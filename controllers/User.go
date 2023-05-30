@@ -8,48 +8,48 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Register(c *gin.Context){
-	p:=new(model.ParamRegister)
-	err:=c.ShouldBind(p)
+func Register(c *gin.Context) {
+	p := new(model.ParamRegister)
+	err := c.ShouldBind(p)
 	if err != nil {
-		ResponseError(c,CodeInvalidParams)
+		ResponseError(c, CodeInvalidParams)
 		return
 	}
-	err,p1:=service.Register(p)
+	err, p1 := service.Register(p)
 	if err != nil {
-		ResponseError(c,CodeServerBusy)
+		ResponseError(c, CodeServerBusy)
 		return
 	}
-	ResponseSuccess(c,p1)
+	ResponseSuccess(c, p1)
 }
-func Login(c *gin.Context){
-	p:=new(model.ParamLogin)
-	err:=c.ShouldBind(p)
+func Login(c *gin.Context) {
+	p := new(model.ParamLogin)
+	err := c.ShouldBind(p)
 	if err != nil {
-		ResponseError(c,CodeInvalidParams)
+		ResponseError(c, CodeInvalidParams)
 		return
 	}
-	err,user,token:=service.Login(p)
+	err, user, token := service.Login(p)
 	if err != nil {
-		ResponseErrorWithMsg(c,CodeInvalidPassword,"")
+		ResponseErrorWithMsg(c, CodeInvalidPassword, "")
 		return
 	}
 
-	ResponseSuccess(c,gin.H{
-		"id":user.ID,
-		"token":token,
+	ResponseSuccess(c, gin.H{
+		"id":    user.UserID,
+		"token": token,
 	})
 }
-func GetContactorList(c* gin.Context){
-	Id:=c.Param("id")
-	p,err:=service.GetContactorList(Id)
+func GetContactorList(c *gin.Context) {
+	Id := c.Param("id")
+	p, err := service.GetContactorList(Id)
 	if err != nil {
-		ResponseError(c,CodeServerBusy)
+		ResponseError(c, CodeServerBusy)
 		return
 	}
-	ResponseSuccess(c,p)
+	ResponseSuccess(c, p)
 }
-func TestRedis(c *gin.Context){
-	err:=redis.AddMsg("","123456")
+func TestRedis(c *gin.Context) {
+	err := redis.AddMsg("", "123456")
 	fmt.Println(err)
 }

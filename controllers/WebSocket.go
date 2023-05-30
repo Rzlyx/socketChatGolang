@@ -15,28 +15,27 @@ import (
 var OtherMsgChan chan string
 var OthserChan map[int64]chan string
 
+var MsgChan chan model.Msg            // 全局消息队列
+var UserChan map[int64]chan model.Msg // 每个用户分配一个chan
+var IDChan chan int64                 // 接收login，分配一个chan
 
-var MsgChan chan model.Msg
-var UserChan map[int64]chan model.Msg
-var IDChan chan int64
-
-func ChanInit(){
-	IDChan=make(chan int64,100)
-	MsgChan=make(chan model.Msg,10000)
-	UserChan=make(map[int64]chan model.Msg)
-	UserChan[1] = make(chan model.Msg,10)
+func ChanInit() {
+	IDChan = make(chan int64, 100)
+	MsgChan = make(chan model.Msg, 10000)
+	UserChan = make(map[int64]chan model.Msg)
+	UserChan[1] = make(chan model.Msg, 10)
 }
 
-func MsgTransMit(){
+func MsgTransMit() {
 	for msg := range MsgChan {
-		if _,ok:=UserChan[utils.ShiftToNum64(msg.ReceiveID)];ok{
-			fmt.Println("receive_id:",msg.ReceiveID)
-			UserChan[utils.ShiftToNum64(msg.ReceiveID)]<-msg
-		}else {
-			id:=msg.ReceiveID
-			res,_:=json.Marshal(msg)
+		if _, ok := UserChan[utils.ShiftToNum64(msg.ReceiveID)]; ok {
+			fmt.Println("receive_id:", msg.ReceiveID)
+			UserChan[utils.ShiftToNum64(msg.ReceiveID)] <- msg
+		} else {
+			id := msg.ReceiveID
+			res, _ := json.Marshal(msg)
 
-			err:=redis.AddMsg(string(res),id)
+			err := redis.AddMsg(string(res), id)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -45,21 +44,23 @@ func MsgTransMit(){
 	}
 }
 
-func AddUser(){
+func AddUser() {
 	for msg := range IDChan {
-		UserChan[msg]=make(chan model.Msg,10)
+		UserChan[msg] = make(chan model.Msg, 10)
 	}
 }
+
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
 }
-func Connect(c *gin.Context){
+
+func Connect(c *gin.Context) {
 	//获取token,如果token无效，就返回
-	token:=c.Param("token")
+	token := c.Param("token")
 	mc, err := jwt.ParseToken(token)
-	IDChan<-mc.ID
+	IDChan <- mc.ID
 	//连接升级
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -80,19 +81,20 @@ func Connect(c *gin.Context){
 		}
 	}(mc.ID)
 	//ID233:=utils.ShiftToStringFromInt64(mc.ID)
-	msg:=new(model.Msg)
+	msg := new(model.Msg)
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
 			break
 		}
-		err=json.Unmarshal(message,&msg)
+		err = json.Unmarshal(message, &msg)
 		if err != nil {
 			fmt.Println(err)
 		}
-		MsgChan<-*msg
+		MsgChan <- *msg
 	}
 }
+
 /********测试专用*******/
 //go func() {
 //	ticker := time.NewTicker(time.Second) // 创建每秒触发的定时器
@@ -109,10 +111,10 @@ func Connect(c *gin.Context){
 //}()
 /********测试专用*******/
 
-func Connect2(c *gin.Context){
-	token:=c.Param("token")
+func Connect2(c *gin.Context) {
+	token := c.Param("token")
 	mc, err := jwt.ParseToken(token)
-	IDChan<-mc.ID
+	IDChan <- mc.ID
 	//连接升级
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -138,11 +140,10 @@ func Connect2(c *gin.Context){
 		if err != nil {
 			break
 		}
-		err=json.Unmarshal(message,&msg)
+		err = json.Unmarshal(message, &msg)
 		if err != nil {
 			fmt.Println(err)
 		}
 
 	}
 }
-
