@@ -20,7 +20,6 @@ import (
 	"time"
 )
 
-
 func main() {
 
 	controllers.ChanInit()
@@ -40,7 +39,7 @@ func main() {
 		fmt.Printf("init redis failed,err: %v \n", err)
 	}
 	defer redis.Close()
-	if err:=snowflake.Init(setting.Conf.StartTime, setting.Conf.MachineID);err!=nil{
+	if err := snowflake.Init(setting.Conf.StartTime, setting.Conf.MachineID); err != nil {
 		fmt.Printf("init snowflake failed,err: %v \n", err)
 	}
 
@@ -48,8 +47,6 @@ func main() {
 	//常驻线程，用于转发消息
 	go controllers.AddUser()
 	//常驻线程，当一个用户加入时，为其分配一个连接消息通道的通道
-
-
 
 	r := routes.SetupRouter()
 	r.Run(":8080")
