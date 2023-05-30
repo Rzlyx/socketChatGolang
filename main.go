@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"dou_yin/controllers"
+	"dou_yin/controllers/chat"
 	"dou_yin/dao/mysql"
 	"dou_yin/dao/redis"
 	"dou_yin/logger"
@@ -22,7 +22,7 @@ import (
 
 func main() {
 
-	controllers.ChanInit()
+	chat.ChanInit()
 	//初始化消息通道
 	if err := setting.Init(); err != nil {
 		fmt.Printf("init setting failed,err: %v \n", err)
@@ -43,9 +43,9 @@ func main() {
 		fmt.Printf("init snowflake failed,err: %v \n", err)
 	}
 
-	go controllers.MsgTransMit()
+	go chat.MsgTransMit()
 	//常驻线程，用于转发消息
-	go controllers.AddUser()
+	go chat.AddUser()
 	//常驻线程，当一个用户加入时，为其分配一个连接消息通道的通道
 
 	r := routes.SetupRouter()

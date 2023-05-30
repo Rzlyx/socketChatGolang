@@ -1,8 +1,8 @@
-package controllers
+package chat
 
 import (
 	"dou_yin/dao/redis"
-	"dou_yin/model"
+	"dou_yin/model/PO"
 	"dou_yin/pkg/jwt"
 	"dou_yin/pkg/utils"
 	"encoding/json"
@@ -15,15 +15,15 @@ import (
 var OtherMsgChan chan string
 var OthserChan map[int64]chan string
 
-var MsgChan chan model.Msg            // 全局消息队列
-var UserChan map[int64]chan model.Msg // 每个用户分配一个chan
-var IDChan chan int64                 // 接收login，分配一个chan
+var MsgChan chan PO.PrivateMsgDO            // 全局消息队列
+var UserChan map[int64]chan PO.PrivateMsgDO // 每个用户分配一个chan
+var IDChan chan int64                       // 接收login，分配一个chan
 
 func ChanInit() {
 	IDChan = make(chan int64, 100)
-	MsgChan = make(chan model.Msg, 10000)
-	UserChan = make(map[int64]chan model.Msg)
-	UserChan[1] = make(chan model.Msg, 10)
+	MsgChan = make(chan PO.PrivateMsgDO, 10000)
+	UserChan = make(map[int64]chan PO.PrivateMsgDO)
+	UserChan[1] = make(chan PO.PrivateMsgDO, 10)
 }
 
 func MsgTransMit() {
@@ -46,7 +46,7 @@ func MsgTransMit() {
 
 func AddUser() {
 	for msg := range IDChan {
-		UserChan[msg] = make(chan model.Msg, 10)
+		UserChan[msg] = make(chan PO.PrivateMsgDO, 10)
 	}
 }
 
@@ -81,7 +81,7 @@ func Connect(c *gin.Context) {
 		}
 	}(mc.ID)
 	//ID233:=utils.ShiftToStringFromInt64(mc.ID)
-	msg := new(model.Msg)
+	msg := new(PO.PrivateMsgDO)
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {

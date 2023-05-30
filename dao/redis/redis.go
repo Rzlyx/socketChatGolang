@@ -10,6 +10,7 @@ var rdb *redis.Client
 
 const timeZset = "timeZset"
 const lookZset = "lookZset"
+
 // Init 连接redis
 func Init() (err error) {
 	rdb = redis.NewClient(&redis.Options{
@@ -22,6 +23,7 @@ func Init() (err error) {
 
 	return
 }
+
 func Close() {
 	_ = rdb.Close()
 }

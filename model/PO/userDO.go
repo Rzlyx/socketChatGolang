@@ -1,4 +1,4 @@
-package model
+package PO
 
 type User struct {
 	UserID   int64  `json:"user_id" db:"user_id"`

@@ -2,15 +2,16 @@ package service
 
 import (
 	"dou_yin/dao/mysql"
-	"dou_yin/model"
+	"dou_yin/model/PO"
+	"dou_yin/model/VO/param"
 	"dou_yin/pkg/jwt"
 	"dou_yin/pkg/snowflake"
 	"errors"
 	"fmt"
 )
 
-func Register(p *model.ParamRegister) (err error, user *model.User) {
-	p1 := new(model.User)
+func Register(p *param.ParamRegister) (err error, user *PO.User) {
+	p1 := new(PO.User)
 	p1.UserName = p.UserName
 	p1.Password = p.Password
 	p1.EMail = p.EMail
@@ -19,7 +20,8 @@ func Register(p *model.ParamRegister) (err error, user *model.User) {
 	fmt.Println(err)
 	return err, p1
 }
-func Login(p *model.ParamLogin) (err error, user *model.User, token string) {
+
+func Login(p *param.ParamLogin) (err error, user *PO.User, token string) {
 	err, user = mysql.Login(p.UserName)
 	if err != nil {
 		return errors.New("用户不存在"), nil, ""
@@ -30,7 +32,8 @@ func Login(p *model.ParamLogin) (err error, user *model.User, token string) {
 	}
 	return errors.New("信息错误"), nil, ""
 }
-func GetContactorList(Id string) (*model.ContactorList, error) {
+
+func GetContactorList(Id string) (*PO.ContactorList, error) {
 
 	err, p := mysql.GetContactorList(Id)
 

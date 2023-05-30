@@ -1,12 +1,12 @@
 package mysql
 
 import (
-	"dou_yin/model"
+	"dou_yin/model/PO"
 	"dou_yin/pkg/utils"
 	"fmt"
 )
 
-func Register(p *model.User) error {
+func Register(p *PO.User) error {
 	tableName := utils.ShiftToStringFromInt64(p.UserID)
 	sqlStr := "insert into user (user_id, username, password, email) VALUES (?,?,?,?)"
 	sqlStr1 := "CREATE TABLE IF NOT EXISTS `" + tableName + "` (" +
@@ -54,14 +54,16 @@ func Register(p *model.User) error {
 	}
 	return err
 }
-func Login(username string) (err error, p1 *model.User) {
-	p1 = new(model.User)
+
+func Login(username string) (err error, p1 *PO.User) {
+	p1 = new(PO.User)
 	sqlStr := "select * from user where username = ?"
 	err = db.Get(p1, sqlStr, username)
 	return err, p1
 }
-func GetContactorList(Id string) (err error, p *model.ContactorList) {
-	p = new(model.ContactorList)
+
+func GetContactorList(Id string) (err error, p *PO.ContactorList) {
+	p = new(PO.ContactorList)
 	sqlStr := "select * from `" + Id + "`"
 	err = db.Select(&p.ContactorList, sqlStr)
 	fmt.Println(err)
