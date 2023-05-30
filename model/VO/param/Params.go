@@ -1,4 +1,4 @@
-package model
+package param
 
 type ParamRegister struct {
 	UserName string `json:"username" form:"username" binding:"required"`

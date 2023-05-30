@@ -1,4 +1,4 @@
-package controllers
+package response
 
 import (
 	"github.com/gin-gonic/gin"
@@ -19,6 +19,7 @@ func ResponseError(c *gin.Context, code ResCode) {
 	}
 	c.JSON(http.StatusOK, rd)
 }
+
 func ResponseErrorWithMsg(c *gin.Context, code ResCode, Msg interface{}) {
 	rd := &Response{
 		Code: code,
@@ -27,6 +28,7 @@ func ResponseErrorWithMsg(c *gin.Context, code ResCode, Msg interface{}) {
 	}
 	c.JSON(http.StatusOK, rd)
 }
+
 func ResponseSuccess(c *gin.Context, data interface{}) {
 	rd := &Response{
 		Code: CodeSuccess,
@@ -35,6 +37,7 @@ func ResponseSuccess(c *gin.Context, data interface{}) {
 	}
 	c.JSON(http.StatusOK, rd)
 }
+
 func ResponseFile(c *gin.Context, filePath string) {
 	c.File(filePath)
 }
