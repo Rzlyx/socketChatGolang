@@ -38,7 +38,7 @@ func Login(p *param.ParamLogin) (err error, user *PO.UserPO, token string) {
 
 func GetContactorList(Id string) (*PO.ContactorList, error) {
 
-	err, p := mysql.GetContactorList(Id)
+	p, err := mysql.GetContactorList(Id)
 
 	return p, err
 }
