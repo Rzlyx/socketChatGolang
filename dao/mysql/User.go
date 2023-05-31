@@ -55,17 +55,17 @@ func Register(p *PO.User) error {
 	return err
 }
 
-func Login(username string) (err error, p1 *PO.UserPO) {
+func Login(username string) (p1 *PO.UserPO, err error) {
 	p1 = new(PO.UserPO)
 	sqlStr := "select * from user where username = ?"
 	err = DB.Get(p1, sqlStr, username)
-	return err, p1
+	return p1, err
 }
 
-func GetContactorList(Id string) (err error, p *PO.ContactorList) {
+func GetContactorList(Id string) (p *PO.ContactorList, err error) {
 	p = new(PO.ContactorList)
 	sqlStr := "select * from `" + Id + "`"
 	err = DB.Select(&p.ContactorList, sqlStr)
 	fmt.Println(err)
-	return err, p
+	return p, err
 }
