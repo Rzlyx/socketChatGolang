@@ -49,7 +49,7 @@ func main() {
 	//常驻线程，当一个用户加入时，为其分配一个连接消息通道的通道
 
 	r := routes.SetupRouter()
-	r.Run(":8080")
+	r.Run(":8070")
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", viper.GetInt("app.port")),
 		Handler: r,
