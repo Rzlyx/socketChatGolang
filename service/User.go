@@ -22,7 +22,7 @@ func Register(p *param.ParamRegister) (err error, user *PO.User) {
 }
 
 func Login(p *param.ParamLogin) (err error, user *PO.UserPO, token string) {
-	err, user = mysql.Login(p.UserName)
+	user, err = mysql.Login(p.UserName)
 	if err != nil {
 		fmt.Println(err.Error())
 		return errors.New("用户不存在"), nil, ""
@@ -38,7 +38,7 @@ func Login(p *param.ParamLogin) (err error, user *PO.UserPO, token string) {
 
 func GetContactorList(Id string) (*PO.ContactorList, error) {
 
-	err, p := mysql.GetContactorList(Id)
+	p, err := mysql.GetContactorList(Id)
 
 	return p, err
 }
