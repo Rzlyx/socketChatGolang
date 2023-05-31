@@ -18,7 +18,7 @@ func Register(p *PO.User) error {
 		")"
 
 	// 开始事务
-	tx, err := db.Beginx()
+	tx, err := DB.Beginx()
 	if err != nil {
 		// 处理事务开始错误
 		return err
@@ -58,14 +58,14 @@ func Register(p *PO.User) error {
 func Login(username string) (err error, p1 *PO.User) {
 	p1 = new(PO.User)
 	sqlStr := "select * from user where username = ?"
-	err = db.Get(p1, sqlStr, username)
+	err = DB.Get(p1, sqlStr, username)
 	return err, p1
 }
 
 func GetContactorList(Id string) (err error, p *PO.ContactorList) {
 	p = new(PO.ContactorList)
 	sqlStr := "select * from `" + Id + "`"
-	err = db.Select(&p.ContactorList, sqlStr)
+	err = DB.Select(&p.ContactorList, sqlStr)
 	fmt.Println(err)
 	return err, p
 }

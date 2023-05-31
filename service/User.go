@@ -21,15 +21,18 @@ func Register(p *param.ParamRegister) (err error, user *PO.User) {
 	return err, p1
 }
 
-func Login(p *param.ParamLogin) (err error, user *PO.User, token string) {
+func Login(p *param.ParamLogin) (err error, user *PO.UserPO, token string) {
 	err, user = mysql.Login(p.UserName)
 	if err != nil {
+		fmt.Println(err.Error())
 		return errors.New("用户不存在"), nil, ""
 	}
+
 	if p.UserName == p.UserName && p.Password == user.Password {
 		token, err = jwt.GenToken(user.UserID, user.UserName)
 		return err, user, token
 	}
+
 	return errors.New("信息错误"), nil, ""
 }
 

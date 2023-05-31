@@ -1,6 +1,6 @@
 package PO
 
-type PrivateMsgDO struct {
+type PrivateMsgPO struct {
 	ID        string `json:"id" db:"id"`
 	Context   string `json:"context" db:"context"`
 	Time      string `json:"time" db:"time"`
