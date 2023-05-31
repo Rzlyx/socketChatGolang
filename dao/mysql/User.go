@@ -55,8 +55,8 @@ func Register(p *PO.User) error {
 	return err
 }
 
-func Login(username string) (err error, p1 *PO.User) {
-	p1 = new(PO.User)
+func Login(username string) (err error, p1 *PO.UserPO) {
+	p1 = new(PO.UserPO)
 	sqlStr := "select * from user where username = ?"
 	err = DB.Get(p1, sqlStr, username)
 	return err, p1
