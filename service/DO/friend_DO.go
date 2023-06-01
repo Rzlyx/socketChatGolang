@@ -23,5 +23,32 @@ type FriendInfo struct {
 	IsRemark    bool   `json:"is_remark"`
 }
 
-type FriendApplyList struct {
+type AddFriendApplication struct {
+	ApplyID     int64
+	ApplicantID int64
+	FriendID    int64
+	Type        int
+	Reason      string
+	CreateTime  string
+}
+
+type FriendApplicationList struct {
+	Applications []FriendApplication
+}
+
+type FriendApplication struct {
+	ApplyID       int64
+	UserID        int64
+	ApplicantID   int64
+	ApplicantName string
+	Reason        string
+	Status        int
+}
+
+type Friendship struct {
+	FriendshipID      int64
+	FirstID           int64
+	SecondID          int64
+	FirstRemarkSecond string
+	SecondRemarkFirst string
 }
