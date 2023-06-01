@@ -2,6 +2,7 @@ package routes
 
 import (
 	"dou_yin/controllers/chat"
+	"dou_yin/controllers/friend"
 	"dou_yin/controllers/user"
 	"dou_yin/logger"
 	"dou_yin/middleware"
@@ -18,5 +19,7 @@ func SetupRouter() *gin.Engine {
 	r.GET("/test", user.TestRedis)
 	g := r.Group("/api", middleware.JWTAuthMiddleware())
 	g.GET("/get_contactor_list/:id", user.GetContactorList)
+
+	g.POST("/addFriend", friend.AddFriend)
 	return r
 }

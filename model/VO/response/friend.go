@@ -9,3 +9,11 @@ type QueryFriendListResp struct {
 type QueryFriendInfoResp struct {
 	FriendInfo DO.FriendInfo `json:"friend_info"`
 }
+
+type AddFriendResp struct {
+	Application DO.AddFriendApplication `json:"application"`
+}
+
+type QueryFriendApplyResp struct {
+	Applications DO.FriendApplicationList `json:"applications"`
+}

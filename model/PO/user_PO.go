@@ -37,3 +37,11 @@ type UserPO struct {
 	IsDeleted            bool    `json:"is_deleted" db:"is_deleted"`
 	Extra                *string `json:"extra" db:"extra"`
 }
+
+type PrivateChatWhite struct {
+	WhiteList []int64 `json:"white_list"`
+}
+
+type PrivateChatBlack struct {
+	BlackList []int64 `json:"black_list"`
+}
