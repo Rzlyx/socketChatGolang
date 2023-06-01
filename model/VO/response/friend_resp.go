@@ -3,7 +3,7 @@ package response
 import "dou_yin/service/DO"
 
 type QueryFriendListResp struct {
-	Friendlist DO.FriendList `json:"friendlist"`
+	FriendList DO.FriendList `json:"friend_list"`
 }
 
 type QueryFriendInfoResp struct {
@@ -15,5 +15,5 @@ type AddFriendResp struct {
 }
 
 type QueryFriendApplyResp struct {
-	Applications DO.FriendApplicationList `json:"applications"`
+	ApplicationList DO.FriendApplicationList `json:"applications"`
 }

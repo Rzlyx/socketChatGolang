@@ -1,6 +1,7 @@
 package friend
 
 import (
+	"dou_yin/logger"
 	param "dou_yin/model/VO/param"
 	"dou_yin/model/VO/response"
 	"dou_yin/service"
@@ -21,7 +22,7 @@ func QueryFriendList(c *gin.Context) {
 		return
 	}
 	queryFriendListResp := new(response.QueryFriendListResp)
-	queryFriendListResp.Friendlist = friendlist
+	queryFriendListResp.FriendList = friendlist
 	response.ResponseSuccess(c, queryFriendListResp)
 }
 
@@ -53,6 +54,7 @@ func AddFriend(c *gin.Context) {
 
 	application, err := service.AddFriend(*param)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		response.ResponseError(c, response.CodeInternError)
 		return
 	}
@@ -73,6 +75,7 @@ func DeleteFriend(c *gin.Context) {
 	err = service.DeleteFriend(*param)
 	if err.Error() == "" {
 		// todo: err code
+		logger.Log.Error(err.Error())
 		response.ResponseError(c, response.CodeInternError)
 		return
 	}
@@ -114,13 +117,38 @@ func UnBlockPrivateChat(c *gin.Context) {
 	response.ResponseSuccess(c, struct{}{})
 }
 
-// todo: friend circle
 func SetFriendCircleBlack(c *gin.Context) {
+	param := new(param.SetFriendCircleBlackParam)
+	err := c.ShouldBind(param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
 
+	err = service.SetFriendCircleBlack(*param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInternError)
+		return
+	}
+
+	response.ResponseSuccess(c, struct{}{})
 }
 
 func UnBlockFriendCircle(c *gin.Context) {
+	param := new(param.UnBlockFriendCircleParam)
+	err := c.ShouldBind(param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
 
+	err = service.UnBlockFriendCircle(*param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInternError)
+		return
+	}
+
+	response.ResponseSuccess(c, struct{}{})
 }
 
 func QueryFriendApply(c *gin.Context) {
@@ -133,12 +161,13 @@ func QueryFriendApply(c *gin.Context) {
 
 	applications, err := service.QueryFriendApply(*param)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		response.ResponseError(c, response.CodeInternError)
 		return
 	}
 
 	resp := new(response.QueryFriendApplyResp)
-	resp.Applications = applications
+	resp.ApplicationList = applications
 	response.ResponseSuccess(c, resp)
 }
 
@@ -152,6 +181,7 @@ func AgreeFriendApply(c *gin.Context) {
 
 	err = service.AgreeFriendApply(*param)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		response.ResponseError(c, response.CodeInternError)
 		return
 	}
@@ -169,6 +199,7 @@ func DisagreeFriendApply(c *gin.Context) {
 
 	err = service.DisagreeFriendApply(*param)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		response.ResponseError(c, response.CodeInternError)
 		return
 	}

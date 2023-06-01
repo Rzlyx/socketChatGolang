@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-var lg *zap.Logger
+var Log *zap.Logger
 
 // Init 初始化Logger
 func Init(cfg *setting.LogConfig, mode string) (err error) {
@@ -37,8 +37,8 @@ func Init(cfg *setting.LogConfig, mode string) (err error) {
 	} else {
 		core = zapcore.NewCore(encoder, writeSyncer, l)
 	}
-	lg = zap.New(core, zap.AddCaller())
-	zap.ReplaceGlobals(lg) // 替换zap包中全局的logger实例，后续在其他包中只需使用zap.L()调用即可
+	Log = zap.New(core, zap.AddCaller())
+	zap.ReplaceGlobals(Log) // 替换zap包中全局的logger实例，后续在其他包中只需使用zap.L()调用即可
 	return
 }
 
@@ -71,7 +71,7 @@ func GinLogger() gin.HandlerFunc {
 		c.Next()
 
 		cost := time.Since(start)
-		lg.Info(path,
+		Log.Info(path,
 			zap.Int("status", c.Writer.Status()),
 			zap.String("method", c.Request.Method),
 			zap.String("path", path),

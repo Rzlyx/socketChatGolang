@@ -20,6 +20,18 @@ func SetupRouter() *gin.Engine {
 	g := r.Group("/api", middleware.JWTAuthMiddleware())
 	g.GET("/get_contactor_list/:id", user.GetContactorList)
 
-	g.POST("/addFriend", friend.AddFriend)
+	// friend
+	r.POST("/queryFriendList", friend.QueryFriendList)
+	r.POST("/queryFriendInfo", friend.QueryFriendInfo)
+	r.POST("/addFriend", friend.AddFriend)
+	r.POST("/deleteFriend", friend.DeleteFriend)
+	r.POST("/setPrivateChatBlack", friend.SetPrivateChatBlack)
+	r.POST("/unBlockPrivateChat", friend.UnBlockPrivateChat)
+	r.POST("/setFriendCircleBlack", friend.SetFriendCircleBlack)
+	r.POST("/unBlockFriendCircle", friend.UnBlockFriendCircle)
+	r.POST("/queryFriendApply", friend.QueryFriendApply)
+	r.POST("/agreeFriendApply", friend.AgreeFriendApply)
+	r.POST("/disagreeFriendApply", friend.DisagreeFriendApply)
+
 	return r
 }

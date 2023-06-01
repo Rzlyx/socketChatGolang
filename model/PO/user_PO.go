@@ -45,3 +45,11 @@ type PrivateChatWhite struct {
 type PrivateChatBlack struct {
 	BlackList []int64 `json:"black_list"`
 }
+
+type FriendCircleWhite struct {
+	WhiteList []int64 `json:"white_list"`
+}
+
+type FriendCircleBlack struct {
+	BlackList []int64 `json:"black_list"`
+}

@@ -24,31 +24,31 @@ type FriendInfo struct {
 }
 
 type AddFriendApplication struct {
-	ApplyID     int64
-	ApplicantID int64
-	FriendID    int64
-	Type        int
-	Reason      string
-	CreateTime  string
+	ApplyID     int64  `json:"apply_id"`
+	ApplicantID int64  `json:"applicant_id"`
+	FriendID    int64  `json:"friend_id"`
+	Type        int    `json:"type"`
+	Reason      string `json:"reason"`
+	CreateTime  string `json:"create_time"`
 }
 
 type FriendApplicationList struct {
-	Applications []FriendApplication
+	Applications []FriendApplication `json:"applications"`
 }
 
 type FriendApplication struct {
-	ApplyID       int64
-	UserID        int64
-	ApplicantID   int64
-	ApplicantName string
-	Reason        string
-	Status        int
+	ApplyID       int64  `json:"apply_id"`
+	UserID        int64  `json:"user_id"`
+	ApplicantID   int64  `json:"applicant_id"`
+	ApplicantName string `json:"applicant_name"`
+	Reason        string `json:"reason"`
+	Status        int    `json:"status"`
 }
 
 type Friendship struct {
-	FriendshipID      int64
-	FirstID           int64
-	SecondID          int64
-	FirstRemarkSecond string
-	SecondRemarkFirst string
+	FriendshipID      int64  `json:"friendship_id"`
+	FirstID           int64  `json:"first_id"`
+	SecondID          int64  `json:"second_id"`
+	FirstRemarkSecond string `json:"first_remark_second"`
+	SecondRemarkFirst string `json:"second_remark_first"`
 }
