@@ -16,6 +16,8 @@ type AddFriendParam struct {
 }
 
 type DeleteFriendParam struct {
+	UserID       int64 `json:"user_id" form:"user_id" binding:"required"`
+	FriendID     int64 `json:"friend_id" form:"friend_id" binding:"required"`
 	FriendshipID int64 `json:"friendship_id" form:"friendship_id" binding:"required"`
 }
 
@@ -25,6 +27,16 @@ type SetPrivateChatBlackParam struct {
 }
 
 type UnBlockPrivateChatParam struct {
+	UserID   int64 `json:"user_id" form:"user_id" binding:"required"`
+	FriendID int64 `json:"friend_id" form:"friend_id" binding:"required"`
+}
+
+type SetFriendCircleBlackParam struct {
+	UserID   int64 `json:"user_id" form:"user_id" binding:"required"`
+	FriendID int64 `json:"friend_id" form:"friend_id" binding:"required"`
+}
+
+type UnBlockFriendCircleParam struct {
 	UserID   int64 `json:"user_id" form:"user_id" binding:"required"`
 	FriendID int64 `json:"friend_id" form:"friend_id" binding:"required"`
 }

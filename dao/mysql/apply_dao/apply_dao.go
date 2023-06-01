@@ -2,6 +2,7 @@ package apply_dao
 
 import (
 	"dou_yin/dao/mysql"
+	"dou_yin/logger"
 	"dou_yin/model/PO"
 	"dou_yin/service/DO"
 )
@@ -10,6 +11,7 @@ func Insert(application DO.AddFriendApplication) (err error) {
 	sqlStr := "insert into apply(apply_id, applicant, target_id, type, reason, create_time) values (?, ?, ?, ?, ?, ?)"
 	_, err = mysql.DB.Exec(sqlStr, application.ApplyID, application.ApplicantID, application.FriendID, application.Type, application.Reason, application.CreateTime)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		return err
 	}
 
@@ -17,9 +19,10 @@ func Insert(application DO.AddFriendApplication) (err error) {
 }
 
 func QueryApplication(userID int64, friendID int64) (applyPO PO.ApplyPO, err error) {
-	sqlStr := "select * from apply where user_id = ? and target_id = ?"
+	sqlStr := "select * from apply where applicant = ? and target_id = ?"
 	err = mysql.DB.QueryRow(sqlStr, userID, friendID).Scan(&applyPO)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		return applyPO, err
 	}
 
@@ -27,17 +30,19 @@ func QueryApplication(userID int64, friendID int64) (applyPO PO.ApplyPO, err err
 }
 
 func QueryFriendApply(userID int64) (applys []PO.ApplyPO, err error) {
-	sqlStr := "select * from apply where target_id = ?"
+	sqlStr := "select * from apply where target_id = ? and type = 1"
 	rows, err := mysql.DB.Query(sqlStr, userID)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		return nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var apply PO.ApplyPO
-		err := rows.Scan(&apply)
+		err := rows.Scan(&apply.ApplyID, &apply.Applicant, &apply.Type, &apply.Status, &apply.Reason, &apply.CreateTime, &apply.Extra, &apply.TargetID)
 		if err != nil {
+			logger.Log.Error(err.Error())
 			return nil, err
 		}
 
@@ -58,9 +63,10 @@ func UpdateStatus(applyID int64, status int) (err error) {
 }
 
 func Delete(applyID int64) (err error) {
-	sqlStr := "delete from apply where applyID = ?"
+	sqlStr := "delete from apply where apply_id = ?"
 	_, err = mysql.DB.Exec(sqlStr, applyID)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		return err
 	}
 
