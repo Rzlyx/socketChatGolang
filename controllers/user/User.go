@@ -60,7 +60,7 @@ func TestRedis(c *gin.Context) {
 }
 
 func QueryContactorList(c *gin.Context) {
-	param := new(param.QueryContactorList)
+	param := new(param.QueryContactorListParam)
 	err := c.ShouldBind(param)
 	if err != nil {
 		response.ResponseError(c, response.CodeInvalidParams)
@@ -106,4 +106,38 @@ func UploadPhoto(c *gin.Context) {
 func GetCurrentPath() string {
 	path, _ := os.Getwd()
 	return path
+}
+
+func SetContactorList(c *gin.Context) {
+	param := new(param.SetContactorListParam)
+	err := c.ShouldBind(param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	err = service.SetContactorList(*param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInternError)
+		return
+	}
+
+	response.ResponseSuccess(c, struct{}{})
+}
+
+func UpdateUserInfo(c *gin.Context) {
+	param := new(param.UpdateUserInfoParam)
+	err := c.ShouldBind(param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	err = service.UpdateUserInfo(*param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInternError)
+		return
+	}
+
+	response.ResponseSuccess(c, struct{}{})
 }

@@ -7,6 +7,7 @@ import (
 	"dou_yin/model/VO/param"
 	"dou_yin/pkg/jwt"
 	"dou_yin/pkg/snowflake"
+	"dou_yin/pkg/utils"
 	"dou_yin/service/DO"
 	"encoding/json"
 	"errors"
@@ -46,8 +47,8 @@ func GetContactorList(Id string) (*PO.ContactorList, error) {
 	return p, err
 }
 
-func QueryContactorList(param param.QueryContactorList) (contactors DO.ContactList, err error) {
-	userInfo, err := user_dao.QueryUserInfo(param.UserID)
+func QueryContactorList(param param.QueryContactorListParam) (contactors DO.ContactList, err error) {
+	userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.UserID))
 	if err != nil {
 		return contactors, err
 	}
@@ -60,7 +61,7 @@ func QueryContactorList(param param.QueryContactorList) (contactors DO.ContactLi
 		}
 	}
 
-	for _, contact := range extra.ContactorList {
+	for _, contact := range *extra.ContactorList {
 		contactDO := DO.ContactInfo{
 			ID:           contact.ID,
 			Name:         contact.Name,
@@ -74,8 +75,41 @@ func QueryContactorList(param param.QueryContactorList) (contactors DO.ContactLi
 	return contactors, err
 }
 
-func SetContactorList(param param.SetContactorList) (err error) {
-	// user_dao.Update
+func SetContactorList(param param.SetContactorListParam) (err error) {
+	userInfo, err := user_dao.QueryUserInfo(param.UserID)
+	if err != nil {
+		return err
+	}
+
+	var extra PO.UserExtra
+	if userInfo.Extra != nil {
+		err = json.Unmarshal([]byte(*userInfo.Extra), &extra)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(param.ContactorList) != 0 {
+		var contactorsPO []PO.ContactInfoPO
+		for _, item := range param.ContactorList {
+			contactor := PO.ContactInfoPO{
+				ID:           item.ID,
+				Name:         item.Name,
+				Message:      item.Message,
+				FriendshipID: item.FriendshipID,
+			}
+
+			contactorsPO = append(contactorsPO, contactor)
+		}
+		extra.ContactorList = &contactorsPO
+	} else {
+		extra.ContactorList = nil
+	}
+	extraJson, err := json.Marshal(extra)
+	extraStr := string(extraJson[:])
+	userInfo.Extra = &extraStr
+
+	err = user_dao.UpdateUserInfoByPO(&userInfo)
 	if err != nil {
 		return err
 	}
@@ -83,8 +117,8 @@ func SetContactorList(param param.SetContactorList) (err error) {
 	return nil
 }
 
-func UpdateUserInfo(param param.UpdateUserInfo) (err error) {
-	userInfo, err := user_dao.QueryUserInfo(param.UserID)
+func UpdateUserInfo(param param.UpdateUserInfoParam) (err error) {
+	userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.UserID))
 	if err != nil {
 		return err
 	}
@@ -102,7 +136,7 @@ func UpdateUserInfo(param param.UpdateUserInfo) (err error) {
 	userInfo.Birthday = param.Birthday
 	userInfo.FriendCircleVisiable = param.FriendCircleVisiable
 
-	// user_dao.Update
+	err = user_dao.UpdateUserInfoByPO(&userInfo)
 	if err != nil {
 		return err
 	}

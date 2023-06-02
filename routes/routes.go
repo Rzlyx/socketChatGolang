@@ -26,6 +26,8 @@ func SetupRouter() *gin.Engine {
 	r.POST("/queryContactorList", user.QueryContactorList)
 	r.GET("/getPhotoByID/:id", user.GetPhotoByID)
 	r.POST("/uploadPhoto", user.UploadPhoto)
+	r.POST("/setContactorList", user.SetContactorList)
+	r.POST("/updateUserInfo", user.UpdateUserInfo)
 
 	// friend
 	r.POST("/queryFriendList", friend.QueryFriendList)
@@ -40,7 +42,7 @@ func SetupRouter() *gin.Engine {
 	r.POST("/agreeFriendApply", friend.AgreeFriendApply)
 	r.POST("/disagreeFriendApply", friend.DisagreeFriendApply)
 	r.POST("/setFriendRemark", friend.SetFriendRemark)
-	
+
 	// group
 	r.POST("/CreateGroupInfo", group.CreateGroupInfo)
 	r.POST("/QueryGroupInfo", group.QueryGroupInfo)
