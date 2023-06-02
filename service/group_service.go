@@ -303,17 +303,17 @@ func QuitGroupByParam(info *param.QuitGroupParam) error {
 
 		var white, gray, black []int64
 		for _, id := range *whiteList {
-			if id != info.UserID {
+			if id != info.GroupID {
 				white = append(white, id)
 			}
 		}
 		for _, id := range *gratList {
-			if id != info.UserID {
+			if id != info.GroupID {
 				gray = append(gray, id)
 			}
 		}
 		for _, id := range *blackList {
-			if id != info.UserID {
+			if id != info.GroupID {
 				black = append(black, id)
 			}
 		}
