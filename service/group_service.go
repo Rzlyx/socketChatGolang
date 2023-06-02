@@ -518,8 +518,11 @@ func SilenceByParam(info *param.SilenceParam) error {
 	if err != nil {
 		return err
 	}
-
-	silenceList := append(*groupInfo.SilenceList, info.TargetID)
+	var silenceList []int64
+	if groupInfo.SilenceList != nil {
+		silenceList = append(silenceList, *groupInfo.SilenceList...)
+	}
+	silenceList = append(silenceList, info.TargetID)
 	data, err := json.Marshal(silenceList)
 	if err != nil {
 		fmt.Println("[SilenceByParam], Marshal err is ", err.Error())
@@ -554,13 +557,17 @@ func UnSilenceByParam(info *param.UnSilenceParam) error {
 			silenceList = append(silenceList, id)
 		}
 	}
-	data, err := json.Marshal(silenceList)
-	if err != nil {
-		fmt.Println("[UnSilenceByParam], Marshal err is ", err.Error())
-		return err
+	if len(silenceList) > 0 {
+		data, err := json.Marshal(silenceList)
+		if err != nil {
+			fmt.Println("[UnSilenceByParam], Marshal err is ", err.Error())
+			return err
+		}
+		silence := string(data)
+		group.SilenceList = &silence
+	}else{
+		group.SilenceList = nil
 	}
-	silence := string(data)
-	group.SilenceList = &silence
 
 	err = group_dao.UpdateGroupInfo(group)
 	if err != nil {
@@ -659,18 +666,18 @@ func SetBlackListByParam(info *param.SetBlackListParam) error {
 	}
 	var whiteList, grayList []int64
 	for _, id := range *groupWhiteList {
-		if id != info.UserID {
+		if id != info.GroupID {
 			whiteList = append(whiteList, id)
 		}
 	}
 
 	for _, id := range *groupGrayList {
-		if id != info.UserID {
+		if id != info.GroupID {
 			grayList = append(grayList, id)
 		}
 	}
 
-	blackList := append(*groupBlackList, info.UserID)
+	blackList := append(*groupBlackList, info.GroupID)
 
 	white, gray, black, err := turnjsonList(whiteList, grayList, blackList)
 	if err != nil {
@@ -699,18 +706,18 @@ func SetGrayListByParam(info *param.SetGrayListParam) error {
 	}
 	var whiteList, blackList []int64
 	for _, id := range *groupWhiteList {
-		if id != info.UserID {
+		if id != info.GroupID {
 			whiteList = append(whiteList, id)
 		}
 	}
 
 	for _, id := range *groupBlackList {
-		if id != info.UserID {
+		if id != info.GroupID {
 			blackList = append(blackList, id)
 		}
 	}
 
-	grayList := append(*groupGrayList, info.UserID)
+	grayList := append(*groupGrayList, info.GroupID)
 
 	white, gray, black, err := turnjsonList(whiteList, grayList, blackList)
 	if err != nil {
@@ -740,18 +747,18 @@ func SetWhiteListByParam(info *param.SetWhiteListParam) error {
 	}
 	var grayList, blackList []int64
 	for _, id := range *groupGrayList {
-		if id != info.UserID {
+		if id != info.GroupID {
 			grayList = append(grayList, id)
 		}
 	}
 
 	for _, id := range *groupBlackList {
-		if id != info.UserID {
+		if id != info.GroupID {
 			blackList = append(blackList, id)
 		}
 	}
 
-	whiteList := append(*groupWhiteList, info.UserID)
+	whiteList := append(*groupWhiteList, info.GroupID)
 
 	white, gray, black, err := turnjsonList(whiteList, grayList, blackList)
 	if err != nil {
@@ -915,11 +922,11 @@ func SetGroupUserByParam(info *param.SetGroupUserParam) error {
 }
 
 // 邀请加入群聊
-func InviteJoinGroup(c *gin.Context) {
+func InviteJoinGroupByParam(c *gin.Context) {
 
 }
 
 // 设置群备注
-func SetGroupName(c *gin.Context) {
+func SetGroupNameByParam(c *gin.Context) {
 
 }
