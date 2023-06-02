@@ -7,6 +7,7 @@ import (
 	"dou_yin/service"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"os"
 )
 
 func Register(c *gin.Context) {
@@ -74,4 +75,35 @@ func QueryContactorList(c *gin.Context) {
 	queryContactorListResp := new(response.QueryContactorList)
 	queryContactorListResp.ContactorList = contactors
 	response.ResponseSuccess(c, queryContactorListResp)
+}
+
+func GetPhotoByID(c *gin.Context) {
+	img := c.Param("id")
+	if img == "" {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	pwd := GetCurrentPath()
+	imgPath := fmt.Sprintf("%v/img/%v", pwd, img)
+	c.File(imgPath)
+}
+
+func UploadPhoto(c *gin.Context) {
+	file, err := c.FormFile("img")
+	if err != nil {
+		response.ResponseError(c, response.CodeServerBusy)
+		return
+	}
+
+	pwd := GetCurrentPath()
+	dst := fmt.Sprintf("%v/img/%v", pwd, file.Filename)
+	c.SaveUploadedFile(file, dst)
+
+	response.ResponseSuccess(c, struct{}{})
+}
+
+func GetCurrentPath() string {
+	path, _ := os.Getwd()
+	return path
 }

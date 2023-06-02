@@ -23,7 +23,9 @@ func SetupRouter() *gin.Engine {
 	r.GET("/test", user.TestRedis)
 	g := r.Group("/api", middleware.JWTAuthMiddleware())
 	g.GET("/get_contactor_list/:id", user.GetContactorList)
-	r.POST("queryContactorList", user.QueryContactorList)
+	r.POST("/queryContactorList", user.QueryContactorList)
+	r.GET("/getPhotoByID/:id", user.GetPhotoByID)
+	r.POST("/uploadPhoto", user.UploadPhoto)
 
 	// friend
 	r.POST("/queryFriendList", friend.QueryFriendList)

@@ -5,13 +5,13 @@ type FriendList struct {
 }
 
 type Friend struct {
-	FriendshipID int64  `json:"friendship_id"`
-	FriendID     int64  `json:"friend_id"`
+	FriendshipID int64  `json:"friendship_id,string"`
+	FriendID     int64  `json:"friend_id,string"`
 	Name         string `json:"name"`
 }
 
 type FriendInfo struct {
-	UserID              int64  `json:"user_id"`
+	UserID              int64  `json:"user_id,string"`
 	UserName            string `json:"user_name"`
 	Sex                 int    `json:"sex"`
 	PhoneNumber         string `json:"phone_number"`
@@ -28,9 +28,9 @@ type FriendInfo struct {
 type AddFriendApplication struct {
 	// 是否通过对方申请之间成为好友
 	IsBeFriend  bool   `json:"is_be_friend"`
-	ApplyID     int64  `json:"apply_id"`
-	ApplicantID int64  `json:"applicant_id"`
-	FriendID    int64  `json:"friend_id"`
+	ApplyID     int64  `json:"apply_id,string"`
+	ApplicantID int64  `json:"applicant_id,string"`
+	FriendID    int64  `json:"friend_id,string"`
 	Type        int    `json:"type"`
 	Reason      string `json:"reason"`
 	CreateTime  string `json:"create_time"`
@@ -41,24 +41,24 @@ type FriendApplicationList struct {
 }
 
 type FriendApplication struct {
-	ApplyID       int64  `json:"apply_id"`
-	UserID        int64  `json:"user_id"`
-	ApplicantID   int64  `json:"applicant_id"`
+	ApplyID       int64  `json:"apply_id,string"`
+	UserID        int64  `json:"user_id,string"`
+	ApplicantID   int64  `json:"applicant_id,string"`
 	ApplicantName string `json:"applicant_name"`
 	Reason        string `json:"reason"`
 	Status        int    `json:"status"`
 }
 
 type Friendship struct {
-	FriendshipID      int64  `json:"friendship_id"`
-	FirstID           int64  `json:"first_id"`
-	SecondID          int64  `json:"second_id"`
+	FriendshipID      int64  `json:"friendship_id,string"`
+	FirstID           int64  `json:"first_id,string"`
+	SecondID          int64  `json:"second_id,string"`
 	FirstRemarkSecond string `json:"first_remark_second"`
 	SecondRemarkFirst string `json:"second_remark_first"`
 }
 
 type CheckFriendApply struct {
-	FriendshipID int64 `json:"friendship_id"`
-	FirstID      int64 `json:"first_id"`
-	SecondID     int64 `json:"second_id"`
+	FriendshipID int64 `json:"friendship_id,string"`
+	FirstID      int64 `json:"first_id,string"`
+	SecondID     int64 `json:"second_id,string"`
 }
