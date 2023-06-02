@@ -59,6 +59,7 @@ func SetupRouter() *gin.Engine {
 	r.POST("/SetWhiteList", group.SetWhiteList)
 	r.POST("/SetGroupAdmin", group.SetGroupAdmin)
 	r.POST("/SetGroupUser", group.SetGroupUser)
+	r.POST("/KickUserFromGroup", group.KickUserFromGroup)
 
 	return r
 }

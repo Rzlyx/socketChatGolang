@@ -130,6 +130,26 @@ func QuitGroup(c *gin.Context) {
 	response.ResponseSuccess(c, struct{}{})
 }
 
+// 踢人
+func KickUserFromGroup(c *gin.Context) {
+	p := new(param.QuitGroupParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[KickUserFromGroup] ShouldBind err is ", err.Error())
+		return
+	}
+	err = service.QuitGroupByParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[KickUserFromGroup]  err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, struct{}{})
+}
+
 // 查看加群申请（管理员/群主）
 func QueryGroupApplyList(c *gin.Context) {
 	p := new(param.QueryGroupApplyListParam)
