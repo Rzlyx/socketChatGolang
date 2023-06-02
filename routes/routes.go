@@ -14,11 +14,14 @@ func SetupRouter() *gin.Engine {
 	r.Use(middleware.Cors())
 	r.Use(logger.GinLogger(), logger.GinRecovery(true))
 	r.GET("/ws/:token", chat.Connect)
+
+	// user
 	r.POST("/register", user.Register)
 	r.POST("/login", user.Login)
 	r.GET("/test", user.TestRedis)
 	g := r.Group("/api", middleware.JWTAuthMiddleware())
 	g.GET("/get_contactor_list/:id", user.GetContactorList)
+	r.POST("queryContactorList", user.QueryContactorList)
 
 	// friend
 	r.POST("/queryFriendList", friend.QueryFriendList)

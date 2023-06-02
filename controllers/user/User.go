@@ -57,3 +57,21 @@ func TestRedis(c *gin.Context) {
 	err := redis.AddMsg("", "123456")
 	fmt.Println(err)
 }
+
+func QueryContactorList(c *gin.Context) {
+	param := new(param.QueryContactorList)
+	err := c.ShouldBind(param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	contactors, err := service.QueryContactorList(*param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInternError)
+		return
+	}
+	queryContactorListResp := new(response.QueryContactorList)
+	queryContactorListResp.ContactorList = contactors
+	response.ResponseSuccess(c, queryContactorListResp)
+}

@@ -2,10 +2,13 @@ package service
 
 import (
 	"dou_yin/dao/mysql"
+	"dou_yin/dao/mysql/user_dao"
 	"dou_yin/model/PO"
 	"dou_yin/model/VO/param"
 	"dou_yin/pkg/jwt"
 	"dou_yin/pkg/snowflake"
+	"dou_yin/service/DO"
+	"encoding/json"
 	"errors"
 	"fmt"
 )
@@ -41,4 +44,32 @@ func GetContactorList(Id string) (*PO.ContactorList, error) {
 	p, err := mysql.GetContactorList(Id)
 
 	return p, err
+}
+
+func QueryContactorList(param param.QueryContactorList) (contactors DO.ContactList, err error) {
+	userInfo, err := user_dao.QueryUserInfo(param.UserID)
+	if err != nil {
+		return contactors, err
+	}
+
+	var extra PO.UserExtra
+	if userInfo.Extra != nil {
+		err = json.Unmarshal([]byte(*userInfo.Extra), &extra)
+		if err != nil {
+			return contactors, err
+		}
+	}
+
+	for _, contact := range extra.ContactorList {
+		contactDO := DO.ContactInfo{
+			ID:           contact.ID,
+			Name:         contact.Name,
+			Message:      contact.Message,
+			FriendshipID: contact.FriendshipID,
+		}
+
+		contactors.ContactorList = append(contactors.ContactorList, contactDO)
+	}
+
+	return contactors, err
 }
