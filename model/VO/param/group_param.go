@@ -47,6 +47,12 @@ type QuitGroupParam struct {
 	GroupID int64 `json:"group_id" form:"group_id" binding:"required"`
 }
 
+// type KickUserFromGroupParam struct {
+// 	UserID   int64 `json:"user_id" form:"user_id" binding:"required"`
+// 	GroupID  int64 `json:"group_id" form:"group_id" binding:"required"`
+// 	TargetID int64 `json:"target_id" form:"target_id" binding:"required"`
+// }
+
 // 同意加群申请（管理员/群主）
 type AgreeGroupApplyParam struct {
 	ApplyID   int64 `json:"apply_id" form:"apply_id" binding:"required"`
