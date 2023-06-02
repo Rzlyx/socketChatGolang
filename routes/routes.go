@@ -3,9 +3,11 @@ package routes
 import (
 	"dou_yin/controllers/chat"
 	"dou_yin/controllers/friend"
+	"dou_yin/controllers/group"
 	"dou_yin/controllers/user"
 	"dou_yin/logger"
 	"dou_yin/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -36,6 +38,25 @@ func SetupRouter() *gin.Engine {
 	r.POST("/agreeFriendApply", friend.AgreeFriendApply)
 	r.POST("/disagreeFriendApply", friend.DisagreeFriendApply)
 	r.POST("/setFriendRemark", friend.SetFriendRemark)
+	
+	// group
+	r.POST("/CreateGroupInfo", group.CreateGroupInfo)
+	r.POST("/QueryGroupInfo", group.QueryGroupInfo)
+	r.POST("/QueryGroupList", group.QueryGroupList)
+	r.POST("/DissolveGroupInfo", group.DissolveGroupInfo)
+	r.POST("/ApplyJoinGroup", group.ApplyJoinGroup)
+	r.POST("/QuitGroup", group.QuitGroup)
+	r.POST("/QueryGroupApplyList", group.QueryGroupApplyList)
+	r.POST("/AgreeGroupApply", group.AgreeGroupApply)
+	r.POST("/DisAgreeGroupApply", group.DisAgreeGroupApply)
+	r.POST("/Silence", group.Silence)
+	r.POST("/UnSilence", group.UnSilence)
+	r.POST("/TransferGroup", group.TransferGroup)
+	r.POST("/SetBlackList", group.SetBlackList)
+	r.POST("/SetGrayList", group.SetGrayList)
+	r.POST("/SetWhiteList", group.SetWhiteList)
+	r.POST("/SetGroupAdmin", group.SetGroupAdmin)
+	r.POST("/SetGroupUser", group.SetGroupUser)
 
 	return r
 }
