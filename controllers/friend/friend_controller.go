@@ -73,10 +73,13 @@ func DeleteFriend(c *gin.Context) {
 	}
 
 	err = service.DeleteFriend(*param)
-	if err.Error() == "" {
-		// todo: err code
-		logger.Log.Error(err.Error())
-		response.ResponseError(c, response.CodeInternError)
+	if err != nil {
+		if err.Error() == "not friend" {
+			response.ResponseError(c, response.CodeNotFriend)
+		} else {
+			logger.Log.Error(err.Error())
+			response.ResponseError(c, response.CodeInternError)
+		}
 		return
 	}
 
@@ -181,8 +184,12 @@ func AgreeFriendApply(c *gin.Context) {
 
 	err = service.AgreeFriendApply(*param)
 	if err != nil {
-		logger.Log.Error(err.Error())
-		response.ResponseError(c, response.CodeInternError)
+		if err.Error() == "there is no application" {
+			response.ResponseError(c, response.CodeNotApplied)
+		} else {
+			logger.Log.Error(err.Error())
+			response.ResponseError(c, response.CodeInternError)
+		}
 		return
 	}
 
@@ -199,7 +206,28 @@ func DisagreeFriendApply(c *gin.Context) {
 
 	err = service.DisagreeFriendApply(*param)
 	if err != nil {
-		logger.Log.Error(err.Error())
+		if err.Error() == "there is no application" {
+			response.ResponseError(c, response.CodeNotApplied)
+		} else {
+			logger.Log.Error(err.Error())
+			response.ResponseError(c, response.CodeInternError)
+		}
+		return
+	}
+
+	response.ResponseSuccess(c, struct{}{})
+}
+
+func SetFriendRemark(c *gin.Context) {
+	param := new(param.SetFriendRemark)
+	err := c.ShouldBind(param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	err = service.SetFriendRemark(*param)
+	if err != nil {
 		response.ResponseError(c, response.CodeInternError)
 		return
 	}

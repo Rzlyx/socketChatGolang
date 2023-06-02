@@ -17,6 +17,9 @@ const (
 	CodeOrderNotExist
 
 	CodeInternError
+
+	CodeNotFriend
+	CodeNotApplied
 )
 
 var codeMsgMap = map[ResCode]string{
@@ -32,8 +35,11 @@ var codeMsgMap = map[ResCode]string{
 	CodeNeedLogin:     "需要登录",
 	CodePayError:      "支付失败",
 	CodeOrderNotExist: "订单不存在或失效",
-	
+
 	CodeInternError: "系统内部错误",
+
+	CodeNotFriend:  "不是好友",
+	CodeNotApplied: "没有申请",
 }
 
 func (c ResCode) Msg() string {

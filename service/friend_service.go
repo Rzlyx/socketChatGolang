@@ -72,7 +72,42 @@ func QueryFriendInfo(param param.QueryFriendInfoParam) (friendInfo DO.FriendInfo
 		}
 	}
 
+	userInfo, err := user_dao.QueryUserInfo(param.UserID)
+	var privateChatBlackList PO.PrivateChatBlack
+	if userInfo.PrivateChatBlack != nil {
+		err = json.Unmarshal([]byte(*userInfo.PrivateChatBlack), &privateChatBlackList)
+		if err != nil {
+			logger.Log.Error(err.Error())
+			return friendInfo, err
+		}
+		friendInfo.IsPrivateChatBlack = IsContains(privateChatBlackList.BlackList, param.FriendID)
+	} else {
+		friendInfo.IsPrivateChatBlack = false
+	}
+
+	var friendCircleBlackList PO.FriendCircleBlack
+	if userInfo.FriendCircleBlack != nil {
+		err = json.Unmarshal([]byte(*userInfo.FriendCircleBlack), &friendCircleBlackList)
+		if err != nil {
+			logger.Log.Error(err.Error())
+			return friendInfo, err
+		}
+		friendInfo.IsFriendCircleBlack = IsContains(friendCircleBlackList.BlackList, param.FriendID)
+	} else {
+		friendInfo.IsFriendCircleBlack = false
+	}
+
 	return friendInfo, nil
+}
+
+func IsContains(list []int64, target int64) bool {
+	for _, item := range list {
+		if item == target {
+			return true
+		}
+	}
+
+	return false
 }
 
 func IsFriend(firstID int64, secondID int64) (bool, error) {
@@ -87,21 +122,39 @@ func IsFriend(firstID int64, secondID int64) (bool, error) {
 	return true, nil
 }
 
-func HadApplied(userID int64, friendID int64) (bool, error) {
-	_, err := apply_dao.QueryApplication(userID, friendID)
+func HadApplied(userID int64, friendID int64) (bool, PO.ApplyPO, error) {
+	applyPO, err := apply_dao.QueryApplication(userID, friendID)
 	if err == sql.ErrNoRows {
-		return false, nil
+		return false, applyPO, nil
 	}
 	if err != nil {
-		return false, err
+		return false, applyPO, err
 	}
 
-	return true, nil
+	return true, applyPO, nil
 }
 
-func AddFriend(param param.AddFriendParam) (application DO.AddFriendApplication, err error) {
-	// todo： 同时申请
-	isFriend, err := IsFriend(param.UserID, param.FriendID)
+func AddFriend(addFriendParam param.AddFriendParam) (application DO.AddFriendApplication, err error) {
+	hadApplied, applyPO, err := HadApplied(addFriendParam.FriendID, addFriendParam.UserID)
+	if err != nil {
+		return application, err
+	}
+	if hadApplied {
+		err := AgreeFriendApply(param.AgreeFriendApplyParam{
+			FriendID: addFriendParam.FriendID,
+			UserID:   addFriendParam.UserID,
+			ApplyID:  applyPO.ApplyID,
+		})
+		if err != nil {
+			return application, err
+		}
+
+		application.IsBeFriend = true
+		return application, errors.New("be FRIEND by friend's application")
+	}
+	application.IsBeFriend = false
+
+	isFriend, err := IsFriend(addFriendParam.UserID, addFriendParam.FriendID)
 	if err != nil {
 		return application, err
 	}
@@ -110,7 +163,7 @@ func AddFriend(param param.AddFriendParam) (application DO.AddFriendApplication,
 		return application, errors.New("is friend")
 	}
 
-	hadApplied, err := HadApplied(param.UserID, param.FriendID)
+	hadApplied, _, err = HadApplied(addFriendParam.UserID, addFriendParam.FriendID)
 	if err != nil {
 		return application, err
 	}
@@ -119,10 +172,10 @@ func AddFriend(param param.AddFriendParam) (application DO.AddFriendApplication,
 	}
 
 	application.ApplyID = snowflake.GenID()
-	application.ApplicantID = param.UserID
-	application.FriendID = param.FriendID
+	application.ApplicantID = addFriendParam.UserID
+	application.FriendID = addFriendParam.FriendID
 	application.Type = 1
-	application.Reason = param.Reason
+	application.Reason = addFriendParam.Reason
 	application.CreateTime = utils.GetNowTime()
 
 	err = apply_dao.Insert(application)
@@ -216,6 +269,13 @@ func QueryFriendApply(param param.QueryFriendApplyParam) (applications DO.Friend
 }
 
 func AgreeFriendApply(param param.AgreeFriendApplyParam) (err error) {
+	hadApplied, _, err := HadApplied(param.FriendID, param.UserID)
+	if err != nil {
+		return err
+	}
+	if !hadApplied {
+		return errors.New("there is no application")
+	}
 	// todo: tx
 	err = apply_dao.Delete(param.ApplyID)
 	if err != nil {
@@ -267,6 +327,13 @@ func AgreeFriendApply(param param.AgreeFriendApplyParam) (err error) {
 }
 
 func DisagreeFriendApply(param param.DisagreeFriendApplyParam) (err error) {
+	hadApplied, _, err := HadApplied(param.FriendID, param.UserID)
+	if err != nil {
+		return err
+	}
+	if !hadApplied {
+		return errors.New("there no apply")
+	}
 	err = apply_dao.Delete(param.ApplyID)
 	if err != nil {
 		return err
@@ -281,23 +348,26 @@ func AddFriendCircleWhite(userID int64, friendID int64) (err error) {
 		return err
 	}
 
-	var whileList PO.FriendCircleWhite
+	var whiteList PO.FriendCircleWhite
 	if userPO.FriendCircleWhite != nil {
-		err = json.Unmarshal([]byte(*userPO.FriendCircleWhite), &whileList)
+		err = json.Unmarshal([]byte(*userPO.FriendCircleWhite), &whiteList)
 		if err != nil {
 			logger.Log.Error(err.Error())
 			return err
 		}
 	}
-	whileList.WhiteList = append(whileList.WhiteList, friendID)
-	whiteJson, err := json.Marshal(whileList)
+	whiteList.WhiteList = append(whiteList.WhiteList, friendID)
+	whiteJson, err := json.Marshal(whiteList)
 	if err != nil {
 		logger.Log.Error(err.Error())
 		return err
 	}
-	WhiteStr := string(whiteJson[:])
+	whiteStr := string(whiteJson[:])
+	if len(whiteList.WhiteList) == 0 {
+		whiteStr = ""
+	}
 
-	err = user_dao.UpdateFriendCircleWhite(userID, WhiteStr)
+	err = user_dao.UpdateFriendCircleWhite(userID, whiteStr)
 	if err != nil {
 		return err
 	}
@@ -312,9 +382,11 @@ func AddFriendCircleWhiteFromBlack(userID int64, friendID int64) (err error) {
 	}
 
 	var whiteList PO.FriendCircleWhite
-	err = json.Unmarshal([]byte(*userPO.FriendCircleWhite), &whiteList)
-	if err != nil {
-		return err
+	if userPO.FriendCircleWhite != nil {
+		err = json.Unmarshal([]byte(*userPO.FriendCircleWhite), &whiteList)
+		if err != nil {
+			return err
+		}
 	}
 	whiteList.WhiteList = append(whiteList.WhiteList, friendID)
 	whiteJson, err := json.Marshal(whiteList)
@@ -322,11 +394,16 @@ func AddFriendCircleWhiteFromBlack(userID int64, friendID int64) (err error) {
 		return err
 	}
 	whiteStr := string(whiteJson[:])
+	if len(whiteList.WhiteList) == 0 {
+		whiteStr = ""
+	}
 
 	var blackList PO.FriendCircleBlack
-	err = json.Unmarshal([]byte(*userPO.FriendCircleBlack), &blackList)
-	if err != nil {
-		return err
+	if userPO.FriendCircleBlack != nil {
+		err = json.Unmarshal([]byte(*userPO.FriendCircleBlack), &blackList)
+		if err != nil {
+			return err
+		}
 	}
 	for index, id := range blackList.BlackList {
 		if id == friendID {
@@ -339,6 +416,9 @@ func AddFriendCircleWhiteFromBlack(userID int64, friendID int64) (err error) {
 		return err
 	}
 	blackStr := string(blackJson[:])
+	if len(blackList.BlackList) == 0 {
+		blackStr = ""
+	}
 
 	err = user_dao.UpdateFriendCircleBlackWhite(userID, whiteStr, blackStr)
 	if err != nil {
@@ -367,6 +447,9 @@ func AddFriendCircleBlack(userID int64, friendID int64) (err error) {
 		return err
 	}
 	blackStr := string(blackJson[:])
+	if len(blackList.BlackList) == 0 {
+		blackStr = ""
+	}
 
 	var whiteList PO.FriendCircleWhite
 	err = json.Unmarshal([]byte(*userPO.FriendCircleWhite), &whiteList)
@@ -384,6 +467,9 @@ func AddFriendCircleBlack(userID int64, friendID int64) (err error) {
 		return err
 	}
 	whiteStr := string(whiteJson[:])
+	if len(whiteList.WhiteList) == 0 {
+		whiteStr = ""
+	}
 
 	err = user_dao.UpdateFriendCircleBlackWhite(userID, whiteStr, blackStr)
 	if err != nil {
@@ -399,23 +485,26 @@ func AddPrivateChatWhite(userID int64, friendID int64) (err error) {
 		return err
 	}
 
-	var whileList PO.PrivateChatWhite
+	var whiteList PO.PrivateChatWhite
 	if userPO.PrivateChatWhite != nil {
-		err = json.Unmarshal([]byte(*userPO.PrivateChatWhite), &whileList)
+		err = json.Unmarshal([]byte(*userPO.PrivateChatWhite), &whiteList)
 		if err != nil {
 			logger.Log.Error(err.Error())
 			return nil
 		}
 	}
-	whileList.WhiteList = append(whileList.WhiteList, friendID)
-	whiteJson, err := json.Marshal(whileList)
+	whiteList.WhiteList = append(whiteList.WhiteList, friendID)
+	whiteJson, err := json.Marshal(whiteList)
 	if err != nil {
 		logger.Log.Error(err.Error())
 		return nil
 	}
-	WhiteStr := string(whiteJson[:])
+	whiteStr := string(whiteJson[:])
+	if len(whiteList.WhiteList) == 0 {
+		whiteStr = ""
+	}
 
-	err = user_dao.UpdatePrivateChatWhite(userID, WhiteStr)
+	err = user_dao.UpdatePrivateChatWhite(userID, whiteStr)
 	if err != nil {
 		return err
 	}
@@ -429,21 +518,24 @@ func AddPrivateChatWhiteFromBlack(userID int64, friendID int64) (err error) {
 		return err
 	}
 
-	var whileList PO.PrivateChatWhite
+	var whiteList PO.PrivateChatWhite
 	if userPO.PrivateChatWhite != nil {
-		err = json.Unmarshal([]byte(*userPO.PrivateChatWhite), &whileList)
+		err = json.Unmarshal([]byte(*userPO.PrivateChatWhite), &whiteList)
 		if err != nil {
 			logger.Log.Error(err.Error())
 			return err
 		}
 	}
-	whileList.WhiteList = append(whileList.WhiteList, friendID)
-	whileJson, err := json.Marshal(whileList)
+	whiteList.WhiteList = append(whiteList.WhiteList, friendID)
+	whileJson, err := json.Marshal(whiteList)
 	if err != nil {
 		logger.Log.Error(err.Error())
 		return err
 	}
 	whiteStr := string(whileJson[:])
+	if len(whiteList.WhiteList) == 0 {
+		whiteStr = ""
+	}
 
 	var blackList PO.PrivateChatBlack
 	err = json.Unmarshal([]byte(*userPO.PrivateChatBlack), &blackList)
@@ -461,6 +553,9 @@ func AddPrivateChatWhiteFromBlack(userID int64, friendID int64) (err error) {
 		return err
 	}
 	blackStr := string(blackJson[:])
+	if len(blackList.BlackList) == 0 {
+		blackStr = ""
+	}
 
 	err = user_dao.UpdatePrivateChatBlackWhite(userID, whiteStr, blackStr)
 	if err != nil {
@@ -490,6 +585,9 @@ func AddPrivateChatBlack(userID int64, friendID int64) (err error) {
 		return err
 	}
 	blackStr := string(blackJson[:])
+	if len(blackList.BlackList) == 0 {
+		blackStr = ""
+	}
 
 	var whiteList PO.PrivateChatWhite
 	if userPO.PrivateChatWhite != nil {
@@ -511,6 +609,9 @@ func AddPrivateChatBlack(userID int64, friendID int64) (err error) {
 		return err
 	}
 	whiteStr := string(whiteJson[:])
+	if len(whiteList.WhiteList) == 0 {
+		whiteStr = ""
+	}
 
 	err = user_dao.UpdatePrivateChatBlackWhite(userID, whiteStr, blackStr)
 	if err != nil {
@@ -548,6 +649,9 @@ func RemoveFriendFromWhiteBlackList(userID int64, friendID int64) (err error) {
 		return err
 	}
 	whiteStr := string(whiteJson[:])
+	if len(whiteList.WhiteList) == 0 {
+		whiteStr = ""
+	}
 
 	err = user_dao.UpdatePrivateChatWhite(userID, whiteStr)
 	if err != nil {
@@ -575,6 +679,9 @@ func RemoveFriendFromWhiteBlackList(userID int64, friendID int64) (err error) {
 			return err
 		}
 		blackStr := string(blackJson[:])
+		if len(blackList.BlackList) == 0 {
+			blackStr = ""
+		}
 
 		err = user_dao.UpdatePrivateChatBlack(userID, blackStr)
 		if err != nil {
@@ -607,6 +714,9 @@ func RemoveFriendFromWhiteBlackList(userID int64, friendID int64) (err error) {
 		return err
 	}
 	friendCircleWhiteStr := string(friendCircleWhiteJson[:])
+	if len(friendCircleWhite.WhiteList) == 0 {
+		friendCircleWhiteStr = ""
+	}
 
 	err = user_dao.UpdateFriendCircleWhite(userID, friendCircleWhiteStr)
 	if err != nil {
@@ -630,10 +740,44 @@ func RemoveFriendFromWhiteBlackList(userID int64, friendID int64) (err error) {
 			return err
 		}
 		blackStr := string(blackJson[:])
+		if len(blackList.BlackList) == 0 {
+			blackStr = ""
+		}
 
 		err = user_dao.UpdateFriendCircleBlack(userID, blackStr)
 		if err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+func SetFriendRemark(param param.SetFriendRemark) (err error) {
+	friendship, err := friend_dao.QueryFriendship(param.FriendshipID)
+	if err != nil {
+		return err
+	}
+
+	var realName string
+	if param.Remark != nil {
+		userInfo, err := user_dao.QueryUserInfo(param.FriendID)
+		if err != nil {
+			return err
+		}
+
+		realName = userInfo.UserName
+	}
+
+	if friendship.FirstID == param.UserID {
+		err = friend_dao.UpdateFirstRemarkSecond(param.FriendshipID, *param.Remark, realName)
+		if err != nil {
+			return err
+		}
+	} else {
+		err = friend_dao.UpdateSecondRemarkFirst(param.FriendshipID, *param.Remark, realName)
+		if err != nil {
+			return nil
 		}
 	}
 
