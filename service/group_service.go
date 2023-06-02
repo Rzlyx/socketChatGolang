@@ -716,19 +716,6 @@ func SetWhiteListByParam(info *param.SetWhiteListParam) error {
 		return err
 	}
 
-	white, gray, black, err := turnjsonList(whiteList, grayList, blackList)
-	if err != nil {
-		return err
-	}
-	userInfo.GroupChatWhite = white
-	userInfo.GroupChatGray = gray
-	userInfo.GroupChatBlack = black
-
-	err = user_dao.UpdateUserInfoByPO(&userInfo)
-	if err != nil {
-		return err
-	}
-	
 	return nil
 }
 
