@@ -20,6 +20,7 @@ func MGetGroupInfoByGroupID(GroupID int64) (*GroupInfoPO, error) {
 func CreateGroupInfo(info *GroupInfoPO) (error) {
 	strSql := "INSERT group_info (group_id, owner_id, group_name, description, user_ids, admin_ids, slience_list, create_time, is_deleted, extra) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	_, err := mysql.DB.Exec(strSql, 
+		info.GroupID,
 		info.OwnerID,
 		info.GroupName,
 		info.Description,
