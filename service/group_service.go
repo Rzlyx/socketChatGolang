@@ -296,33 +296,80 @@ func QuitGroupByParam(info *param.QuitGroupParam) error {
 		if err != nil {
 			return err
 		}
-		var groupWhiteList []int64
-		if userInfo.GroupChatWhite != nil {
-			err := json.Unmarshal([]byte(*userInfo.GroupChatWhite), &groupWhiteList)
-			if err != nil {
-				fmt.Println("[CreateGroupInfoByParam], Unmarshal err is ", err.Error())
-				return nil
-			}
+		whiteList, gratList, blackList, err := turnUserGroupList(userInfo)
+		if err != nil {
+			return err
 		}
 
-		var list []int64
-		for _, id := range groupWhiteList {
+		var white, gray, black []int64
+		for _, id := range *whiteList {
 			if id != info.UserID {
-				list = append(list, id)
+				white = append(white, id)
+			}
+		}
+		for _, id := range *gratList {
+			if id != info.UserID {
+				gray = append(gray, id)
+			}
+		}
+		for _, id := range *blackList {
+			if id != info.UserID {
+				black = append(black, id)
 			}
 		}
 
-		if len(list) > 0 {
-			var whiteList string
-			data, err := json.Marshal(list)
-			if err != nil {
-				return err
-			}
-			whiteList = string(data)
+		str1, str2, str3, err := turnjsonList(white, gray, black)
+		if err != nil {
+			return err
+		}
 
-			userInfo.GroupChatWhite = &whiteList
+		if len(white) > 0 {
+			userInfo.GroupChatWhite = str1
 		} else {
 			userInfo.GroupChatWhite = nil
+		}
+		if len(gray) > 0 {
+			userInfo.GroupChatGray = str2
+		} else {
+			userInfo.GroupChatGray = nil
+		}
+		if len(black) > 0 {
+			userInfo.GroupChatBlack = str3
+		} else {
+			userInfo.GroupChatBlack = nil
+		}
+
+		groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(info.GroupID)
+		if err != nil {
+			return err
+		}
+		groupInfoDO, err := DO.MGetGroupInfofromPO(*groupInfoPO)
+		if err != nil {
+			return err
+		}
+
+		var userIds []int64
+		if groupInfoDO.UserIds != nil {
+			for _, id := range *groupInfoDO.UserIds {
+				if id != info.UserID {
+					userIds = append(userIds, id)
+				}
+			}
+		}
+		groupInfoDO.UserIds = &userIds
+		var adminIds []int64
+		if groupInfoDO.AdminIds != nil {
+			for _, id := range *groupInfoDO.AdminIds {
+				if id != info.UserID {
+					adminIds = append(adminIds, id)
+				}
+			}
+		}
+		groupInfoDO.AdminIds = &adminIds
+
+		GroupInfoPO, err := DO.TurnGroupInfoPOfromDO(*groupInfoDO)
+		if err != nil {
+			return err
 		}
 		// TODO: Tx
 		// 在该群聊中，执行退群操作
@@ -336,6 +383,10 @@ func QuitGroupByParam(info *param.QuitGroupParam) error {
 			return err
 		}
 
+		err = group_dao.UpdateGroupInfo(GroupInfoPO)
+		if err != nil {
+			return err
+		}
 	}
 	return nil // 退群成功
 }
