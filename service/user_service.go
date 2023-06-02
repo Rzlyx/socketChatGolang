@@ -73,3 +73,39 @@ func QueryContactorList(param param.QueryContactorList) (contactors DO.ContactLi
 
 	return contactors, err
 }
+
+func SetContactorList(param param.SetContactorList) (err error) {
+	// user_dao.Update
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UpdateUserInfo(param param.UpdateUserInfo) (err error) {
+	userInfo, err := user_dao.QueryUserInfo(param.UserID)
+	if err != nil {
+		return err
+	}
+
+	userInfo.UserName = param.UserName
+	userInfo.Password = param.Password
+	userInfo.Sex = param.Sex
+	if userInfo.Signature == nil {
+		userInfo.Signature = new(string)
+	}
+	*userInfo.Signature = param.Signature
+	userInfo.Status = param.Status
+	userInfo.PhoneNumber = param.PhoneNumber
+	userInfo.Email = param.Email
+	userInfo.Birthday = param.Birthday
+	userInfo.FriendCircleVisiable = param.FriendCircleVisiable
+
+	// user_dao.Update
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
