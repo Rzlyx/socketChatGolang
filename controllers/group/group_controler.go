@@ -10,7 +10,7 @@ import (
 )
 
 // 查看群信息
-func QueryGroupInfo(c *gin.Context){
+func QueryGroupInfo(c *gin.Context) {
 	p := new(param.QueryGroupInfoParam)
 	err := c.ShouldBind(p)
 	if err != nil {
@@ -368,4 +368,29 @@ func SetGroupUser(c *gin.Context) {
 		return
 	}
 	response.ResponseSuccess(c, struct{}{})
+}
+
+// 邀请加入群聊
+func InviteJoinGroup(c *gin.Context) {
+
+}
+
+// 查看邀请
+func QueryInviteGroup(c *gin.Context) {
+
+}
+
+// 同意邀请
+func AgreeInviteGroup(c *gin.Context) {
+
+}
+
+// 拒绝邀请
+func DisAgreeInviteGroup(c *gin.Context) {
+
+}
+
+// 设置群备注
+func SetGroupName(c *gin.Context) {
+
 }
