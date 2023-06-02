@@ -12,11 +12,8 @@ import (
 	"dou_yin/service/DO"
 	"encoding/json"
 	"fmt"
-<<<<<<< HEAD
 
 	"github.com/gin-gonic/gin"
-=======
->>>>>>> 群管理部分功能实现
 )
 
 func MGetGroupInfoByParam(info *param.QueryGroupInfoParam) (*response.GroupInfo, error) {
