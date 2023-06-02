@@ -31,6 +31,8 @@ func QueryFriendList(param param.QueryFriendListParam) (friendList DO.FriendList
 			friendDO.FriendID = friend.SecondID
 			friendDO.Name = friend.FirstRemarkSecond
 		}
+
+		friendList.Friends = append(friendList.Friends, friendDO)
 	}
 
 	return friendList, nil
@@ -47,7 +49,9 @@ func QueryFriendInfo(param param.QueryFriendInfoParam) (friendInfo DO.FriendInfo
 	friendInfo.Sex = friend.Sex
 	friendInfo.PhoneNumber = friend.PhoneNumber
 	friendInfo.Email = friend.Email
-	friendInfo.Signature = *friend.Signature
+	if friend.Signature != nil {
+		friendInfo.Signature = *friend.Signature
+	}
 	friendInfo.Birthday = friend.Birthday
 	friendInfo.Status = friend.Status
 

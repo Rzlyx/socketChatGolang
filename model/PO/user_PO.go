@@ -53,3 +53,14 @@ type FriendCircleWhite struct {
 type FriendCircleBlack struct {
 	BlackList []int64 `json:"black_list"`
 }
+
+type UserExtra struct {
+	ContactorList []ContactInfo `json:"contactor_list"`
+}
+
+type ContactInfo struct {
+	ID           int64  `json:"id"`
+	Name         string `json:"name"`
+	Message      string `json:"message"`
+	FriendshipID int64  `json:"friendship_id"`
+}

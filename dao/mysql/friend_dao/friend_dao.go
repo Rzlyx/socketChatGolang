@@ -6,7 +6,6 @@ import (
 	"dou_yin/model/PO"
 	"dou_yin/service/DO"
 	"errors"
-	"fmt"
 )
 
 func QueryFriendshipList(userID int64) (friends []PO.FriendPO, err error) {
@@ -16,7 +15,7 @@ func QueryFriendshipList(userID int64) (friends []PO.FriendPO, err error) {
 		logger.Log.Error(err.Error())
 		return nil, err
 	}
-	fmt.Println("***", friends)
+
 	return friends, nil
 }
 
