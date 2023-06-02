@@ -20,7 +20,7 @@ func Insert(application DO.AddFriendApplication) (err error) {
 
 func QueryApplication(userID int64, friendID int64) (applyPO PO.ApplyPO, err error) {
 	sqlStr := "select * from apply where applicant = ? and target_id = ?"
-	err = mysql.DB.QueryRow(sqlStr, userID, friendID).Scan(&applyPO)
+	err = mysql.DB.Get(&applyPO, sqlStr, userID, friendID)
 	if err != nil {
 		logger.Log.Error(err.Error())
 		return applyPO, err

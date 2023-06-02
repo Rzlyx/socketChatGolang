@@ -6,33 +6,25 @@ import (
 	"dou_yin/model/PO"
 	"dou_yin/service/DO"
 	"errors"
+	"fmt"
 )
 
 func QueryFriendshipList(userID int64) (friends []PO.FriendPO, err error) {
 	sqlStr := "select * from friend where first_id = ? or second_id = ?"
-	rows, err := mysql.DB.Query(sqlStr, userID, userID)
+	err = mysql.DB.Select(&friends, sqlStr, userID, userID)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		return nil, err
 	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var friend PO.FriendPO
-		err := rows.Scan(&friend)
-		if err != nil {
-			return nil, err
-		}
-
-		friends = append(friends, friend)
-	}
-
+	fmt.Println("***", friends)
 	return friends, nil
 }
 
 func QueryFriendship(friendShipID int64) (friend PO.FriendPO, err error) {
 	sqlStr := "select * from friend where friendship_id = ?"
-	err = mysql.DB.QueryRow(sqlStr, friendShipID).Scan(friend)
+	err = mysql.DB.Get(&friend, sqlStr, friendShipID)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		return friend, err
 	}
 
@@ -41,7 +33,7 @@ func QueryFriendship(friendShipID int64) (friend PO.FriendPO, err error) {
 
 func QueryFriendshipBy2ID(firstID int64, secondID int64) (friend PO.FriendPO, err error) {
 	sqlStr := "select * from friend where (first_id = ? and second_id = ?) or (first_id = ? and second_id = ?)"
-	err = mysql.DB.QueryRow(sqlStr, firstID, secondID, secondID, firstID).Scan(friend)
+	err = mysql.DB.Get(&friend, sqlStr, firstID, secondID, secondID, firstID)
 	if err != nil {
 		logger.Log.Error(err.Error())
 		return friend, err
@@ -72,6 +64,38 @@ func DeleteFriend(friendshipID int64) (err error) {
 func Insert(friendship DO.Friendship) (err error) {
 	sqlStr := "insert friend(friendship_id, first_id, second_id, f_remark_s, s_remark_f, is_f_remark_s, is_s_remark_f) values(?, ?, ?, ?, ?, ?, ?)"
 	_, err = mysql.DB.Exec(sqlStr, friendship.FriendshipID, friendship.FirstID, friendship.SecondID, friendship.FirstRemarkSecond, friendship.SecondRemarkFirst, false, false)
+	if err != nil {
+		logger.Log.Error(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func UpdateFirstRemarkSecond(friendshipID int64, remark string, realName string) (err error) {
+	if remark == "" {
+		sqlStr := "update friend set f_remark_s = ?, is_f_remark_s = ? where friendship_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, realName, false, friendshipID)
+	} else {
+		sqlStr := "update friend set f_remark_s = ?, is_f_remark_s = ? where friendship_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, remark, true, friendshipID)
+	}
+	if err != nil {
+		logger.Log.Error(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func UpdateSecondRemarkFirst(friendshipID int64, remark string, realName string) (err error) {
+	if remark == "" {
+		sqlStr := "update friend set s_remark_f = ? , is_s_remark_f = ? where friendship_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, realName, false, friendshipID)
+	} else {
+		sqlStr := "update friend set s_remark_f = ? , is_s_remark_f = ? where friendship_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, remark, true, friendshipID)
+	}
 	if err != nil {
 		logger.Log.Error(err.Error())
 		return err

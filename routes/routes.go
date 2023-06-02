@@ -32,6 +32,7 @@ func SetupRouter() *gin.Engine {
 	r.POST("/queryFriendApply", friend.QueryFriendApply)
 	r.POST("/agreeFriendApply", friend.AgreeFriendApply)
 	r.POST("/disagreeFriendApply", friend.DisagreeFriendApply)
+	r.POST("/setFriendRemark", friend.SetFriendRemark)
 
 	return r
 }
