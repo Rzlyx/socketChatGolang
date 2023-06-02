@@ -16,7 +16,7 @@ import (
 )
 
 func QueryFriendList(param param.QueryFriendListParam) (friendList DO.FriendList, err error) {
-	friends, err := friend_dao.QueryFriendshipList(param.UserID)
+	friends, err := friend_dao.QueryFriendshipList(utils.ShiftToNum64(param.UserID))
 	if err != nil {
 		return friendList, err
 	}
@@ -24,7 +24,7 @@ func QueryFriendList(param param.QueryFriendListParam) (friendList DO.FriendList
 	for _, friend := range friends {
 		var friendDO DO.Friend
 		friendDO.FriendshipID = friend.FriendshipID
-		if friend.FirstID != param.UserID {
+		if friend.FirstID != utils.ShiftToNum64(param.UserID) {
 			friendDO.FriendID = friend.FirstID
 			friendDO.Name = friend.SecondRemarkFirst
 		} else {
@@ -39,7 +39,7 @@ func QueryFriendList(param param.QueryFriendListParam) (friendList DO.FriendList
 }
 
 func QueryFriendInfo(param param.QueryFriendInfoParam) (friendInfo DO.FriendInfo, err error) {
-	friend, err := user_dao.QueryUserInfo(param.FriendID)
+	friend, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.FriendID))
 	if err != nil {
 		return friendInfo, err
 	}
@@ -55,12 +55,12 @@ func QueryFriendInfo(param param.QueryFriendInfoParam) (friendInfo DO.FriendInfo
 	friendInfo.Birthday = friend.Birthday
 	friendInfo.Status = friend.Status
 
-	friendship, err := friend_dao.QueryFriendship(param.FriendshipID)
+	friendship, err := friend_dao.QueryFriendship(utils.ShiftToNum64(param.FriendshipID))
 	if err != nil {
 		return friendInfo, err
 	}
 
-	if friendship.FirstID == param.FriendID {
+	if friendship.FirstID == utils.ShiftToNum64(param.FriendID) {
 		if friendship.IsSecondRemarkFirst {
 			friendInfo.IsRemark = true
 			friendInfo.Remark = friendship.SecondRemarkFirst
@@ -76,7 +76,7 @@ func QueryFriendInfo(param param.QueryFriendInfoParam) (friendInfo DO.FriendInfo
 		}
 	}
 
-	userInfo, err := user_dao.QueryUserInfo(param.UserID)
+	userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.UserID))
 	var privateChatBlackList PO.PrivateChatBlack
 	if userInfo.PrivateChatBlack != nil {
 		err = json.Unmarshal([]byte(*userInfo.PrivateChatBlack), &privateChatBlackList)
@@ -84,7 +84,7 @@ func QueryFriendInfo(param param.QueryFriendInfoParam) (friendInfo DO.FriendInfo
 			logger.Log.Error(err.Error())
 			return friendInfo, err
 		}
-		friendInfo.IsPrivateChatBlack = IsContains(privateChatBlackList.BlackList, param.FriendID)
+		friendInfo.IsPrivateChatBlack = IsContains(privateChatBlackList.BlackList, utils.ShiftToNum64(param.FriendID))
 	} else {
 		friendInfo.IsPrivateChatBlack = false
 	}
@@ -96,7 +96,7 @@ func QueryFriendInfo(param param.QueryFriendInfoParam) (friendInfo DO.FriendInfo
 			logger.Log.Error(err.Error())
 			return friendInfo, err
 		}
-		friendInfo.IsFriendCircleBlack = IsContains(friendCircleBlackList.BlackList, param.FriendID)
+		friendInfo.IsFriendCircleBlack = IsContains(friendCircleBlackList.BlackList, utils.ShiftToNum64(param.FriendID))
 	} else {
 		friendInfo.IsFriendCircleBlack = false
 	}
@@ -139,7 +139,7 @@ func HadApplied(userID int64, friendID int64) (bool, PO.ApplyPO, error) {
 }
 
 func AddFriend(addFriendParam param.AddFriendParam) (application DO.AddFriendApplication, err error) {
-	hadApplied, applyPO, err := HadApplied(addFriendParam.FriendID, addFriendParam.UserID)
+	hadApplied, applyPO, err := HadApplied(utils.ShiftToNum64(addFriendParam.FriendID), utils.ShiftToNum64(addFriendParam.UserID))
 	if err != nil {
 		return application, err
 	}
@@ -147,7 +147,7 @@ func AddFriend(addFriendParam param.AddFriendParam) (application DO.AddFriendApp
 		err := AgreeFriendApply(param.AgreeFriendApplyParam{
 			FriendID: addFriendParam.FriendID,
 			UserID:   addFriendParam.UserID,
-			ApplyID:  applyPO.ApplyID,
+			ApplyID:  utils.ShiftToStringFromInt64(applyPO.ApplyID),
 		})
 		if err != nil {
 			return application, err
@@ -158,7 +158,7 @@ func AddFriend(addFriendParam param.AddFriendParam) (application DO.AddFriendApp
 	}
 	application.IsBeFriend = false
 
-	isFriend, err := IsFriend(addFriendParam.UserID, addFriendParam.FriendID)
+	isFriend, err := IsFriend(utils.ShiftToNum64(addFriendParam.UserID), utils.ShiftToNum64(addFriendParam.FriendID))
 	if err != nil {
 		return application, err
 	}
@@ -167,7 +167,7 @@ func AddFriend(addFriendParam param.AddFriendParam) (application DO.AddFriendApp
 		return application, errors.New("is friend")
 	}
 
-	hadApplied, _, err = HadApplied(addFriendParam.UserID, addFriendParam.FriendID)
+	hadApplied, _, err = HadApplied(utils.ShiftToNum64(addFriendParam.UserID), utils.ShiftToNum64(addFriendParam.FriendID))
 	if err != nil {
 		return application, err
 	}
@@ -176,8 +176,8 @@ func AddFriend(addFriendParam param.AddFriendParam) (application DO.AddFriendApp
 	}
 
 	application.ApplyID = snowflake.GenID()
-	application.ApplicantID = addFriendParam.UserID
-	application.FriendID = addFriendParam.FriendID
+	application.ApplicantID = utils.ShiftToNum64(addFriendParam.UserID)
+	application.FriendID = utils.ShiftToNum64(addFriendParam.FriendID)
 	application.Type = 1
 	application.Reason = addFriendParam.Reason
 	application.CreateTime = utils.GetNowTime()
@@ -192,17 +192,17 @@ func AddFriend(addFriendParam param.AddFriendParam) (application DO.AddFriendApp
 
 func DeleteFriend(param param.DeleteFriendParam) (err error) {
 	// todo: tx
-	err = friend_dao.DeleteFriend(param.FriendshipID)
+	err = friend_dao.DeleteFriend(utils.ShiftToNum64(param.FriendshipID))
 	if err != nil {
 		return err
 	}
 
-	err = RemoveFriendFromWhiteBlackList(param.UserID, param.FriendID)
+	err = RemoveFriendFromWhiteBlackList(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
 	if err != nil {
 		return err
 	}
 
-	err = RemoveFriendFromWhiteBlackList(param.FriendID, param.UserID)
+	err = RemoveFriendFromWhiteBlackList(utils.ShiftToNum64(param.FriendID), utils.ShiftToNum64(param.UserID))
 	if err != nil {
 		return err
 	}
@@ -211,7 +211,7 @@ func DeleteFriend(param param.DeleteFriendParam) (err error) {
 }
 
 func SetPrivateChatBlack(param param.SetPrivateChatBlackParam) (err error) {
-	err = AddPrivateChatBlack(param.UserID, param.FriendID)
+	err = AddPrivateChatBlack(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
 	if err != nil {
 		return err
 	}
@@ -220,7 +220,7 @@ func SetPrivateChatBlack(param param.SetPrivateChatBlackParam) (err error) {
 }
 
 func UnBlockPrivateChat(param param.UnBlockPrivateChatParam) (err error) {
-	err = AddPrivateChatWhiteFromBlack(param.UserID, param.FriendID)
+	err = AddPrivateChatWhiteFromBlack(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
 	if err != nil {
 		return err
 	}
@@ -229,7 +229,7 @@ func UnBlockPrivateChat(param param.UnBlockPrivateChatParam) (err error) {
 }
 
 func SetFriendCircleBlack(param param.SetFriendCircleBlackParam) (err error) {
-	err = AddFriendCircleBlack(param.UserID, param.FriendID)
+	err = AddFriendCircleBlack(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
 	if err != nil {
 		return err
 	}
@@ -238,7 +238,7 @@ func SetFriendCircleBlack(param param.SetFriendCircleBlackParam) (err error) {
 }
 
 func UnBlockFriendCircle(param param.UnBlockFriendCircleParam) (err error) {
-	err = AddFriendCircleWhiteFromBlack(param.UserID, param.FriendID)
+	err = AddFriendCircleWhiteFromBlack(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
 	if err != nil {
 		return err
 	}
@@ -247,7 +247,7 @@ func UnBlockFriendCircle(param param.UnBlockFriendCircleParam) (err error) {
 }
 
 func QueryFriendApply(param param.QueryFriendApplyParam) (applications DO.FriendApplicationList, err error) {
-	applyPOs, err := apply_dao.QueryFriendApply(param.UserID)
+	applyPOs, err := apply_dao.QueryFriendApply(utils.ShiftToNum64(param.UserID))
 	if err != nil {
 		return applications, err
 	}
@@ -273,7 +273,7 @@ func QueryFriendApply(param param.QueryFriendApplyParam) (applications DO.Friend
 }
 
 func AgreeFriendApply(param param.AgreeFriendApplyParam) (err error) {
-	hadApplied, _, err := HadApplied(param.FriendID, param.UserID)
+	hadApplied, _, err := HadApplied(utils.ShiftToNum64(param.FriendID), utils.ShiftToNum64(param.UserID))
 	if err != nil {
 		return err
 	}
@@ -281,24 +281,24 @@ func AgreeFriendApply(param param.AgreeFriendApplyParam) (err error) {
 		return errors.New("there is no application")
 	}
 	// todo: tx
-	err = apply_dao.Delete(param.ApplyID)
+	err = apply_dao.Delete(utils.ShiftToNum64(param.ApplyID))
 	if err != nil {
 		return err
 	}
 
-	FirstInfo, err := user_dao.QueryUserInfo(param.FriendID)
+	FirstInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.FriendID))
 	if err != nil {
 		return err
 	}
-	SecondIndo, err := user_dao.QueryUserInfo(param.UserID)
+	SecondIndo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.UserID))
 	if err != nil {
 		return err
 	}
 
 	var friendship DO.Friendship
 	friendship.FriendshipID = snowflake.GenID()
-	friendship.FirstID = param.FriendID
-	friendship.SecondID = param.UserID
+	friendship.FirstID = utils.ShiftToNum64(param.FriendID)
+	friendship.SecondID = utils.ShiftToNum64(param.UserID)
 	friendship.FirstRemarkSecond = SecondIndo.UserName
 	friendship.SecondRemarkFirst = FirstInfo.UserName
 
@@ -307,22 +307,22 @@ func AgreeFriendApply(param param.AgreeFriendApplyParam) (err error) {
 		return err
 	}
 
-	err = AddPrivateChatWhite(param.UserID, param.FriendID)
+	err = AddPrivateChatWhite(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
 	if err != nil {
 		return err
 	}
 
-	err = AddFriendCircleWhite(param.UserID, param.FriendID)
+	err = AddFriendCircleWhite(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
 	if err != nil {
 		return err
 	}
 
-	err = AddPrivateChatWhite(param.FriendID, param.UserID)
+	err = AddPrivateChatWhite(utils.ShiftToNum64(param.FriendID), utils.ShiftToNum64(param.UserID))
 	if err != nil {
 		return err
 	}
 
-	err = AddFriendCircleWhite(param.FriendID, param.UserID)
+	err = AddFriendCircleWhite(utils.ShiftToNum64(param.FriendID), utils.ShiftToNum64(param.UserID))
 	if err != nil {
 		return err
 	}
@@ -331,14 +331,14 @@ func AgreeFriendApply(param param.AgreeFriendApplyParam) (err error) {
 }
 
 func DisagreeFriendApply(param param.DisagreeFriendApplyParam) (err error) {
-	hadApplied, _, err := HadApplied(param.FriendID, param.UserID)
+	hadApplied, _, err := HadApplied(utils.ShiftToNum64(param.FriendID), utils.ShiftToNum64(param.UserID))
 	if err != nil {
 		return err
 	}
 	if !hadApplied {
 		return errors.New("there no apply")
 	}
-	err = apply_dao.Delete(param.ApplyID)
+	err = apply_dao.Delete(utils.ShiftToNum64(param.ApplyID))
 	if err != nil {
 		return err
 	}
@@ -758,14 +758,14 @@ func RemoveFriendFromWhiteBlackList(userID int64, friendID int64) (err error) {
 }
 
 func SetFriendRemark(param param.SetFriendRemark) (err error) {
-	friendship, err := friend_dao.QueryFriendship(param.FriendshipID)
+	friendship, err := friend_dao.QueryFriendship(utils.ShiftToNum64(param.FriendshipID))
 	if err != nil {
 		return err
 	}
 
 	var realName string
 	if param.Remark != nil {
-		userInfo, err := user_dao.QueryUserInfo(param.FriendID)
+		userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.FriendID))
 		if err != nil {
 			return err
 		}
@@ -773,13 +773,13 @@ func SetFriendRemark(param param.SetFriendRemark) (err error) {
 		realName = userInfo.UserName
 	}
 
-	if friendship.FirstID == param.UserID {
-		err = friend_dao.UpdateFirstRemarkSecond(param.FriendshipID, *param.Remark, realName)
+	if friendship.FirstID == utils.ShiftToNum64(param.UserID) {
+		err = friend_dao.UpdateFirstRemarkSecond(utils.ShiftToNum64(param.FriendshipID), *param.Remark, realName)
 		if err != nil {
 			return err
 		}
 	} else {
-		err = friend_dao.UpdateSecondRemarkFirst(param.FriendshipID, *param.Remark, realName)
+		err = friend_dao.UpdateSecondRemarkFirst(utils.ShiftToNum64(param.FriendshipID), *param.Remark, realName)
 		if err != nil {
 			return nil
 		}

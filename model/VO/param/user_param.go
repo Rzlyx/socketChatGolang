@@ -13,16 +13,17 @@ type ParamLogin struct {
 	Password string `json:"password" form:"password" binding:"required"`
 }
 
-type QueryContactorList struct {
-	UserID int64 `json:"user_id" form:"user_id" binding:"required"`
+type QueryContactorListParam struct {
+	UserID string `json:"user_id" form:"user_id" binding:"required"`
 }
 
-type SetContactorList struct {
+type SetContactorListParam struct {
+	UserID        int64            `json:"user_id"`
 	ContactorList []DO.ContactInfo `json:"contactor_list"`
 }
 
-type UpdateUserInfo struct {
-	UserID      int64  `json:"user_id"`
+type UpdateUserInfoParam struct {
+	UserID      string `json:"user_id"`
 	UserName    string `json:"user_name"`
 	Password    string `json:"password"`
 	Sex         int    `json:"sex"`
