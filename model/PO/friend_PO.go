@@ -10,3 +10,8 @@ type FriendPO struct {
 	IsSecondRemarkFirst bool    `json:"is_s_remark_f" db:"is_s_remark_f"`
 	Extra               *string `json:"extra" db:"extra"`
 }
+
+type FriendExtra struct {
+	FirstReadTime  string `json:"first_read_time"`
+	SecondReadTime string `json:"second_read_time"`
+}
