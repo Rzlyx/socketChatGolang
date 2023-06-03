@@ -8,4 +8,6 @@ type MessageVO struct {
 	SenderID   string `json:"send_id" form:"send_id" binding:"required"`
 	ReceiverID string `json:"receive_id" form:"receive_id" binding:"required"`
 	DataType   int    `json:"type" form:"type" binding:"required"`
+
+	ErrString string `json:"err" form:"err"`
 }

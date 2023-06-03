@@ -79,3 +79,29 @@ func DeletePrivateChatMsg(param param.DeletePrivateChatMsgParam) (err error) {
 
 	return nil
 }
+
+func SavePrivateChatMsg(msg VO.MessageVO) (err error) {
+	friendship, err := friend_dao.QueryFriendshipBy2ID(utils.ShiftToNum64(msg.SenderID), utils.ShiftToNum64(msg.ReceiverID))
+	if err != nil {
+		return err
+	}
+
+	po := PO.PrivateMsgPO{
+		MsgID:        utils.ShiftToNum64(msg.MsgID),
+		FriendshipID: friendship.FriendshipID,
+		SenderID:     utils.ShiftToNum64(msg.SenderID),
+		ReceiverID:   utils.ShiftToNum64(msg.ReceiverID),
+		Message:      msg.Message,
+		Type:         msg.DataType,
+		CreateTime:   msg.CreateTime,
+		Deleted_list: 0,
+		Extra:        nil,
+	}
+
+	err = privateChat_dao.Insert(po)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
