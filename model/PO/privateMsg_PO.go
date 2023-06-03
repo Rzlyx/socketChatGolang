@@ -17,6 +17,6 @@ type PrivateMsgPO struct {
 	Message      string  `json:"message" db:"message"`
 	Type         int     `json:"type" db:"type"`
 	CreateTime   string  `json:"create_time" db:"create_time"`
-	Deleted_list *string `json:"deleted_list" db:"deleted_list"`
+	Deleted_list int     `json:"deleted_list" db:"deleted_list"`
 	Extra        *string `json:"extra" db:"extra"`
 }

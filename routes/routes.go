@@ -42,6 +42,11 @@ func SetupRouter() *gin.Engine {
 	r.POST("/agreeFriendApply", friend.AgreeFriendApply)
 	r.POST("/disagreeFriendApply", friend.DisagreeFriendApply)
 	r.POST("/setFriendRemark", friend.SetFriendRemark)
+	r.POST("/setReadTime", friend.SetReadTime)
+
+	// private chat
+	r.POST("/queryPrivateChatMsg", chat.QueryPrivateChatMsg)
+	r.POST("/deletePrivateChatMsg", chat.DeletePrivateChatMsg)
 
 	// group
 	r.POST("/CreateGroupInfo", group.CreateGroupInfo)
