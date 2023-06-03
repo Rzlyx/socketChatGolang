@@ -17,8 +17,7 @@ func Insert(privateMsgPO PO.PrivateMsgPO) (err error) {
 	return nil
 }
 
-// todo: deleted list
-func Query(friendshipID int64, num int, pageNum int, readTime string) (privateMsgPOs []PO.PrivateMsgPO, err error) {
+func QueryByFriendshipID(friendshipID int64, num int, pageNum int, readTime string) (privateMsgPOs []PO.PrivateMsgPO, err error) {
 	startIndex := num * pageNum
 	sqlStr := "select * from private_message where friendship_id = ? and create_time < ? limit ?, ?"
 	err = mysql.DB.Select(&privateMsgPOs, sqlStr, friendshipID, readTime, startIndex, num)
@@ -28,4 +27,26 @@ func Query(friendshipID int64, num int, pageNum int, readTime string) (privateMs
 	}
 
 	return privateMsgPOs, nil
+}
+
+func QueryByMsgID(MsgID int64) (po PO.PrivateMsgPO, err error) {
+	sqlStr := "select * from private_message where message_id = ?"
+	err = mysql.DB.Get(&po, sqlStr, MsgID)
+	if err != nil {
+		logger.Log.Error(err.Error())
+		return po, err
+	}
+
+	return po, nil
+}
+
+func UpdateDeletedList(msgID int64, deleted_list int) (err error) {
+	sqlStr := "update private_message set deleted_list = ? where message_id = ?"
+	_, err = mysql.DB.Exec(sqlStr, deleted_list, msgID)
+	if err != nil {
+		logger.Log.Error(err.Error())
+		return err
+	}
+
+	return err
 }

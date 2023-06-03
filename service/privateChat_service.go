@@ -32,8 +32,18 @@ func QueryPrivateChatMsg(param param.QueryPrivateChatMsgParam) (messageList DO.M
 		readTime = extra.SecondReadTime
 	}
 
-	MsgPOs, err := privateChat_dao.Query(friendship.FriendshipID, param.Num, param.PageNum, readTime)
+	MsgPOs, err := privateChat_dao.QueryByFriendshipID(friendship.FriendshipID, param.Num, param.PageNum, readTime)
 	for _, msg := range MsgPOs {
+		if msg.SenderID == utils.ShiftToNum64(param.UserID) {
+			if msg.Deleted_list&1 == 1 {
+				continue
+			}
+		} else {
+			if msg.Deleted_list&2 == 1 {
+				continue
+			}
+		}
+
 		msgDO := VO.MessageVO{
 			MsgID:      utils.ShiftToStringFromInt64(msg.MsgID),
 			MsgType:    0,
@@ -48,4 +58,24 @@ func QueryPrivateChatMsg(param param.QueryPrivateChatMsgParam) (messageList DO.M
 	}
 
 	return messageList, nil
+}
+
+func DeletePrivateChatMsg(param param.DeletePrivateChatMsgParam) (err error) {
+	msg, err := privateChat_dao.QueryByMsgID(utils.ShiftToNum64(param.MsgID))
+	if err != nil {
+		return err
+	}
+
+	if msg.SenderID == utils.ShiftToNum64(param.UserID) {
+		msg.Deleted_list |= 1
+	} else {
+		msg.Deleted_list |= 2
+	}
+
+	err = privateChat_dao.UpdateDeletedList(msg.MsgID, msg.Deleted_list)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
