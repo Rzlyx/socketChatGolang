@@ -59,8 +59,12 @@ type DisagreeFriendApplyParam struct {
 }
 
 type SetFriendRemark struct {
-	UserID       string  `json:"user_id" form:"user_id" binding:"required"`
-	FriendID     string  `json:"friend_id" form:"friend_id" binding:"required"`
-	FriendshipID string  `json:"friendship_id" form:"friendship_id" binding:"required"`
-	Remark       *string `json:"remark" form:"remark"`
+	UserID   string  `json:"user_id" form:"user_id" binding:"required"`
+	FriendID string  `json:"friend_id" form:"friend_id" binding:"required"`
+	Remark   *string `json:"remark" form:"remark"`
+}
+
+type SetReadTime struct {
+	UserID   string `json:"user_id" form:"user_id" binding:"required"`
+	FriendID string `json:"friend_id" form:"friend_id" binding:"required"`
 }

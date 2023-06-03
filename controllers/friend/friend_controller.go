@@ -234,3 +234,20 @@ func SetFriendRemark(c *gin.Context) {
 
 	response.ResponseSuccess(c, struct{}{})
 }
+
+func SetReadTime(c *gin.Context) {
+	param := new(param.SetReadTime)
+	err := c.ShouldBind(param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	err = service.SetReadTime(*param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInternError)
+		return
+	}
+
+	response.ResponseSuccess(c, struct{}{})
+}

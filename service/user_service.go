@@ -63,10 +63,10 @@ func QueryContactorList(param param.QueryContactorListParam) (contactors DO.Cont
 
 	for _, contact := range *extra.ContactorList {
 		contactDO := DO.ContactInfo{
-			ID:           contact.ID,
-			Name:         contact.Name,
-			Message:      contact.Message,
-			FriendshipID: contact.FriendshipID,
+			ID:      contact.ID,
+			Name:    contact.Name,
+			Message: contact.Message,
+			Time:    contact.Time,
 		}
 
 		contactors.ContactorList = append(contactors.ContactorList, contactDO)
@@ -93,10 +93,10 @@ func SetContactorList(param param.SetContactorListParam) (err error) {
 		var contactorsPO []PO.ContactInfoPO
 		for _, item := range param.ContactorList {
 			contactor := PO.ContactInfoPO{
-				ID:           item.ID,
-				Name:         item.Name,
-				Message:      item.Message,
-				FriendshipID: item.FriendshipID,
+				ID:      item.ID,
+				Name:    item.Name,
+				Message: item.Message,
+				Time:    item.Time,
 			}
 
 			contactorsPO = append(contactorsPO, contactor)
