@@ -128,6 +128,9 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 		groupDO.GroupName = groupInfoPO.GroupName
 		groupDO.Type = 0
 		groupDO.UserID = id
+		var extra DO.GroupExtra
+		extra.ReadTime = utils.GetNowTime()
+		groupDO.Extra = &extra
 
 		groupPO, err := DO.TurnGroupPOfromDO(groupDO)
 		if err != nil {
@@ -468,6 +471,9 @@ func AgreeGroupApplyByParam(info *param.AgreeGroupApplyParam) error {
 	groupDO.GroupName = groupInfoPO.GroupName
 	groupDO.Type = 0
 	groupDO.UserID = utils.ShiftToNum64(info.Applicant)
+	var extra DO.GroupExtra
+	extra.ReadTime = utils.GetNowTime()
+	groupDO.Extra = &extra
 
 	groupPO, err := DO.TurnGroupPOfromDO(groupDO)
 	if err != nil {
@@ -568,7 +574,7 @@ func UnSilenceByParam(info *param.UnSilenceParam) error {
 		}
 		silence := string(data)
 		group.SilenceList = &silence
-	}else{
+	} else {
 		group.SilenceList = nil
 	}
 
@@ -948,6 +954,52 @@ func DisAgreeInviteGroupByParam(info *param.DisAgreeInviteGroupParam) error {
 
 // 设置群备注
 func SetGroupNameByParam(info *param.SetGroupNameParam) error {
-	
+	groupPO, err := group_dao.MGetGroupByUserIDandGroupID(utils.ShiftToNum64(info.UserID), utils.ShiftToNum64(info.GroupID))
+	if err != nil {
+		return err
+	}
+	groupDO, err := DO.MGetGroupDOfromPO(*groupPO)
+	if err != nil {
+		return err
+	}
+
+	groupDO.GroupName = info.GroupName
+
+	GroupPO, err := DO.TurnGroupPOfromDO(*groupDO)
+	if err != nil {
+		return err
+	}
+
+	_, err = group_dao.UpdateGroupByGroupPO(*GroupPO)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// 设置已读时间
+func SetGroupReadTimebyParam(info *param.SetGroupReadTimeParam) error {
+	groupPO, err := group_dao.MGetGroupByUserIDandGroupID(utils.ShiftToNum64(info.UserID), utils.ShiftToNum64(info.GroupID))
+	if err != nil {
+		return err
+	}
+	groupDO, err := DO.MGetGroupDOfromPO(*groupPO)
+	if err != nil {
+		return err
+	}
+
+	groupDO.Extra.ReadTime = utils.GetNowTime()
+
+	GroupPO, err := DO.TurnGroupPOfromDO(*groupDO)
+	if err != nil {
+		return err
+	}
+
+	_, err = group_dao.UpdateGroupByGroupPO(*GroupPO)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

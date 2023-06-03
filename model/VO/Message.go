@@ -10,4 +10,5 @@ type MessageVO struct {
 	DataType   int    `json:"type" form:"type" binding:"required"`
 
 	ErrString string `json:"err" form:"err"`
+	IsAnonymous bool `json:"is_anonymous" form:"is_anonymous" binding:"required"`
 }
