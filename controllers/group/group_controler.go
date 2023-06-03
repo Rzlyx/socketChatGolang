@@ -372,25 +372,100 @@ func SetGroupUser(c *gin.Context) {
 
 // 邀请加入群聊
 func InviteJoinGroup(c *gin.Context) {
-
+	p := new(param.InviteJoinGroupParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[InviteJoinGroup] ShouldBind err is ", err.Error())
+		return
+	}
+	err = service.InviteJoinGroupByParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[InviteJoinGroup]  err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, struct{}{})
 }
 
 // 查看邀请
 func QueryInviteGroup(c *gin.Context) {
-
+	p := new(param.QueryInviteGroupParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[QueryInviteGroup] ShouldBind err is ", err.Error())
+		return
+	}
+	p1, err := service.QueryInviteGroupByParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[QueryInviteGroup]  err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, p1)
 }
 
 // 同意邀请
 func AgreeInviteGroup(c *gin.Context) {
-
+	p := new(param.AgreeInviteGroupParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[AgreeInviteGroup] ShouldBind err is ", err.Error())
+		return
+	}
+	err = service.AgreeInviteGroupByParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[AgreeInviteGroup]  err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, struct{}{})
 }
 
 // 拒绝邀请
 func DisAgreeInviteGroup(c *gin.Context) {
-
+	p := new(param.DisAgreeInviteGroupParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[DisAgreeInviteGroup] ShouldBind err is ", err.Error())
+		return
+	}
+	err = service.DisAgreeInviteGroupByParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[DisAgreeInviteGroup]  err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, struct{}{})
 }
 
 // 设置群备注
 func SetGroupName(c *gin.Context) {
-
+	p := new(param.SetGroupNameParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[SetGroupName] ShouldBind err is ", err.Error())
+		return
+	}
+	err = service.SetGroupNameByParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[SetGroupName]  err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, struct{}{})
 }

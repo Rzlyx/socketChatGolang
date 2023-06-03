@@ -12,11 +12,10 @@ import (
 	"dou_yin/service/DO"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
 )
 
 func MGetGroupInfoByParam(info *param.QueryGroupInfoParam) (*response.GroupInfo, error) {
-	group, err := group_dao.MGetGroupInfoByGroupID(info.GroupID)
+	group, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +40,7 @@ func MGetGroupInfoByParam(info *param.QueryGroupInfoParam) (*response.GroupInfo,
 }
 
 func MGetGroupListByParam(info *param.QueryGroupListParam) (*[]response.GroupJoin, error) {
-	list, err := group_dao.MGetGroupListByUserID(info.UserID)
+	list, err := group_dao.MGetGroupListByUserID(utils.ShiftToNum64(info.UserID))
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +65,7 @@ func MGetGroupListByParam(info *param.QueryGroupListParam) (*[]response.GroupJoi
 func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 	var groupInfo DO.GroupInfoDO
 	groupInfo.GroupID = snowflake.GenID()
-	groupInfo.OwnerID = info.OwnerID
+	groupInfo.OwnerID = utils.ShiftToNum64(info.OwnerID)
 	groupInfo.AdminIds = new([]int64)
 	groupInfo.Description = info.Description
 	groupInfo.CreateTime = utils.GetNowTime()
@@ -75,7 +74,11 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 	groupInfo.IsDeleted = false
 	groupInfo.SilenceList = new([]int64)
 	// 将好友拉入群聊
-	groupInfo.UserIds = info.UserIDs
+	var userIds []int64
+	for _, id := range *info.UserIDs {
+		userIds = append(userIds, utils.ShiftToNum64(id))
+	}
+	groupInfo.UserIds = &userIds
 
 	groupInfoPO, err := DO.TurnGroupInfoPOfromDO(groupInfo)
 	if err != nil {
@@ -85,9 +88,9 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 	var users []PO.UserPO
 	var UserIDs []int64
 	if info.UserIDs != nil {
-		UserIDs = append(UserIDs, *info.UserIDs...)
+		UserIDs = append(UserIDs, userIds...)
 	}
-	UserIDs = append(UserIDs, info.OwnerID)
+	UserIDs = append(UserIDs, utils.ShiftToNum64(info.OwnerID))
 	for _, id := range UserIDs {
 		userInfo, err := user_dao.QueryUserInfo(id)
 		if err != nil {
@@ -161,7 +164,7 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 // 解散群聊
 func DissolveGroupInfoByParam(info *param.DissolveGroupInfoParam) error {
 	// TODO 加锁
-	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(info.GroupID)
+	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return err
 	}
@@ -189,21 +192,21 @@ func DissolveGroupInfoByParam(info *param.DissolveGroupInfoParam) error {
 
 		var white []int64
 		for _, ID := range *whiteList {
-			if ID != info.GroupID {
+			if ID != utils.ShiftToNum64(info.GroupID) {
 				white = append(white, ID)
 			}
 		}
 
 		var gray []int64
 		for _, ID := range *grayList {
-			if ID != info.GroupID {
+			if ID != utils.ShiftToNum64(info.GroupID) {
 				gray = append(gray, ID)
 			}
 		}
 
 		var black []int64
 		for _, ID := range *blackList {
-			if ID != info.GroupID {
+			if ID != utils.ShiftToNum64(info.GroupID) {
 				black = append(black, ID)
 			}
 		}
@@ -243,7 +246,7 @@ func DissolveGroupInfoByParam(info *param.DissolveGroupInfoParam) error {
 
 	// 删除加群关系
 	for _, id := range userIds {
-		_, err := group_dao.DeleteGroupByUserIDandGroupID(id, info.GroupID)
+		_, err := group_dao.DeleteGroupByUserIDandGroupID(id, utils.ShiftToNum64(info.GroupID))
 		if err != nil {
 			return err
 		}
@@ -253,7 +256,7 @@ func DissolveGroupInfoByParam(info *param.DissolveGroupInfoParam) error {
 }
 
 func ApplyJoinGroupByParam(info *param.ApplyJoinGroupParam) error {
-	application, err := apply_dao.MGetApplicationByGroupIDandUserID(info.GroupID, info.UserID)
+	application, err := apply_dao.MGetApplicationByGroupIDandUserID(utils.ShiftToNum64(info.GroupID), utils.ShiftToNum64(info.UserID))
 	if err != nil {
 		return err
 	}
@@ -262,18 +265,18 @@ func ApplyJoinGroupByParam(info *param.ApplyJoinGroupParam) error {
 		return nil
 	}
 
-	_, err = group_dao.MGetGroupInfoByGroupID(info.GroupID)
+	_, err = group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return err
 	}
 
 	var apply PO.ApplyPO
-	apply.Applicant = info.UserID
+	apply.Applicant = utils.ShiftToNum64(info.UserID)
 	apply.ApplyID = snowflake.GenID()
 	apply.CreateTime = utils.GetNowTime()
 	apply.Extra = nil
 	apply.Reason = info.Reason
-	apply.TargetID = info.GroupID
+	apply.TargetID = utils.ShiftToNum64(info.GroupID)
 	apply.Status = 0
 	apply.Type = 0
 	// TODO:Tx
@@ -287,12 +290,12 @@ func ApplyJoinGroupByParam(info *param.ApplyJoinGroupParam) error {
 
 // 退出群聊
 func QuitGroupByParam(info *param.QuitGroupParam) error {
-	ret, err := group_dao.IsGroupUser(info.UserID, info.GroupID)
+	ret, err := group_dao.IsGroupUser(utils.ShiftToNum64(info.UserID), utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return err // 查询失败
 	}
 	if ret {
-		userInfo, err := user_dao.QueryUserInfo(info.UserID)
+		userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(info.UserID))
 		if err != nil {
 			return err
 		}
@@ -303,17 +306,17 @@ func QuitGroupByParam(info *param.QuitGroupParam) error {
 
 		var white, gray, black []int64
 		for _, id := range *whiteList {
-			if id != info.GroupID {
+			if id != utils.ShiftToNum64(info.GroupID) {
 				white = append(white, id)
 			}
 		}
 		for _, id := range *gratList {
-			if id != info.GroupID {
+			if id != utils.ShiftToNum64(info.GroupID) {
 				gray = append(gray, id)
 			}
 		}
 		for _, id := range *blackList {
-			if id != info.GroupID {
+			if id != utils.ShiftToNum64(info.GroupID) {
 				black = append(black, id)
 			}
 		}
@@ -339,7 +342,7 @@ func QuitGroupByParam(info *param.QuitGroupParam) error {
 			userInfo.GroupChatBlack = nil
 		}
 
-		groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(info.GroupID)
+		groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
 		if err != nil {
 			return err
 		}
@@ -351,7 +354,7 @@ func QuitGroupByParam(info *param.QuitGroupParam) error {
 		var userIds []int64
 		if groupInfoDO.UserIds != nil {
 			for _, id := range *groupInfoDO.UserIds {
-				if id != info.UserID {
+				if id != utils.ShiftToNum64(info.UserID) {
 					userIds = append(userIds, id)
 				}
 			}
@@ -360,7 +363,7 @@ func QuitGroupByParam(info *param.QuitGroupParam) error {
 		var adminIds []int64
 		if groupInfoDO.AdminIds != nil {
 			for _, id := range *groupInfoDO.AdminIds {
-				if id != info.UserID {
+				if id != utils.ShiftToNum64(info.UserID) {
 					adminIds = append(adminIds, id)
 				}
 			}
@@ -373,7 +376,7 @@ func QuitGroupByParam(info *param.QuitGroupParam) error {
 		}
 		// TODO: Tx
 		// 在该群聊中，执行退群操作
-		ret, err := group_dao.DeleteGroupByUserIDandGroupID(info.UserID, info.GroupID)
+		ret, err := group_dao.DeleteGroupByUserIDandGroupID(utils.ShiftToNum64(info.UserID), utils.ShiftToNum64(info.GroupID))
 		if err != nil || !ret {
 			return err // 删除失败
 		}
@@ -393,7 +396,7 @@ func QuitGroupByParam(info *param.QuitGroupParam) error {
 
 // 查看加群申请
 func QueryGroupApplyListByParam(info *param.QueryGroupApplyListParam) (*[]response.GroupJoinApply, error) {
-	list, err := apply_dao.MGetApplicationListByGroupID(info.GroupID)
+	list, err := apply_dao.MGetApplicationListByGroupID(utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return nil, err
 	}
@@ -412,11 +415,11 @@ func QueryGroupApplyListByParam(info *param.QueryGroupApplyListParam) (*[]respon
 
 // 同意加入
 func AgreeGroupApplyByParam(info *param.AgreeGroupApplyParam) error {
-	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(info.GroupID)
+	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return err
 	}
-	userInfo, err := user_dao.QueryUserInfo(info.Applicant)
+	userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(info.Applicant))
 	if err != nil {
 		return err
 	}
@@ -431,7 +434,7 @@ func AgreeGroupApplyByParam(info *param.AgreeGroupApplyParam) error {
 	if groupInfoPO.UserIds != nil {
 		userIds = append(userIds, *groupInfoDO.UserIds...)
 	}
-	userIds = append(*groupInfoDO.UserIds, info.Applicant)
+	userIds = append(*groupInfoDO.UserIds, utils.ShiftToNum64(info.Applicant))
 	groupInfoDO.UserIds = &userIds
 	groupInfo, err := DO.TurnGroupInfoPOfromDO(*groupInfoDO)
 	if err != nil {
@@ -447,7 +450,7 @@ func AgreeGroupApplyByParam(info *param.AgreeGroupApplyParam) error {
 			return nil
 		}
 	}
-	groupWhiteList = append(groupWhiteList, info.GroupID)
+	groupWhiteList = append(groupWhiteList, utils.ShiftToNum64(info.GroupID))
 
 	var whiteList string
 	data, err := json.Marshal(groupWhiteList)
@@ -461,10 +464,10 @@ func AgreeGroupApplyByParam(info *param.AgreeGroupApplyParam) error {
 	var groupDO DO.GroupDO
 	groupDO.CreateTime = utils.GetNowTime()
 	groupDO.Extra = new(DO.GroupExtra)
-	groupDO.GroupID = info.GroupID
+	groupDO.GroupID = utils.ShiftToNum64(info.GroupID)
 	groupDO.GroupName = groupInfoPO.GroupName
 	groupDO.Type = 0
-	groupDO.UserID = info.Applicant
+	groupDO.UserID = utils.ShiftToNum64(info.Applicant)
 
 	groupPO, err := DO.TurnGroupPOfromDO(groupDO)
 	if err != nil {
@@ -487,7 +490,7 @@ func AgreeGroupApplyByParam(info *param.AgreeGroupApplyParam) error {
 		return err
 	}
 
-	err = apply_dao.DeleteApplicationByApplyID(info.ApplyID)
+	err = apply_dao.DeleteApplicationByApplyID(utils.ShiftToNum64(info.ApplyID))
 	if err != nil {
 		return err
 	}
@@ -498,7 +501,7 @@ func AgreeGroupApplyByParam(info *param.AgreeGroupApplyParam) error {
 // 不同意加入
 func DisAgreeGroupApplyByParam(info *param.DisAgreeGroupApplyParam) error {
 
-	err := apply_dao.DeleteApplicationByApplyID(info.ApplyID)
+	err := apply_dao.DeleteApplicationByApplyID(utils.ShiftToNum64(info.ApplyID))
 	if err != nil {
 		return err
 	}
@@ -509,7 +512,7 @@ func DisAgreeGroupApplyByParam(info *param.DisAgreeGroupApplyParam) error {
 // 禁言
 func SilenceByParam(info *param.SilenceParam) error {
 	// TODO: 加锁
-	group, err := group_dao.MGetGroupInfoByGroupID(info.GroupID)
+	group, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return err
 	}
@@ -522,7 +525,7 @@ func SilenceByParam(info *param.SilenceParam) error {
 	if groupInfo.SilenceList != nil {
 		silenceList = append(silenceList, *groupInfo.SilenceList...)
 	}
-	silenceList = append(silenceList, info.TargetID)
+	silenceList = append(silenceList, utils.ShiftToNum64(info.TargetID))
 	data, err := json.Marshal(silenceList)
 	if err != nil {
 		fmt.Println("[SilenceByParam], Marshal err is ", err.Error())
@@ -541,7 +544,7 @@ func SilenceByParam(info *param.SilenceParam) error {
 // 解除禁言
 func UnSilenceByParam(info *param.UnSilenceParam) error {
 	// TODO: 加锁
-	group, err := group_dao.MGetGroupInfoByGroupID(info.GroupID)
+	group, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return err
 	}
@@ -553,7 +556,7 @@ func UnSilenceByParam(info *param.UnSilenceParam) error {
 
 	var silenceList []int64
 	for _, id := range *groupInfo.SilenceList {
-		if id != info.TargetID {
+		if id != utils.ShiftToNum64(info.TargetID) {
 			silenceList = append(silenceList, id)
 		}
 	}
@@ -577,15 +580,15 @@ func UnSilenceByParam(info *param.UnSilenceParam) error {
 }
 
 func TransferGroupByParam(info *param.TransferGroupParam) error {
-	groupInfoRecord, err := group_dao.MGetGroupInfoByGroupID(info.GroupID)
+	groupInfoRecord, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return err
 	}
-	OwnerRecord, err := group_dao.MGetGroupByUserIDandGroupID(info.UserID, info.GroupID)
+	OwnerRecord, err := group_dao.MGetGroupByUserIDandGroupID(utils.ShiftToNum64(info.UserID), utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return err
 	}
-	TargetRecord, err := group_dao.MGetGroupByUserIDandGroupID(info.TargetID, info.GroupID)
+	TargetRecord, err := group_dao.MGetGroupByUserIDandGroupID(utils.ShiftToNum64(info.TargetID), utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return err
 	}
@@ -598,11 +601,11 @@ func TransferGroupByParam(info *param.TransferGroupParam) error {
 	// targte是普通成员
 	var userList []int64
 	for _, id := range *GroupInfo.UserIds {
-		if TargetRecord.Type != 0 || (TargetRecord.Type == 0 && id != info.TargetID) {
+		if TargetRecord.Type != 0 || (TargetRecord.Type == 0 && id != utils.ShiftToNum64(info.TargetID)) {
 			userList = append(userList, id)
 		}
 	}
-	userList = append(userList, info.UserID) // 群主变为普通成员
+	userList = append(userList, utils.ShiftToNum64(info.UserID)) // 群主变为普通成员
 	data, err := json.Marshal(userList)
 	if err != nil {
 		fmt.Println("[TransferGroupByParam], Marshal err is ", err.Error())
@@ -615,7 +618,7 @@ func TransferGroupByParam(info *param.TransferGroupParam) error {
 	if TargetRecord.Type == 1 {
 		var adminList []int64
 		for _, id := range *GroupInfo.AdminIds {
-			if id != info.TargetID {
+			if id != utils.ShiftToNum64(info.TargetID) {
 				adminList = append(adminList, id)
 			}
 		}
@@ -631,7 +634,7 @@ func TransferGroupByParam(info *param.TransferGroupParam) error {
 			groupInfoRecord.AdminIds = nil
 		}
 	}
-	groupInfoRecord.OwnerID = info.TargetID
+	groupInfoRecord.OwnerID = utils.ShiftToNum64(info.TargetID)
 
 	OwnerRecord.Type = 0  // 成为普通成员
 	TargetRecord.Type = 2 // 成为群主
@@ -655,7 +658,7 @@ func TransferGroupByParam(info *param.TransferGroupParam) error {
 }
 
 func SetBlackListByParam(info *param.SetBlackListParam) error {
-	userInfo, err := user_dao.QueryUserInfo(info.UserID)
+	userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(info.UserID))
 	if err != nil {
 		return err
 	}
@@ -666,18 +669,18 @@ func SetBlackListByParam(info *param.SetBlackListParam) error {
 	}
 	var whiteList, grayList []int64
 	for _, id := range *groupWhiteList {
-		if id != info.GroupID {
+		if id != utils.ShiftToNum64(info.GroupID) {
 			whiteList = append(whiteList, id)
 		}
 	}
 
 	for _, id := range *groupGrayList {
-		if id != info.GroupID {
+		if id != utils.ShiftToNum64(info.GroupID) {
 			grayList = append(grayList, id)
 		}
 	}
 
-	blackList := append(*groupBlackList, info.GroupID)
+	blackList := append(*groupBlackList, utils.ShiftToNum64(info.GroupID))
 
 	white, gray, black, err := turnjsonList(whiteList, grayList, blackList)
 	if err != nil {
@@ -696,7 +699,7 @@ func SetBlackListByParam(info *param.SetBlackListParam) error {
 }
 
 func SetGrayListByParam(info *param.SetGrayListParam) error {
-	userInfo, err := user_dao.QueryUserInfo(info.UserID)
+	userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(info.UserID))
 	if err != nil {
 		return err
 	}
@@ -706,18 +709,18 @@ func SetGrayListByParam(info *param.SetGrayListParam) error {
 	}
 	var whiteList, blackList []int64
 	for _, id := range *groupWhiteList {
-		if id != info.GroupID {
+		if id != utils.ShiftToNum64(info.GroupID) {
 			whiteList = append(whiteList, id)
 		}
 	}
 
 	for _, id := range *groupBlackList {
-		if id != info.GroupID {
+		if id != utils.ShiftToNum64(info.GroupID) {
 			blackList = append(blackList, id)
 		}
 	}
 
-	grayList := append(*groupGrayList, info.GroupID)
+	grayList := append(*groupGrayList, utils.ShiftToNum64(info.GroupID))
 
 	white, gray, black, err := turnjsonList(whiteList, grayList, blackList)
 	if err != nil {
@@ -736,7 +739,7 @@ func SetGrayListByParam(info *param.SetGrayListParam) error {
 }
 
 func SetWhiteListByParam(info *param.SetWhiteListParam) error {
-	userInfo, err := user_dao.QueryUserInfo(info.UserID)
+	userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(info.UserID))
 	if err != nil {
 		return err
 	}
@@ -747,18 +750,18 @@ func SetWhiteListByParam(info *param.SetWhiteListParam) error {
 	}
 	var grayList, blackList []int64
 	for _, id := range *groupGrayList {
-		if id != info.GroupID {
+		if id != utils.ShiftToNum64(info.GroupID) {
 			grayList = append(grayList, id)
 		}
 	}
 
 	for _, id := range *groupBlackList {
-		if id != info.GroupID {
+		if id != utils.ShiftToNum64(info.GroupID) {
 			blackList = append(blackList, id)
 		}
 	}
 
-	whiteList := append(*groupWhiteList, info.GroupID)
+	whiteList := append(*groupWhiteList, utils.ShiftToNum64(info.GroupID))
 
 	white, gray, black, err := turnjsonList(whiteList, grayList, blackList)
 	if err != nil {
@@ -834,11 +837,11 @@ func turnjsonList(whiteList, grayList, blackList []int64) (*string, *string, *st
 }
 
 func SetGroupAdminByParam(info *param.SetGroupAdminParam) error {
-	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(info.GroupID)
+	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return err
 	}
-	group, err := group_dao.MGetGroupByUserIDandGroupID(info.TargetID, info.GroupID)
+	group, err := group_dao.MGetGroupByUserIDandGroupID(utils.ShiftToNum64(info.TargetID), utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return err
 	}
@@ -849,13 +852,13 @@ func SetGroupAdminByParam(info *param.SetGroupAdminParam) error {
 
 	var userIDs []int64
 	for _, id := range *groupInfoDO.UserIds {
-		if id != info.TargetID {
+		if id != utils.ShiftToNum64(info.TargetID) {
 			userIDs = append(userIDs, id)
 		}
 	}
 	groupInfoDO.UserIds = &userIDs
 
-	adminIDs := append(*groupInfoDO.AdminIds, info.TargetID)
+	adminIDs := append(*groupInfoDO.AdminIds, utils.ShiftToNum64(info.TargetID))
 	groupInfoDO.AdminIds = &adminIDs
 
 	GroupInfoPO, err := DO.TurnGroupInfoPOfromDO(*groupInfoDO)
@@ -878,11 +881,11 @@ func SetGroupAdminByParam(info *param.SetGroupAdminParam) error {
 }
 
 func SetGroupUserByParam(info *param.SetGroupUserParam) error {
-	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(info.GroupID)
+	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return err
 	}
-	group, err := group_dao.MGetGroupByUserIDandGroupID(info.TargetID, info.GroupID)
+	group, err := group_dao.MGetGroupByUserIDandGroupID(utils.ShiftToNum64(info.TargetID), utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return err
 	}
@@ -893,13 +896,13 @@ func SetGroupUserByParam(info *param.SetGroupUserParam) error {
 
 	var AdminIds []int64
 	for _, id := range *groupInfoDO.AdminIds {
-		if id != info.TargetID {
+		if id != utils.ShiftToNum64(info.TargetID) {
 			AdminIds = append(AdminIds, id)
 		}
 	}
 	groupInfoDO.AdminIds = &AdminIds
 
-	userIds := append(*groupInfoDO.UserIds, info.TargetID)
+	userIds := append(*groupInfoDO.UserIds, utils.ShiftToNum64(info.TargetID))
 	groupInfoDO.UserIds = &userIds
 
 	GroupInfoPO, err := DO.TurnGroupInfoPOfromDO(*groupInfoDO)
@@ -922,11 +925,29 @@ func SetGroupUserByParam(info *param.SetGroupUserParam) error {
 }
 
 // 邀请加入群聊
-func InviteJoinGroupByParam(c *gin.Context) {
+func InviteJoinGroupByParam(info *param.InviteJoinGroupParam) error {
 
+	return nil
+}
+
+func QueryInviteGroupByParam(info *param.QueryInviteGroupParam) ([]response.InviteGroupInfo, error) {
+	var result []response.InviteGroupInfo
+
+	return result, nil
+}
+
+func AgreeInviteGroupByParam(info *param.AgreeInviteGroupParam) error {
+
+	return nil
+}
+
+func DisAgreeInviteGroupByParam(info *param.DisAgreeInviteGroupParam) error {
+
+	return nil
 }
 
 // 设置群备注
-func SetGroupNameByParam(c *gin.Context) {
-
+func SetGroupNameByParam(info *param.SetGroupNameParam) error {
+	
+	return nil
 }
