@@ -15,15 +15,15 @@ import (
 var OtherMsgChan chan string
 var OthserChan map[int64]chan string
 
-var MsgChan chan PO.PrivateMsgPO            // 全局消息队列
-var UserChan map[int64]chan PO.PrivateMsgPO // 每个用户分配一个chan
-var IDChan chan int64                       // 接收login，分配一个chan
+var MsgChan chan PO.PrivateMsgPOf            // 全局消息队列
+var UserChan map[int64]chan PO.PrivateMsgPOf // 每个用户分配一个chan
+var IDChan chan int64                        // 接收login，分配一个chan
 
 func ChanInit() {
 	IDChan = make(chan int64, 100)
-	MsgChan = make(chan PO.PrivateMsgPO, 10000)
-	UserChan = make(map[int64]chan PO.PrivateMsgPO)
-	UserChan[1] = make(chan PO.PrivateMsgPO, 10)
+	MsgChan = make(chan PO.PrivateMsgPOf, 10000)
+	UserChan = make(map[int64]chan PO.PrivateMsgPOf)
+	UserChan[1] = make(chan PO.PrivateMsgPOf, 10)
 }
 
 func MsgTransMit() {
@@ -46,7 +46,7 @@ func MsgTransMit() {
 
 func AddUser() {
 	for msg := range IDChan {
-		UserChan[msg] = make(chan PO.PrivateMsgPO, 10)
+		UserChan[msg] = make(chan PO.PrivateMsgPOf, 10)
 	}
 }
 
@@ -72,16 +72,16 @@ func Connect(c *gin.Context) {
 	go func(userID int64) {
 		fmt.Println(userID)
 		for {
-			msg2 := <-UserChan[userID]
-			msg3, _ := json.Marshal(msg2)
-			err = conn.WriteMessage(websocket.TextMessage, msg3)
+			message := <-UserChan[userID]
+			msgJson, _ := json.Marshal(message)
+			err = conn.WriteMessage(websocket.TextMessage, msgJson)
 			if err != nil {
 				fmt.Println(err)
 			}
 		}
 	}(mc.ID)
 	//ID233:=utils.ShiftToStringFromInt64(mc.ID)
-	msg := new(PO.PrivateMsgPO)
+	msg := new(PO.PrivateMsgPOf)
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
@@ -91,6 +91,7 @@ func Connect(c *gin.Context) {
 		if err != nil {
 			fmt.Println(err)
 		}
+		// filter
 		MsgChan <- *msg
 	}
 }

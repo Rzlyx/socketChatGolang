@@ -104,6 +104,27 @@ func QueryFriendInfo(param param.QueryFriendInfoParam) (friendInfo DO.FriendInfo
 	return friendInfo, nil
 }
 
+func CheckPrivateChatBlack(userID int64, friendID int64) (bool, error) {
+	// 查friend是否把我拉黑
+	friendInfo, err := user_dao.QueryUserInfo(friendID)
+	if err != nil {
+		return false, err
+	}
+
+	var privateChatBlackList PO.PrivateChatBlack
+	if friendInfo.PrivateChatBlack != nil {
+		err = json.Unmarshal([]byte(*friendInfo.PrivateChatBlack), &privateChatBlackList)
+		if err != nil {
+			logger.Log.Error(err.Error())
+			return false, err
+		}
+
+		return IsContains(privateChatBlackList.BlackList, userID), nil
+	}
+
+	return false, nil
+}
+
 func IsContains(list []int64, target int64) bool {
 	for _, item := range list {
 		if item == target {
@@ -191,8 +212,13 @@ func AddFriend(addFriendParam param.AddFriendParam) (application DO.AddFriendApp
 }
 
 func DeleteFriend(param param.DeleteFriendParam) (err error) {
+	friendship, err := friend_dao.QueryFriendshipBy2ID(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
+	if err != nil {
+		return err
+	}
+
 	// todo: tx
-	err = friend_dao.DeleteFriend(utils.ShiftToNum64(param.FriendshipID))
+	err = friend_dao.DeleteFriend(friendship.FriendshipID)
 	if err != nil {
 		return err
 	}
@@ -758,7 +784,7 @@ func RemoveFriendFromWhiteBlackList(userID int64, friendID int64) (err error) {
 }
 
 func SetFriendRemark(param param.SetFriendRemark) (err error) {
-	friendship, err := friend_dao.QueryFriendship(utils.ShiftToNum64(param.FriendshipID))
+	friendship, err := friend_dao.QueryFriendshipBy2ID(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
 	if err != nil {
 		return err
 	}
@@ -774,15 +800,46 @@ func SetFriendRemark(param param.SetFriendRemark) (err error) {
 	}
 
 	if friendship.FirstID == utils.ShiftToNum64(param.UserID) {
-		err = friend_dao.UpdateFirstRemarkSecond(utils.ShiftToNum64(param.FriendshipID), *param.Remark, realName)
+		err = friend_dao.UpdateFirstRemarkSecond(friendship.FriendshipID, *param.Remark, realName)
 		if err != nil {
 			return err
 		}
 	} else {
-		err = friend_dao.UpdateSecondRemarkFirst(utils.ShiftToNum64(param.FriendshipID), *param.Remark, realName)
+		err = friend_dao.UpdateSecondRemarkFirst(friendship.FriendshipID, *param.Remark, realName)
 		if err != nil {
 			return nil
 		}
+	}
+
+	return nil
+}
+
+func SetReadTime(param param.SetReadTime) (err error) {
+	friendship, err := friend_dao.QueryFriendshipBy2ID(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
+	if err != nil {
+		return err
+	}
+
+	var extra PO.FriendExtra
+	if friendship.Extra != nil {
+		err = json.Unmarshal([]byte(*friendship.Extra), &extra)
+		if err != nil {
+			return err
+		}
+	}
+
+	if friendship.FirstID == utils.ShiftToNum64(param.UserID) {
+		extra.FirstReadTime = utils.GetNowTime()
+	} else {
+		extra.SecondReadTime = utils.GetNowTime()
+	}
+
+	extraJson, err := json.Marshal(extra)
+	extraStr := string(extraJson[:])
+
+	err = friend_dao.UpdateReadTimeExtra(friendship.FriendshipID, extraStr)
+	if err != nil {
+		return err
 	}
 
 	return nil
