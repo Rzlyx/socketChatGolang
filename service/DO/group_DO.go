@@ -33,7 +33,7 @@ type GroupDO struct {
 }
 
 type GroupExtra struct {
-	// Avatar string `json:"avatar"`
+	ReadTime string `json:"read_time"`
 }
 
 func MGetGroupInfofromPO(info group_dao.GroupInfoPO) (*GroupInfoDO, error) {

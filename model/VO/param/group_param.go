@@ -143,5 +143,10 @@ type DisAgreeInviteGroupParam struct {
 type SetGroupNameParam struct {
 	UserID  string `json:"user_id" form:"user_id" binding:"required"`
 	GroupID  string `json:"group_id" form:"group_id" binding:"required"`
-	TargetID string `json:"target_id" form:"target_id" binding:"required"`
+	GroupName   string   `json:"group_name" form:"group_name" binding:"required"`
+}
+
+type SetGroupReadTimeParam struct {
+	UserID  string `json:"user_id" form:"user_id" binding:"required"`
+	GroupID  string `json:"group_id" form:"group_id" binding:"required"`
 }
