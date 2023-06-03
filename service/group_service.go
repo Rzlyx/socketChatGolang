@@ -948,6 +948,52 @@ func DisAgreeInviteGroupByParam(info *param.DisAgreeInviteGroupParam) error {
 
 // 设置群备注
 func SetGroupNameByParam(info *param.SetGroupNameParam) error {
-	
+	groupPO, err := group_dao.MGetGroupByUserIDandGroupID(utils.ShiftToNum64(info.UserID), utils.ShiftToNum64(info.GroupID))
+	if err != nil {
+		return err
+	}
+	groupDO, err := DO.MGetGroupDOfromPO(*groupPO)
+	if err != nil {
+		return err
+	}
+
+	groupDO.GroupName = info.GroupName
+
+	GroupPO, err := DO.TurnGroupPOfromDO(*groupDO)
+	if err != nil {
+		return err
+	}
+
+	_, err = group_dao.UpdateGroupByGroupPO(*GroupPO)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// 设置已读时间
+func SetGroupReadTimebyParam(info *param.SetGroupReadTimeParam) error {
+	groupPO, err := group_dao.MGetGroupByUserIDandGroupID(utils.ShiftToNum64(info.UserID), utils.ShiftToNum64(info.GroupID))
+	if err != nil {
+		return err
+	}
+	groupDO, err := DO.MGetGroupDOfromPO(*groupPO)
+	if err != nil {
+		return err
+	}
+
+	groupDO.Extra.ReadTime = utils.GetNowTime()
+
+	GroupPO, err := DO.TurnGroupPOfromDO(*groupDO)
+	if err != nil {
+		return err
+	}
+
+	_, err = group_dao.UpdateGroupByGroupPO(*GroupPO)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

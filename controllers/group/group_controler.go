@@ -469,3 +469,22 @@ func SetGroupName(c *gin.Context) {
 	}
 	response.ResponseSuccess(c, struct{}{})
 }
+
+func SetGroupReadTime(c *gin.Context) {
+	p := new(param.SetGroupReadTimeParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[SetGroupReadTime] ShouldBind err is ", err.Error())
+		return
+	}
+	err = service.SetGroupReadTimebyParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[SetGroupReadTime]  err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, struct{}{})
+}
