@@ -128,6 +128,9 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 		groupDO.GroupName = groupInfoPO.GroupName
 		groupDO.Type = 0
 		groupDO.UserID = id
+		var extra DO.GroupExtra
+		extra.ReadTime = utils.GetNowTime()
+		groupDO.Extra = &extra
 
 		groupPO, err := DO.TurnGroupPOfromDO(groupDO)
 		if err != nil {
@@ -468,6 +471,9 @@ func AgreeGroupApplyByParam(info *param.AgreeGroupApplyParam) error {
 	groupDO.GroupName = groupInfoPO.GroupName
 	groupDO.Type = 0
 	groupDO.UserID = utils.ShiftToNum64(info.Applicant)
+	var extra DO.GroupExtra
+	extra.ReadTime = utils.GetNowTime()
+	groupDO.Extra = &extra
 
 	groupPO, err := DO.TurnGroupPOfromDO(groupDO)
 	if err != nil {
@@ -568,7 +574,7 @@ func UnSilenceByParam(info *param.UnSilenceParam) error {
 		}
 		silence := string(data)
 		group.SilenceList = &silence
-	}else{
+	} else {
 		group.SilenceList = nil
 	}
 

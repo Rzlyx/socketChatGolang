@@ -108,9 +108,10 @@ func TurnGroupInfoPOfromDO(info GroupInfoDO) (*group_dao.GroupInfoPO, error) {
 		}
 		admin = string(data)
 		result.AdminIds = &admin
-	} else {
+	}else{
 		result.AdminIds = nil
 	}
+	
 
 	var silence string
 	if len(*info.SilenceList) != 0 {
@@ -121,9 +122,10 @@ func TurnGroupInfoPOfromDO(info GroupInfoDO) (*group_dao.GroupInfoPO, error) {
 		}
 		silence = string(data)
 		result.SilenceList = &silence
-	} else {
+	}else{
 		result.SilenceList = nil
 	}
+	
 
 	var users string
 	if len(*info.UserIds) != 0 {
@@ -134,9 +136,10 @@ func TurnGroupInfoPOfromDO(info GroupInfoDO) (*group_dao.GroupInfoPO, error) {
 		}
 		users = string(data)
 		result.UserIds = &users
-	} else {
+	}else{
 		result.UserIds = nil
 	}
+	
 
 	var extra string
 	if info.Extra != nil {
@@ -147,7 +150,7 @@ func TurnGroupInfoPOfromDO(info GroupInfoDO) (*group_dao.GroupInfoPO, error) {
 		}
 		extra = string(data)
 		result.Extra = &extra
-	} else {
+	}else{
 		result.Extra = nil
 	}
 
