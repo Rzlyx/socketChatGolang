@@ -14,30 +14,30 @@ import (
 	"fmt"
 )
 
-func Register(p *param.ParamRegister) (err error, user *PO.User) {
+func Register(p *param.ParamRegister) (*PO.User, error) {
 	p1 := new(PO.User)
 	p1.UserName = p.UserName
 	p1.Password = p.Password
 	p1.EMail = p.EMail
 	p1.UserID = snowflake.GenID() / 100000000000
-	err = mysql.Register(p1)
-	fmt.Println(err)
-	return err, p1
+	err := mysql.Register(p1)
+	fmt.Println("[Register], err is ", err.Error())
+	return p1, err
 }
 
-func Login(p *param.ParamLogin) (err error, user *PO.UserPO, token string) {
+func Login(p *param.ParamLogin) (user *PO.UserPO, token string, err error) {
 	user, err = mysql.Login(p.UserName)
 	if err != nil {
 		fmt.Println(err.Error())
-		return errors.New("用户不存在"), nil, ""
+		return nil, "", errors.New("用户不存在")
 	}
 
-	if p.UserName == p.UserName && p.Password == user.Password {
+	if p.UserName == user.UserName && p.Password == user.Password {
 		token, err = jwt.GenToken(user.UserID, user.UserName)
-		return err, user, token
+		return user, token, err
 	}
 
-	return errors.New("信息错误"), nil, ""
+	return nil, "", errors.New("信息错误")
 }
 
 func GetContactorList(Id string) (*PO.ContactorList, error) {
@@ -106,6 +106,9 @@ func SetContactorList(param param.SetContactorListParam) (err error) {
 		extra.ContactorList = nil
 	}
 	extraJson, err := json.Marshal(extra)
+	if err != nil {
+		return err
+	}
 	extraStr := string(extraJson[:])
 	userInfo.Extra = &extraStr
 
