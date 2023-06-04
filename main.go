@@ -8,19 +8,23 @@ import (
 	"dou_yin/logger"
 	"dou_yin/pkg/snowflake"
 	"dou_yin/routes"
+	"dou_yin/service"
 	"dou_yin/setting"
 	"fmt"
-	"github.com/spf13/viper"
-	"go.uber.org/zap"
+	openai "github.com/sashabaranov/go-openai"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 func main() {
+	service.GptClient = openai.NewClient("apikey")
 
 	chat.ChanInit()
 	//初始化消息通道
