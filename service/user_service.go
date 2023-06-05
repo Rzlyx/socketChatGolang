@@ -1,6 +1,8 @@
 package service
 
 import (
+	"database/sql"
+	"dou_yin/dao/mysql/group_dao"
 	"dou_yin/dao/mysql/user_dao"
 	"dou_yin/model/PO"
 	"dou_yin/model/VO/param"
@@ -189,4 +191,56 @@ func QueryUserInfo(param param.QueryUserInfoParam) (DO.UserInfo, error) {
 	}
 
 	return ret, nil
+}
+
+func SearchFriendOrGroup(param param.SearchFriendOrGroupParam) (context DO.SearchFriendOrGroupContexts, err error) {
+	users, err := user_dao.QueryLike(param.Context)
+	if err != nil && err != sql.ErrNoRows {
+		return context, err
+	} else {
+		for _, user := range users {
+			context.Result = append(context.Result, DO.SearchFriendOrGroupContext{
+				Type: 0,
+				ID:   user.UserID,
+				Name: user.UserName,
+			})
+		}
+	}
+
+	user, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.Context))
+	if err != nil && err != sql.ErrNoRows {
+		return context, err
+	} else {
+		context.Result = append(context.Result, DO.SearchFriendOrGroupContext{
+			Type: 0,
+			ID:   user.UserID,
+			Name: user.UserName,
+		})
+	}
+
+	groupInfos, err := group_dao.QueryLike(param.Context)
+	if err != nil && err != sql.ErrNoRows {
+		return context, err
+	} else {
+		for _, groupInfo := range groupInfos {
+			context.Result = append(context.Result, DO.SearchFriendOrGroupContext{
+				Type: 1,
+				ID:   groupInfo.GroupID,
+				Name: groupInfo.GroupName,
+			})
+		}
+	}
+
+	groupInfo, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(param.Context))
+	if err != nil && err != sql.ErrNoRows {
+		return context, err
+	} else {
+		context.Result = append(context.Result, DO.SearchFriendOrGroupContext{
+			Type: 1,
+			ID:   groupInfo.GroupID,
+			Name: groupInfo.GroupName,
+		})
+	}
+
+	return context, nil
 }

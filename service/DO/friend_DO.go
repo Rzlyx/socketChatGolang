@@ -12,19 +12,20 @@ type Friend struct {
 }
 
 type FriendInfo struct {
-	UserID              int64  `json:"user_id,string"`
-	UserName            string `json:"user_name"`
-	Sex                 int    `json:"sex"`
-	PhoneNumber         string `json:"phone_number"`
-	Email               string `json:"e_mail"`
-	Signature           string `json:"signature"`
-	Birthday            string `json:"birthday"`
-	Status              int    `json:"status"`
-	Remark              string `json:"remark"`
-	IsRemark            bool   `json:"is_remark"`
-	IsPrivateChatBlack  bool   `json:"is_private_chat_black"`
-	IsFriendCircleBlack bool   `json:"is_friend_circle_black"`
-	IsPrivateChatGray   bool   `json:"is_private_chat_gray"`
+	UserID              int64    `json:"user_id,string"`
+	UserName            string   `json:"user_name"`
+	Sex                 int      `json:"sex"`
+	PhoneNumber         string   `json:"phone_number"`
+	Email               string   `json:"e_mail"`
+	Signature           string   `json:"signature"`
+	Birthday            string   `json:"birthday"`
+	Status              int      `json:"status"`
+	Remark              string   `json:"remark"`
+	IsRemark            bool     `json:"is_remark"`
+	IsPrivateChatBlack  bool     `json:"is_private_chat_black"`
+	IsFriendCircleBlack bool     `json:"is_friend_circle_black"`
+	IsPrivateChatGray   bool     `json:"is_private_chat_gray"`
+	Tags                []string `json:"tags"`
 }
 
 type AddFriendApplication struct {
