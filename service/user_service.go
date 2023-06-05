@@ -1,7 +1,6 @@
 package service
 
 import (
-	"dou_yin/dao/mysql"
 	"dou_yin/dao/mysql/user_dao"
 	"dou_yin/model/PO"
 	"dou_yin/model/VO/param"
@@ -26,13 +25,13 @@ func Register(info *param.ParamRegister) (*PO.UserPO, error) {
 		Birthday:  info.Birthday,
 	}
 	
-	err := mysql.Register(userInfo)
+	err := user_dao.Register(userInfo)
 	fmt.Println("[Register], err is ", err.Error())
 	return userInfo, err
 }
 
 func Login(p *param.ParamLogin) (user *PO.UserPO, token string, err error) {
-	user, err = mysql.Login(p.UserName)
+	user, err = user_dao.Login(p.UserName)
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, "", errors.New("用户不存在")
@@ -48,7 +47,7 @@ func Login(p *param.ParamLogin) (user *PO.UserPO, token string, err error) {
 
 func GetContactorList(Id string) (*PO.ContactorList, error) {
 
-	p, err := mysql.GetContactorList(Id)
+	p, err := user_dao.GetContactorList(Id)
 
 	return p, err
 }
