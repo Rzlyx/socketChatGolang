@@ -2,7 +2,6 @@ package service
 
 import (
 	"database/sql"
-	"dou_yin/controllers/chat"
 	"dou_yin/dao/mysql/apply_dao"
 	"dou_yin/dao/mysql/friend_dao"
 	"dou_yin/dao/mysql/user_dao"
@@ -865,5 +864,5 @@ func HandlePrivateChatMsg(msg VO.MessageVO) {
 		}
 	}
 
-	chat.MsgChan <- msg
+	MsgChan <- msg
 }

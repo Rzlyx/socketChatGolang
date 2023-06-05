@@ -1,10 +1,10 @@
-package chat
+package privateChat
 
 import (
-	"dou_yin/controllers/user"
 	"dou_yin/logger"
 	"dou_yin/model/VO/param"
 	"dou_yin/model/VO/response"
+	"dou_yin/pkg/utils"
 	"dou_yin/service"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -61,7 +61,7 @@ func UploadPrivateChatPhoto(c *gin.Context) {
 		return
 	}
 
-	pwd := user.GetCurrentPath()
+	pwd := utils.GetCurrentPath()
 	dst := fmt.Sprintf("%v/img/%v", pwd, p.Message.MsgID)
 	err = c.SaveUploadedFile(file, dst)
 	if err != nil {
@@ -71,4 +71,42 @@ func UploadPrivateChatPhoto(c *gin.Context) {
 	service.HandlePrivateChatMsg(p.Message)
 
 	response.ResponseSuccess(c, struct{}{})
+}
+
+func UploadPrivateChatFile(c *gin.Context) {
+	p := new(param.UploadPrivateChatFileParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		response.ResponseError(c, response.CodeServerBusy)
+		return
+	}
+
+	pwd := utils.GetCurrentPath()
+	dst := fmt.Sprintf("%v/file/%v", pwd, p.Message.MsgID)
+	err = c.SaveUploadedFile(file, dst)
+	if err != nil {
+		response.ResponseError(c, response.CodeServerBusy)
+		return
+	}
+	service.HandlePrivateChatMsg(p.Message)
+
+	response.ResponseSuccess(c, struct{}{})
+}
+
+func GetFileByID(c *gin.Context) {
+	ID := c.Param("id")
+	if ID == "" {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	pwd := utils.GetCurrentPath()
+	filePath := fmt.Sprintf("%v/file/%v", pwd, ID)
+	c.File(filePath)
 }

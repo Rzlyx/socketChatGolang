@@ -1,12 +1,13 @@
 package routes
 
 import (
-	"dou_yin/controllers/chat"
 	"dou_yin/controllers/friend"
 	"dou_yin/controllers/group"
+	"dou_yin/controllers/privateChat"
 	"dou_yin/controllers/user"
 	"dou_yin/logger"
 	"dou_yin/middleware"
+	"dou_yin/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,7 +16,7 @@ func SetupRouter() *gin.Engine {
 	r := gin.New()
 	r.Use(middleware.Cors())
 	r.Use(logger.GinLogger(), logger.GinRecovery(true))
-	r.GET("/ws/:token", chat.Connect)
+	r.GET("/ws/:token", service.Connect)
 
 	// user
 	r.POST("/register", user.Register)
@@ -44,10 +45,12 @@ func SetupRouter() *gin.Engine {
 	r.POST("/setFriendRemark", friend.SetFriendRemark)
 	r.POST("/setReadTime", friend.SetReadTime)
 
-	// private chat
-	r.POST("/queryPrivateChatMsg", chat.QueryPrivateChatMsg)
-	r.POST("/deletePrivateChatMsg", chat.DeletePrivateChatMsg)
-	r.POST("/uploadPrivateChatPhoto", chat.UploadPrivateChatPhoto)
+	// private privateChat
+	r.POST("/queryPrivateChatMsg", privateChat.QueryPrivateChatMsg)
+	r.POST("/deletePrivateChatMsg", privateChat.DeletePrivateChatMsg)
+	r.POST("/uploadPrivateChatPhoto", privateChat.UploadPrivateChatPhoto)
+	r.POST("/uploadPrivateChatFile", privateChat.UploadPrivateChatFile)
+	r.GET("/getFileByID/:id", privateChat.GetFileByID)
 
 	// group
 	r.POST("/CreateGroupInfo", group.CreateGroupInfo)

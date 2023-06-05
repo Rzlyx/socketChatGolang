@@ -17,3 +17,7 @@ type DeletePrivateChatMsgParam struct {
 type UploadPrivateChatPhotoParam struct {
 	Message VO.MessageVO `json:"message" binding:"required"`
 }
+
+type UploadPrivateChatFileParam struct {
+	Message VO.MessageVO `json:"message" binding:"required"`
+}

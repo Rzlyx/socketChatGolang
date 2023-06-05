@@ -1,11 +1,10 @@
-package chat
+package service
 
 import (
 	// "dou_yin/dao/redis"
 	"dou_yin/model/VO"
 	"dou_yin/pkg/jwt"
 	"dou_yin/pkg/utils"
-	"dou_yin/service"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -46,19 +45,19 @@ func MsgTransMit() {
 			// 	}
 			// }
 		} else { // 群聊
-			userIds, err := service.GetAllUserIDsbyGroupID(msg.ReceiverID)
+			userIds, err := GetAllUserIDsbyGroupID(msg.ReceiverID)
 			if err != nil {
 				fmt.Println("[MsgTransMit], 群聊 err is ", err.Error())
 			}
 			for _, id := range *userIds {
 				if id != utils.ShiftToNum64(msg.SenderID) && id != 999999 {
 					if _, ok := UserChan[id]; ok {
-						Type, err := service.GroupMSGType(utils.ShiftToStringFromInt64(id), msg.ReceiverID)
+						Type, err := GroupMSGType(utils.ShiftToStringFromInt64(id), msg.ReceiverID)
 						if err != nil {
 							fmt.Println("[MsgTransMit], GroupMSGType err is ", err.Error())
 						}
 						msg.MsgType = int(Type)
-						if Type == service.GROUP_WHITE_LIST || Type == service.GROUP_GRAY_LIST {
+						if Type == GROUP_WHITE_LIST || Type == GROUP_GRAY_LIST {
 							fmt.Println("receive_group:", msg.ReceiverID, " receive_id:", id)
 							UserChan[id] <- msg
 						}
@@ -70,19 +69,19 @@ func MsgTransMit() {
 }
 
 func StartSendGroupNewMsg(UserId, GroupID string) error {
-	msgs, err := service.QueryGroupNewMsgList(UserId, GroupID)
+	msgs, err := QueryGroupNewMsgList(UserId, GroupID)
 	if err != nil {
 		return err
 	}
 	id := utils.ShiftToNum64(UserId)
 	if _, ok := UserChan[id]; ok {
 		for _, msg := range msgs {
-			Type, err := service.GroupMSGType(UserId, GroupID)
+			Type, err := GroupMSGType(UserId, GroupID)
 			if err != nil {
 				fmt.Println("[MsgTransMit], GroupMSGType err is ", err.Error())
 			}
 			msg.MsgType = int(Type)
-			if Type == service.GROUP_WHITE_LIST || Type == service.GROUP_GRAY_LIST {
+			if Type == GROUP_WHITE_LIST || Type == GROUP_GRAY_LIST {
 				fmt.Println("receive_group:", GroupID, " receive_id:", id)
 				UserChan[id] <- msg
 			}
@@ -141,22 +140,22 @@ func Connect(c *gin.Context) {
 		}
 		// filter
 		if msg.MsgType == 0 {
-			service.HandlePrivateChatMsg(*msg)
+			HandlePrivateChatMsg(*msg)
 		} else { // 群聊
-			IsSlience, err := service.IsGroupSlienceList(msg.SenderID, msg.ReceiverID)
+			IsSlience, err := IsGroupSlienceList(msg.SenderID, msg.ReceiverID)
 			if err != nil {
 				msg.ErrString = "系统内部错误，请稍后再试"
 			}
 			if IsSlience {
 				msg.ErrString = "已被禁言"
 			} else {
-				err = service.CreatGroupMsg(*msg)
+				err = CreatGroupMsg(*msg)
 				if err != nil {
 					msg.ErrString = "系统内部错误，请稍后再试"
 				}
 				MsgChan <- *msg
 				if strings.HasPrefix(msg.Message, "@GPT") {
-					result, err := service.GetGPTMessage(msg)
+					result, err := GetGPTMessage(msg)
 					if err != nil {
 						msg.ErrString = "系统内部错误，请稍后再试"
 					}

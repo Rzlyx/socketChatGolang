@@ -1,7 +1,6 @@
 package group
 
 import (
-	"dou_yin/controllers/chat"
 	"dou_yin/model/VO/param"
 	"dou_yin/model/VO/response"
 	"dou_yin/service"
@@ -491,7 +490,6 @@ func SetGroupReadTime(c *gin.Context) {
 	response.ResponseSuccess(c, struct{}{})
 }
 
-
 // 获取历史消息
 func GetPageOldMsg(c *gin.Context) {
 	p := new(param.GetPageOldMsgParam)
@@ -521,7 +519,7 @@ func StartSendNewMsg(c *gin.Context) {
 		fmt.Println("[StartSendNewMsg] ShouldBind err is ", err.Error())
 		return
 	}
-	err = chat.StartSendGroupNewMsg(p.UserID, p.GroupID)
+	err = service.StartSendGroupNewMsg(p.UserID, p.GroupID)
 	if err != nil {
 		// 内部错误
 		response.ResponseError(c, response.CodeInternError)
