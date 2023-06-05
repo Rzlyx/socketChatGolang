@@ -3,6 +3,7 @@ package group
 import (
 	"dou_yin/model/VO/param"
 	"dou_yin/model/VO/response"
+	"dou_yin/pkg/utils"
 	"dou_yin/service"
 	"fmt"
 
@@ -50,6 +51,25 @@ func QueryGroupList(c *gin.Context) {
 	response.ResponseSuccess(c, p1)
 }
 
+func GetGroupAllUser(c *gin.Context) {
+	p := new(param.GetGroupAllUserParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[GetGroupAllUser] ShouldBind err is ", err.Error())
+		return
+	}
+	p1, err := service.GetGroupAllUserbyParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[GetGroupAllUser] MGetGroupListByParam err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, p1)
+}
+
 // 创建群聊
 func CreateGroupInfo(c *gin.Context) {
 	p := new(param.CreateGroupInfoParam)
@@ -67,6 +87,48 @@ func CreateGroupInfo(c *gin.Context) {
 		fmt.Println("[CreateGroupInfo] CreateGroupInfoByParam err is ", err.Error())
 		return
 	}
+	response.ResponseSuccess(c, struct{}{})
+}
+
+// 更新群信息
+func UpdateGroupInfo(c *gin.Context) {
+	p := new(param.UpdateGroupInfoParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[CreateGroupInfo] ShouldBind err is ", err.Error())
+		return
+	}
+	err = service.UpdateGroupInfoByParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[CreateGroupInfo] CreateGroupInfoByParam err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, struct{}{})
+}
+
+// 上传头像
+func UploadGroupPhoto(c *gin.Context) {
+	param := new(param.UploadGroupPhotoParam)
+	err := c.ShouldBind(param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	file, err := c.FormFile("img")
+	if err != nil {
+		response.ResponseError(c, response.CodeServerBusy)
+		return
+	}
+
+	pwd := utils.GetCurrentPath()
+	dst := fmt.Sprintf("%v/img/%v", pwd, param.GroupID)
+	c.SaveUploadedFile(file, dst)
+
 	response.ResponseSuccess(c, struct{}{})
 }
 
@@ -470,6 +532,25 @@ func SetGroupName(c *gin.Context) {
 	response.ResponseSuccess(c, struct{}{})
 }
 
+func SetMyName(c *gin.Context) {
+	p := new(param.SetMyNameParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[SetMyName] ShouldBind err is ", err.Error())
+		return
+	}
+	err = service.SetMyNamebyParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[SetMyName]  err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, struct{}{})
+}
+
 // 设置群聊已读时间
 func SetGroupReadTime(c *gin.Context) {
 	p := new(param.SetGroupReadTimeParam)
@@ -490,7 +571,7 @@ func SetGroupReadTime(c *gin.Context) {
 	response.ResponseSuccess(c, struct{}{})
 }
 
-// 获取历史消息
+// 按页查询历史消息
 func GetPageOldMsg(c *gin.Context) {
 	p := new(param.GetPageOldMsgParam)
 	err := c.ShouldBind(p)
@@ -508,11 +589,111 @@ func GetPageOldMsg(c *gin.Context) {
 		return
 	}
 	response.ResponseSuccess(c, p1)
+}
+
+
+// 登录获取历史消息--获取15条消息
+func GetGroupOldMsgLogin(c *gin.Context) {
+	p := new(param.GetGroupOldMsgLoginParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[GetGroupOldMsgLogin] ShouldBind err is ", err.Error())
+		return
+	}
+	p1, err := service.GetGroupOldMsgLoginbyParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[GetGroupOldMsgLogin]  err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, p1)
 
 	go func(){
 		err := service.SendGroupNewMsg(p.UserID)
 		if err != nil {
-			fmt.Println("[AddUser], SenndGroupNewMsg err is ", err.Error())
+			fmt.Println("[GetGroupOldMsgLogin], SenndGroupNewMsg err is ", err.Error())
 		}
 	}()
+}
+
+// 加载向上的信息
+func GetGroupOldMsgUp(c *gin.Context) {
+	p := new(param.GetGroupOldMsgUpParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[GetGroupOldMsgUp] ShouldBind err is ", err.Error())
+		return
+	}
+	p1, err := service.GetGroupOldMsgUpbyParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[GetGroupOldMsgUp]  err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, p1)
+}
+
+// 按天数获取信息
+func GetGroupOldMsgDay() {
+
+}
+
+// 上传群相册
+func UploadGroupChatPhoto(c *gin.Context) {
+	p := new(param.UploadGroupChatPhotoParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	file, err := c.FormFile("img")
+	if err != nil {
+		response.ResponseError(c, response.CodeServerBusy)
+		return
+	}
+
+	pwd := utils.GetCurrentPath()
+	dst := fmt.Sprintf("%v/img/%v", pwd, p.Message.MsgID)
+	err = c.SaveUploadedFile(file, dst)
+	if err != nil {
+		response.ResponseError(c, response.CodeServerBusy)
+		return
+	}
+	service.HandleGroupChatMsg(&p.Message)
+
+	response.ResponseSuccess(c, struct{}{})
+}
+
+// 上传群文件
+func UploadGroupChatFile(c *gin.Context) {
+	p := new(param.UploadGroupChatFileParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		response.ResponseError(c, response.CodeServerBusy)
+		return
+	}
+
+	pwd := utils.GetCurrentPath()
+	dst := fmt.Sprintf("%v/file/%v", pwd, p.Message.MsgID)
+	err = c.SaveUploadedFile(file, dst)
+	if err != nil {
+		response.ResponseError(c, response.CodeServerBusy)
+		return
+	}
+	service.HandleGroupChatMsg(&p.Message)
+
+	response.ResponseSuccess(c, struct{}{})
 }

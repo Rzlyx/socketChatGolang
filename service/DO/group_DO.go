@@ -34,6 +34,8 @@ type GroupDO struct {
 
 type GroupExtra struct {
 	ReadTime string `json:"read_time"`
+	IsRemark bool 	`json:"is_remark"`
+	MyName   string `json:"my_name"`
 }
 
 func MGetGroupInfofromPO(info group_dao.GroupInfoPO) (*GroupInfoDO, error) {
