@@ -15,16 +15,16 @@ import (
 
 func Register(info *param.ParamRegister) (*PO.UserPO, error) {
 	userInfo := &PO.UserPO{
-		UserID: snowflake.GenID() / 100000000000,
-		UserName: info.UserName,
-		Password: info.Password,
-		Sex: info.Sex,
+		UserID:      snowflake.GenID() / 100000000000,
+		UserName:    info.UserName,
+		Password:    info.Password,
+		Sex:         info.Sex,
 		PhoneNumber: info.PhoneNumber,
-		Email: info.EMail,
-		Signature: &info.Signature,
-		Birthday:  info.Birthday,
+		Email:       info.EMail,
+		Signature:   &info.Signature,
+		Birthday:    info.Birthday,
 	}
-	
+
 	err := user_dao.Register(userInfo)
 	fmt.Println("[Register], err is ", err.Error())
 	return userInfo, err
@@ -39,7 +39,7 @@ func Login(p *param.ParamLogin) (user *PO.UserPO, token string, err error) {
 
 	if p.UserName == user.UserName && p.Password == user.Password {
 		token, err = jwt.GenToken(user.UserID, user.UserName)
-		
+
 		return user, token, err
 	}
 
@@ -134,6 +134,12 @@ func UpdateUserInfo(param param.UpdateUserInfoParam) (err error) {
 		return err
 	}
 
+	// todo: tx
+	needUpdateRemark := false
+	if userInfo.UserName != param.UserName {
+		needUpdateRemark = true
+	}
+
 	userInfo.UserName = param.UserName
 	userInfo.Password = param.Password
 	userInfo.Sex = param.Sex
@@ -152,5 +158,35 @@ func UpdateUserInfo(param param.UpdateUserInfoParam) (err error) {
 		return err
 	}
 
+	if needUpdateRemark {
+		err = UpdateFriendRemark(utils.ShiftToNum64(param.UserID), param.UserName)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+func QueryUserInfo(param param.QueryUserInfoParam) (DO.UserInfo, error) {
+	userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.UserID))
+	if err != nil {
+		return DO.UserInfo{}, err
+	}
+
+	ret := DO.UserInfo{
+		UserID:               userInfo.UserID,
+		UserName:             userInfo.UserName,
+		Password:             userInfo.Password,
+		Sex:                  userInfo.Sex,
+		PhoneNumber:          userInfo.PhoneNumber,
+		Email:                userInfo.Email,
+		Birthday:             userInfo.Birthday,
+		Status:               userInfo.Status,
+		FriendCircleVisiable: userInfo.FriendCircleVisiable,
+	}
+	if userInfo.Signature != nil {
+		ret.Signature = *userInfo.Signature
+	}
+
+	return ret, nil
 }

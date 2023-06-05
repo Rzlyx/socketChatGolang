@@ -33,6 +33,16 @@ func QueryFriendList(param param.QueryFriendListParam) (friendList DO.FriendList
 			friendDO.Name = friend.FirstRemarkSecond
 		}
 
+		friendInfo, err := user_dao.QueryUserInfo(friendDO.FriendID)
+		if err != nil {
+			return friendList, err
+		}
+
+		friendDO.Status = friendInfo.Status
+		if friendDO.Status == 2 {
+			friendDO.Status = 0
+		}
+		
 		friendList.Friends = append(friendList.Friends, friendDO)
 	}
 
@@ -56,7 +66,7 @@ func QueryFriendInfo(param param.QueryFriendInfoParam) (friendInfo DO.FriendInfo
 	friendInfo.Birthday = friend.Birthday
 	friendInfo.Status = friend.Status
 
-	friendship, err := friend_dao.QueryFriendship(utils.ShiftToNum64(param.FriendshipID))
+	friendship, err := friend_dao.QueryFriendshipBy2ID(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
 	if err != nil {
 		return friendInfo, err
 	}
@@ -102,6 +112,12 @@ func QueryFriendInfo(param param.QueryFriendInfoParam) (friendInfo DO.FriendInfo
 		friendInfo.IsFriendCircleBlack = false
 	}
 
+	isInPrivateChatGray, err := CheckPrivateChatGray(utils.ShiftToNum64(param.FriendID), utils.ShiftToNum64(param.UserID))
+	if err != nil {
+		return friendInfo, err
+	}
+	friendInfo.IsPrivateChatGray = isInPrivateChatGray
+
 	return friendInfo, nil
 }
 
@@ -121,6 +137,28 @@ func CheckPrivateChatBlack(userID int64, friendID int64) (bool, error) {
 		}
 
 		return IsContains(privateChatBlackList.BlackList, userID), nil
+	}
+
+	return false, nil
+}
+
+func CheckPrivateChatGray(userID int64, friendID int64) (bool, error) {
+	friendInfo, err := user_dao.QueryUserInfo(friendID)
+	if err != nil {
+		return false, err
+	}
+
+	var extra PO.UserExtra
+	if friendInfo.Extra != nil {
+		err = json.Unmarshal([]byte(*friendInfo.Extra), &extra)
+		if err != nil {
+			logger.Log.Error(err.Error())
+			return false, err
+		}
+
+		if extra.PrivateChatGray != nil {
+			return IsContains(*extra.PrivateChatGray, userID), nil
+		}
 	}
 
 	return false, nil
@@ -212,8 +250,8 @@ func AddFriend(addFriendParam param.AddFriendParam) (application DO.AddFriendApp
 	return application, nil
 }
 
-func DeleteFriend(param param.DeleteFriendParam) (err error) {
-	friendship, err := friend_dao.QueryFriendshipBy2ID(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
+func DeleteFriend(p param.DeleteFriendParam) (err error) {
+	friendship, err := friend_dao.QueryFriendshipBy2ID(utils.ShiftToNum64(p.UserID), utils.ShiftToNum64(p.FriendID))
 	if err != nil {
 		return err
 	}
@@ -224,12 +262,20 @@ func DeleteFriend(param param.DeleteFriendParam) (err error) {
 		return err
 	}
 
-	err = RemoveFriendFromWhiteBlackList(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
+	//err = RemoveFriendFromWhiteBlackList(utils.ShiftToNum64(p.UserID), utils.ShiftToNum64(p.FriendID))
+	//if err != nil {
+	//	return err
+	//}
+
+	err = RemoveFriendFromWhiteBlackList(utils.ShiftToNum64(p.FriendID), utils.ShiftToNum64(p.UserID))
 	if err != nil {
 		return err
 	}
 
-	err = RemoveFriendFromWhiteBlackList(utils.ShiftToNum64(param.FriendID), utils.ShiftToNum64(param.UserID))
+	err = UnGrayPrivateChat(param.UnGrayPrivateChatParam{
+		UserID:   p.UserID,
+		FriendID: p.FriendID,
+	})
 	if err != nil {
 		return err
 	}
@@ -266,6 +312,78 @@ func SetFriendCircleBlack(param param.SetFriendCircleBlackParam) (err error) {
 
 func UnBlockFriendCircle(param param.UnBlockFriendCircleParam) (err error) {
 	err = AddFriendCircleWhiteFromBlack(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func SetPrivateChatGray(param param.SetPrivateChatGrayParam) (err error) {
+	userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.UserID))
+	if err != nil {
+		return err
+	}
+
+	var userExtra PO.UserExtra
+	if userInfo.Extra != nil {
+		err := json.Unmarshal([]byte(*userInfo.Extra), &userExtra)
+		if err != nil {
+			return err
+		}
+	}
+	if userExtra.PrivateChatGray != nil {
+		*userExtra.PrivateChatGray = append(*userExtra.PrivateChatGray, utils.ShiftToNum64(param.FriendID))
+	} else {
+		grayList := new([]int64)
+		*grayList = append(*grayList, utils.ShiftToNum64(param.FriendID))
+		userExtra.PrivateChatGray = grayList
+	}
+
+	extraJson, err := json.Marshal(userExtra)
+	if err != nil {
+		return err
+	}
+	extraStr := string(extraJson[:])
+	userInfo.Extra = &extraStr
+
+	err = user_dao.UpdateUserInfoByPO(&userInfo)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UnGrayPrivateChat(param param.UnGrayPrivateChatParam) (err error) {
+	userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.UserID))
+	if err != nil {
+		return err
+	}
+
+	var userExtra PO.UserExtra
+	if userInfo.Extra != nil {
+		err := json.Unmarshal([]byte(*userInfo.Extra), &userExtra)
+		if err != nil {
+			return err
+		}
+	}
+	if userExtra.PrivateChatGray != nil {
+		for index, id := range *userExtra.PrivateChatGray {
+			if id == utils.ShiftToNum64(param.FriendID) {
+				*userExtra.PrivateChatGray = append((*userExtra.PrivateChatGray)[:index], (*userExtra.PrivateChatGray)[index+1:]...)
+			}
+		}
+	}
+
+	extraJson, err := json.Marshal(userExtra)
+	if err != nil {
+		return err
+	}
+	extraStr := string(extraJson[:])
+	userInfo.Extra = &extraStr
+
+	err = user_dao.UpdateUserInfoByPO(&userInfo)
 	if err != nil {
 		return err
 	}
@@ -838,7 +956,7 @@ func SetReadTime(param param.SetReadTime) (err error) {
 	extraJson, err := json.Marshal(extra)
 	extraStr := string(extraJson[:])
 
-	err = friend_dao.UpdateReadTimeExtra(friendship.FriendshipID, extraStr)
+	err = friend_dao.UpdateExtra(friendship.FriendshipID, extraStr)
 	if err != nil {
 		return err
 	}
@@ -857,12 +975,136 @@ func HandlePrivateChatMsg(msg VO.MessageVO) {
 		msg.ReceiverID, msg.SenderID = msg.SenderID, msg.ReceiverID
 		msg.ErrString = "已被对方拉黑"
 	} else {
+		// todo: tx
 		err = SavePrivateChatMsg(msg)
 		if err != nil {
 			msg.ReceiverID, msg.SenderID = msg.SenderID, msg.ReceiverID
 			msg.ErrString = "系统内部错误，请稍后重试"
 		}
+
+		isInGrayList, err := CheckPrivateChatGray(utils.ShiftToNum64(msg.SenderID), utils.ShiftToNum64(msg.ReceiverID))
+		if err != nil {
+			msg.ReceiverID, msg.SenderID = msg.SenderID, msg.ReceiverID
+			msg.ErrString = "系统内部错误，请稍后重试"
+		}
+
+		if isInGrayList {
+			msg.MsgType = 1
+		}
 	}
 
 	MsgChan <- msg
+}
+
+func UpdateFriendRemark(userID int64, remark string) (err error) {
+	friendships, err := friend_dao.QueryFriendshipList(userID)
+	if err != nil {
+		return err
+	}
+
+	for _, friendship := range friendships {
+		if friendship.FirstID == userID && !friendship.IsFirstRemarkSecond {
+			friendship.FirstRemarkSecond = remark
+			err = friend_dao.UpdateFirstRemarkSecond(friendship.FriendshipID, remark, "")
+			if err != nil {
+				return err
+			}
+		} else if friendship.SecondID == userID && !friendship.IsSecondRemarkFirst {
+			friendship.SecondRemarkFirst = remark
+			err = friend_dao.UpdateSecondRemarkFirst(friendship.FriendshipID, remark, "")
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func AddFriendTag(param param.AddFriendTagParam) (err error) {
+	friendship, err := friend_dao.QueryFriendshipBy2ID(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
+	if err != nil {
+		return err
+	}
+
+	var extra PO.FriendExtra
+	if friendship.Extra != nil {
+		err = json.Unmarshal([]byte(*friendship.Extra), &extra)
+		if err != nil {
+			return err
+		}
+	}
+
+	if friendship.FirstID == utils.ShiftToNum64(param.UserID) {
+		if extra.FirstTagSecond != nil {
+			*extra.FirstTagSecond = append(*extra.FirstTagSecond, param.Tag)
+		} else {
+			tags := new([]string)
+			*tags = append(*tags, param.Tag)
+			extra.FirstTagSecond = tags
+		}
+	} else {
+		if extra.SecondTagFirst != nil {
+			*extra.SecondTagFirst = append(*extra.SecondTagFirst, param.Tag)
+		} else {
+			tags := new([]string)
+			*tags = append(*tags, param.Tag)
+			extra.SecondTagFirst = tags
+		}
+	}
+
+	extraJson, err := json.Marshal(extra)
+	extraStr := string(extraJson[:])
+
+	err = friend_dao.UpdateExtra(friendship.FriendshipID, extraStr)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func RemoveFriendTag(param param.RemoveFriendTagParam) (err error) {
+	friendship, err := friend_dao.QueryFriendshipBy2ID(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
+	if err != nil {
+		return err
+	}
+
+	var extra PO.FriendExtra
+	if friendship.Extra != nil {
+		err = json.Unmarshal([]byte(*friendship.Extra), &extra)
+		if err != nil {
+			return err
+		}
+	}
+
+	if friendship.FirstID == utils.ShiftToNum64(param.UserID) {
+		if extra.FirstTagSecond != nil {
+			for index, tag := range *extra.FirstTagSecond {
+				if tag == param.Tag {
+					*extra.FirstTagSecond = append((*extra.FirstTagSecond)[:index], (*extra.FirstTagSecond)[index+1:]...)
+					break
+				}
+			}
+		}
+	} else {
+		if extra.SecondTagFirst != nil {
+			for index, tag := range *extra.SecondTagFirst {
+				if tag == param.Tag {
+					*extra.SecondTagFirst = append((*extra.SecondTagFirst)[:index], (*extra.SecondTagFirst)[index+1:]...)
+					break
+				}
+			}
+		}
+	}
+
+	extraJson, err := json.Marshal(extra)
+	extraStr := string(extraJson[:])
+
+	err = friend_dao.UpdateExtra(friendship.FriendshipID, extraStr)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

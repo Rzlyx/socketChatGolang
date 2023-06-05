@@ -49,6 +49,10 @@ type UpdateUserInfoParam struct {
 	//Extra                *string `json:"extra"`
 }
 
-type UploadPhoto struct {
+type UploadPhotoParam struct {
+	UserID string `json:"user_id" form:"user_id" binding:"required"`
+}
+
+type QueryUserInfoParam struct {
 	UserID string `json:"user_id" form:"user_id" binding:"required"`
 }

@@ -14,4 +14,7 @@ type FriendPO struct {
 type FriendExtra struct {
 	FirstReadTime  string `json:"first_read_time"`
 	SecondReadTime string `json:"second_read_time"`
+
+	FirstTagSecond *[]string `json:"first_tag_second"`
+	SecondTagFirst *[]string `json:"second_tag_first"`
 }

@@ -29,6 +29,17 @@ func QueryReadMsgByFriendshipID(friendshipID int64, num int, pageNum int, readTi
 	return privateMsgPOs, nil
 }
 
+func QueryReadMsgByFriendshipIDandDate(friendshipID int64, readTime string, startTime string, endTime string) (privateMsgPOs []PO.PrivateMsgPO, err error) {
+	sqlStr := "select * from private_message where friendship_id = ? and create_time < ? and create_time < ? and create_time > ?"
+	err = mysql.DB.Select(&privateMsgPOs, sqlStr, friendshipID, readTime, endTime, startTime)
+	if err != nil {
+		logger.Log.Error(err.Error())
+		return nil, err
+	}
+	
+	return privateMsgPOs, nil
+}
+
 func QueryUnreadMsgByFriendshipID(friendshipID int64, readTime string) (privateMsgPOs []PO.PrivateMsgPO, err error) {
 	sqlStr := "select * from private_message where friendship_id = ? and create_time > ?"
 	err = mysql.DB.Select(&privateMsgPOs, sqlStr, friendshipID, readTime)

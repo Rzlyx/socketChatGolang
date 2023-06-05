@@ -30,6 +30,26 @@ func QueryPrivateChatMsg(c *gin.Context) {
 	response.ResponseSuccess(c, resp)
 }
 
+func QueryPrivateChatMsgByDate(c *gin.Context) {
+	param := new(param.QueryPrivateChatMsgByDateParam)
+	err := c.ShouldBind(param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	messages, err := service.QueryPrivateChatMsgByDate(*param)
+	if err != nil {
+		logger.Log.Error(err.Error())
+		response.ResponseError(c, response.CodeInternError)
+		return
+	}
+
+	resp := new(response.QueryPrivateChatMsgResp)
+	resp.MessageList = messages
+	response.ResponseSuccess(c, resp)
+}
+
 func DeletePrivateChatMsg(c *gin.Context) {
 	param := new(param.DeletePrivateChatMsgParam)
 	err := c.ShouldBind(param)

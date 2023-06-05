@@ -8,6 +8,7 @@ type Friend struct {
 	FriendshipID int64  `json:"friendship_id,string"`
 	FriendID     int64  `json:"friend_id,string"`
 	Name         string `json:"name"`
+	Status       int    `json:"status"`
 }
 
 type FriendInfo struct {
@@ -23,6 +24,7 @@ type FriendInfo struct {
 	IsRemark            bool   `json:"is_remark"`
 	IsPrivateChatBlack  bool   `json:"is_private_chat_black"`
 	IsFriendCircleBlack bool   `json:"is_friend_circle_black"`
+	IsPrivateChatGray   bool   `json:"is_private_chat_gray"`
 }
 
 type AddFriendApplication struct {

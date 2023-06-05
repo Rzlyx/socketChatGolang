@@ -5,9 +5,8 @@ type QueryFriendListParam struct {
 }
 
 type QueryFriendInfoParam struct {
-	FriendshipID string `json:"friendship_id" form:"friendship_id" binding:"required"`
-	UserID       string `json:"user_id" form:"user_id" binding:"required"`
-	FriendID     string `json:"friend_id" form:"friend_id" binding:"required"`
+	UserID   string `json:"user_id" form:"user_id" binding:"required"`
+	FriendID string `json:"friend_id" form:"friend_id" binding:"required"`
 }
 
 type AddFriendParam struct {
@@ -17,9 +16,8 @@ type AddFriendParam struct {
 }
 
 type DeleteFriendParam struct {
-	UserID       string `json:"user_id" form:"user_id" binding:"required"`
-	FriendID     string `json:"friend_id" form:"friend_id" binding:"required"`
-	FriendshipID string `json:"friendship_id" form:"friendship_id" binding:"required"`
+	UserID   string `json:"user_id" form:"user_id" binding:"required"`
+	FriendID string `json:"friend_id" form:"friend_id" binding:"required"`
 }
 
 type SetPrivateChatBlackParam struct {
@@ -67,4 +65,26 @@ type SetFriendRemark struct {
 type SetReadTime struct {
 	UserID   string `json:"user_id" form:"user_id" binding:"required"`
 	FriendID string `json:"friend_id" form:"friend_id" binding:"required"`
+}
+
+type SetPrivateChatGrayParam struct {
+	UserID   string `json:"user_id" form:"user_id" binding:"required"`
+	FriendID string `json:"friend_id" form:"friend_id" binding:"required"`
+}
+
+type UnGrayPrivateChatParam struct {
+	UserID   string `json:"user_id" form:"user_id" binding:"required"`
+	FriendID string `json:"friend_id" form:"friend_id" binding:"required"`
+}
+
+type AddFriendTagParam struct {
+	UserID   string `json:"user_id" form:"user_id" binding:"required"`
+	FriendID string `json:"friend_id" form:"friend_id" binding:"required"`
+	Tag      string `json:"tag" form:"tag" binding:"required"`
+}
+
+type RemoveFriendTagParam struct {
+	UserID   string `json:"user_id" form:"user_id" binding:"required"`
+	FriendID string `json:"friend_id" form:"friend_id" binding:"required"`
+	Tag      string `json:"tag" form:"tag" binding:"required"`
 }
