@@ -33,6 +33,16 @@ func QueryFriendList(param param.QueryFriendListParam) (friendList DO.FriendList
 			friendDO.Name = friend.FirstRemarkSecond
 		}
 
+		friendInfo, err := user_dao.QueryUserInfo(friendDO.FriendID)
+		if err != nil {
+			return friendList, err
+		}
+
+		friendDO.Status = friendInfo.Status
+		if friendDO.Status == 2 {
+			friendDO.Status = 0
+		}
+		
 		friendList.Friends = append(friendList.Friends, friendDO)
 	}
 
