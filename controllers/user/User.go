@@ -4,10 +4,10 @@ import (
 	"dou_yin/dao/redis"
 	"dou_yin/model/VO/param"
 	"dou_yin/model/VO/response"
+	"dou_yin/pkg/utils"
 	"dou_yin/service"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"os"
 )
 
 func Register(c *gin.Context) {
@@ -84,7 +84,7 @@ func GetPhotoByID(c *gin.Context) {
 		return
 	}
 
-	pwd := GetCurrentPath()
+	pwd := utils.GetCurrentPath()
 	imgPath := fmt.Sprintf("%v/img/%v", pwd, ID)
 	c.File(imgPath)
 }
@@ -103,16 +103,11 @@ func UploadPhoto(c *gin.Context) {
 		return
 	}
 
-	pwd := GetCurrentPath()
+	pwd := utils.GetCurrentPath()
 	dst := fmt.Sprintf("%v/img/%v", pwd, param.UserID)
 	c.SaveUploadedFile(file, dst)
 
 	response.ResponseSuccess(c, struct{}{})
-}
-
-func GetCurrentPath() string {
-	path, _ := os.Getwd()
-	return path
 }
 
 func SetContactorList(c *gin.Context) {
