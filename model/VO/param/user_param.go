@@ -3,9 +3,12 @@ package param
 import "dou_yin/service/DO"
 
 type ParamRegister struct {
-	UserName string `json:"username" form:"username" binding:"required"`
-	Password string `json:"password" form:"password" binding:"required"`
-	EMail    string `json:"e_mail" form:"e_mail" binding:"required"`
+	UserName    string `json:"username" form:"username" binding:"required"`
+	Password    string `json:"password" form:"password" binding:"required"`
+	Sex         int    `json:"sex" form:"sex" binding:"required"`
+	PhoneNumber string `json:"phone_number" form:"phone_number" binding:"required"`
+	EMail       string `json:"e_mail" form:"e_mail" binding:"required"`
+	Signature 	string `json:"signature" form:"signature" binding:"required"`
 }
 
 type ParamLogin struct {

@@ -64,7 +64,7 @@ func CreateGroupInfo(c *gin.Context) {
 	if err != nil {
 		// 内部错误
 		response.ResponseError(c, response.CodeInternError)
-		fmt.Println("[CreateGroupInfo] MGetGroupListByParam err is ", err.Error())
+		fmt.Println("[CreateGroupInfo] CreateGroupInfoByParam err is ", err.Error())
 		return
 	}
 	response.ResponseSuccess(c, struct{}{})
@@ -470,6 +470,7 @@ func SetGroupName(c *gin.Context) {
 	response.ResponseSuccess(c, struct{}{})
 }
 
+// 设置群聊已读时间
 func SetGroupReadTime(c *gin.Context) {
 	p := new(param.SetGroupReadTimeParam)
 	err := c.ShouldBind(p)
@@ -484,6 +485,45 @@ func SetGroupReadTime(c *gin.Context) {
 		// 内部错误
 		response.ResponseError(c, response.CodeInternError)
 		fmt.Println("[SetGroupReadTime]  err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, struct{}{})
+}
+
+// 获取历史消息
+func GetPageOldMsg(c *gin.Context) {
+	p := new(param.GetPageOldMsgParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[GetPageOldMsg] ShouldBind err is ", err.Error())
+		return
+	}
+	p1, err := service.GetPageOldMsgByParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[GetPageOldMsg]  err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, p1)
+}
+
+func StartSendNewMsg(c *gin.Context) {
+	p := new(param.StartSendNewMsgParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[StartSendNewMsg] ShouldBind err is ", err.Error())
+		return
+	}
+	err = service.StartSendGroupNewMsg(p.UserID, p.GroupID)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[StartSendNewMsg]  err is ", err.Error())
 		return
 	}
 	response.ResponseSuccess(c, struct{}{})
