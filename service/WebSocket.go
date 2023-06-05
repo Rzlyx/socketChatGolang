@@ -1,11 +1,10 @@
-package chat
+package service
 
 import (
 	"dou_yin/dao/redis"
 	"dou_yin/model/VO"
 	"dou_yin/pkg/jwt"
 	"dou_yin/pkg/utils"
-	"dou_yin/service"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -94,7 +93,7 @@ func Connect(c *gin.Context) {
 		}
 		// filter
 		if msg.MsgType == 0 {
-			service.HandlePrivateChatMsg(*msg)
+			HandlePrivateChatMsg(*msg)
 		}
 	}
 }
