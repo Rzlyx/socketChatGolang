@@ -20,7 +20,7 @@ type GroupInfoDO struct {
 }
 
 type GroupInfoExtra struct {
-	// Avatar string `json:"avatar"`
+	AIGPT 	bool	`json:"ai_gpt"`	// false-关闭  true-开启
 }
 
 type GroupDO struct {

@@ -17,7 +17,7 @@ func Register(c *gin.Context) {
 		response.ResponseError(c, response.CodeInvalidParams)
 		return
 	}
-	err, p1 := service.Register(p)
+	p1, err := service.Register(p)
 	if err != nil {
 		response.ResponseError(c, response.CodeServerBusy)
 		return
@@ -32,7 +32,7 @@ func Login(c *gin.Context) {
 		response.ResponseError(c, response.CodeInvalidParams)
 		return
 	}
-	err, user, token := service.Login(p)
+	user, token, err := service.Login(p)
 	if err != nil {
 		response.ResponseErrorWithMsg(c, response.CodeInvalidPassword, "")
 		return

@@ -69,7 +69,9 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 	groupInfo.AdminIds = new([]int64)
 	groupInfo.Description = info.Description
 	groupInfo.CreateTime = utils.GetNowTime()
-	groupInfo.Extra = nil
+	groupInfo.Extra = &DO.GroupInfoExtra{
+		AIGPT: true,
+	}
 	groupInfo.GroupName = info.GroupName
 	groupInfo.IsDeleted = false
 	groupInfo.SilenceList = new([]int64)
@@ -78,6 +80,7 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 	for _, id := range *info.UserIDs {
 		userIds = append(userIds, utils.ShiftToNum64(id))
 	}
+	userIds = append(userIds, 999999) 	// AI机器人
 	groupInfo.UserIds = &userIds
 
 	groupInfoPO, err := DO.TurnGroupInfoPOfromDO(groupInfo)
@@ -91,6 +94,7 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 		UserIDs = append(UserIDs, userIds...)
 	}
 	UserIDs = append(UserIDs, utils.ShiftToNum64(info.OwnerID))
+	UserIDs = append(UserIDs, 999999) 	// AI机器人
 	for _, id := range UserIDs {
 		userInfo, err := user_dao.QueryUserInfo(id)
 		if err != nil {
@@ -1001,5 +1005,28 @@ func SetGroupReadTimebyParam(info *param.SetGroupReadTimeParam) error {
 		return err
 	}
 
+	return nil
+}
+
+func SetAIGPTbyParam(info *param.SetAIGPTParam) error {
+	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
+	if err != nil {
+		return err
+	}
+	groupInfoDO, err := DO.MGetGroupInfofromPO(*groupInfoPO)
+	if err != nil {
+		return err
+	}
+	groupInfoDO.Extra.AIGPT = !groupInfoDO.Extra.AIGPT
+	
+	GroupInfoPO, err := DO.TurnGroupInfoPOfromDO(*groupInfoDO)
+	if err != nil {
+		return err
+	}
+
+	err = group_dao.UpdateGroupInfo(GroupInfoPO)
+	if err != nil {
+		return err
+	}
 	return nil
 }
