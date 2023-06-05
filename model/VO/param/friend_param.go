@@ -5,9 +5,8 @@ type QueryFriendListParam struct {
 }
 
 type QueryFriendInfoParam struct {
-	FriendshipID string `json:"friendship_id" form:"friendship_id" binding:"required"`
-	UserID       string `json:"user_id" form:"user_id" binding:"required"`
-	FriendID     string `json:"friend_id" form:"friend_id" binding:"required"`
+	UserID   string `json:"user_id" form:"user_id" binding:"required"`
+	FriendID string `json:"friend_id" form:"friend_id" binding:"required"`
 }
 
 type AddFriendParam struct {
@@ -17,9 +16,8 @@ type AddFriendParam struct {
 }
 
 type DeleteFriendParam struct {
-	UserID       string `json:"user_id" form:"user_id" binding:"required"`
-	FriendID     string `json:"friend_id" form:"friend_id" binding:"required"`
-	FriendshipID string `json:"friendship_id" form:"friendship_id" binding:"required"`
+	UserID   string `json:"user_id" form:"user_id" binding:"required"`
+	FriendID string `json:"friend_id" form:"friend_id" binding:"required"`
 }
 
 type SetPrivateChatBlackParam struct {

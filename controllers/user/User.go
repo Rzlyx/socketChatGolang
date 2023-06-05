@@ -37,7 +37,7 @@ func Login(c *gin.Context) {
 		response.ResponseErrorWithMsg(c, response.CodeInvalidPassword, "")
 		return
 	}
-	
+
 	response.ResponseSuccess(c, gin.H{
 		"id":    user.UserID,
 		"token": token,
@@ -90,7 +90,7 @@ func GetPhotoByID(c *gin.Context) {
 }
 
 func UploadPhoto(c *gin.Context) {
-	param := new(param.UploadPhoto)
+	param := new(param.UploadPhotoParam)
 	err := c.ShouldBind(param)
 	if err != nil {
 		response.ResponseError(c, response.CodeInvalidParams)
@@ -142,4 +142,22 @@ func UpdateUserInfo(c *gin.Context) {
 	}
 
 	response.ResponseSuccess(c, struct{}{})
+}
+
+func QueryUserInfo(c *gin.Context) {
+	param := new(param.QueryUserInfoParam)
+	err := c.ShouldBind(param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	userInfo, err := service.QueryUserInfo(*param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInternError)
+		return
+	}
+	resp := new(response.QueryUserInfo)
+	resp.UserInfo = userInfo
+	response.ResponseSuccess(c, resp)
 }

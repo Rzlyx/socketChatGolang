@@ -56,7 +56,7 @@ func QueryFriendInfo(param param.QueryFriendInfoParam) (friendInfo DO.FriendInfo
 	friendInfo.Birthday = friend.Birthday
 	friendInfo.Status = friend.Status
 
-	friendship, err := friend_dao.QueryFriendship(utils.ShiftToNum64(param.FriendshipID))
+	friendship, err := friend_dao.QueryFriendshipBy2ID(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
 	if err != nil {
 		return friendInfo, err
 	}
@@ -865,4 +865,29 @@ func HandlePrivateChatMsg(msg VO.MessageVO) {
 	}
 
 	MsgChan <- msg
+}
+
+func UpdateFriendRemark(userID int64, remark string) (err error) {
+	friendships, err := friend_dao.QueryFriendshipList(userID)
+	if err != nil {
+		return err
+	}
+
+	for _, friendship := range friendships {
+		if friendship.FirstID == userID && !friendship.IsFirstRemarkSecond {
+			friendship.FirstRemarkSecond = remark
+			err = friend_dao.UpdateFirstRemarkSecond(friendship.FriendshipID, remark, "")
+			if err != nil {
+				return err
+			}
+		} else if friendship.SecondID == userID && !friendship.IsSecondRemarkFirst {
+			friendship.SecondRemarkFirst = remark
+			err = friend_dao.UpdateSecondRemarkFirst(friendship.FriendshipID, remark, "")
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

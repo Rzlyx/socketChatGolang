@@ -29,6 +29,7 @@ func SetupRouter() *gin.Engine {
 	r.POST("/uploadPhoto", user.UploadPhoto)
 	r.POST("/setContactorList", user.SetContactorList)
 	r.POST("/updateUserInfo", user.UpdateUserInfo)
+	r.POST("/queryUserInfo", user.QueryUserInfo)
 
 	// friend
 	r.POST("/queryFriendList", friend.QueryFriendList)
