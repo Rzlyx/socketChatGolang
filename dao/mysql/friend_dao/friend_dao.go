@@ -103,7 +103,7 @@ func UpdateSecondRemarkFirst(friendshipID int64, remark string, realName string)
 	return nil
 }
 
-func UpdateReadTimeExtra(friendshipID int64, extra string) (err error) {
+func UpdateExtra(friendshipID int64, extra string) (err error) {
 	sqlStr := "update friend set extra = ? where friendship_id = ?"
 	_, err = mysql.DB.Exec(sqlStr, extra, friendshipID)
 	if err != nil {

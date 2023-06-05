@@ -76,3 +76,15 @@ type UnGrayPrivateChatParam struct {
 	UserID   string `json:"user_id" form:"user_id" binding:"required"`
 	FriendID string `json:"friend_id" form:"friend_id" binding:"required"`
 }
+
+type AddFriendTagParam struct {
+	UserID   string `json:"user_id" form:"user_id" binding:"required"`
+	FriendID string `json:"friend_id" form:"friend_id" binding:"required"`
+	Tag      string `json:"tag" form:"tag" binding:"required"`
+}
+
+type RemoveFriendTagParam struct {
+	UserID   string `json:"user_id" form:"user_id" binding:"required"`
+	FriendID string `json:"friend_id" form:"friend_id" binding:"required"`
+	Tag      string `json:"tag" form:"tag" binding:"required"`
+}
