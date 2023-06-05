@@ -14,6 +14,19 @@ type GroupInfo struct {
 	CreateTime  string            `json:"create_time"`
 	IsDeleted   bool              `json:"is_deleted"`
 	Extra       DO.GroupInfoExtra `json:"extra"`
+	MyName      string            `json:"my_name"`    // 在此群的昵称
+	Type        int               `json:"type"`       // 群身份 0-普通成员，1-管理员，2-群主
+	OnlineNum   int               `json:"online_num"` // 在线人数
+	MsgType     int               `json:"msg_type"`   // 消息类型 6-接收并通知，7-接收不通知，8-不接收
+}
+
+type GroupUserInfo struct {
+	UserID     int64  `json:"user_id,string"`
+	MyName     string  `json:"name,string"` // 在此群的昵称
+	InsertTime string `json:"date"`        // 入群时间
+	Status     int    `json:"online"`      // 0-离线，1-在线,2-潜水
+	Type       int    `json:"identity"`    // 群身份 0-普通成员，1-管理员，2-群主
+	IsSlienced bool   `json:"status"`      // 是否被禁言
 }
 
 // 加入群聊信息,仅展示 群名和头像

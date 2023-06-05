@@ -7,15 +7,16 @@ import (
 	"dou_yin/model/VO"
 	"dou_yin/pkg/utils"
 	"dou_yin/service/DO"
+	"strings"
 )
 
 type GroupListType int
 
 const (
-	GROUP_LIST_UKNOW GroupListType = 1 // 不清楚
-	GROUP_WHITE_LIST GroupListType = 2 // 群聊处于白名单
-	GROUP_GRAY_LIST  GroupListType = 3 // 群聊处于灰名单
-	GROUP_BLACK_LIST GroupListType = 4 // 群聊处于黑名单
+	GROUP_LIST_UKNOW GroupListType = 5 // 不清楚
+	GROUP_WHITE_LIST GroupListType = 6 // 群聊处于白名单
+	GROUP_GRAY_LIST  GroupListType = 7 // 群聊处于灰名单
+	GROUP_BLACK_LIST GroupListType = 8 // 群聊处于黑名单
 )
 
 // 群聊名单
@@ -75,7 +76,7 @@ func IsDeletedMsg(UserID int64, List []int64) bool {
 	return false
 }
 
-// 获取历史消息by用户ID、群ID
+// 获取历史消息by用户ID、群ID，pageNum， Num
 func QueryGroupOldMsgList(UserID, GroupID string, pageNum, num int) ([]VO.MessageVO, error) {
 	var result []VO.MessageVO
 	groupID := utils.ShiftToNum64(GroupID)
@@ -181,4 +182,27 @@ func QueryGroupNewMsgList(UserID, GroupID string) ([]VO.MessageVO, error) {
 	}
 
 	return result, nil
+}
+
+func HandleGroupChatMsg(msg *VO.MessageVO) {
+	IsSlience, err := IsGroupSlienceList(msg.SenderID, msg.ReceiverID)
+	if err != nil {
+		msg.ErrString = "系统内部错误，请稍后再试"
+	}
+	if IsSlience {
+		msg.ErrString = "已被禁言"
+	} else {
+		err = CreatGroupMsg(*msg)
+		if err != nil {
+			msg.ErrString = "系统内部错误，请稍后再试"
+		}
+		MsgChan <- *msg
+		if strings.HasPrefix(msg.Message, "@GPT") {
+			result, err := GetGPTMessage(msg)
+			if err != nil {
+				msg.ErrString = "系统内部错误，请稍后再试"
+			}
+			MsgChan <- *result
+		}
+	}
 }

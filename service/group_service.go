@@ -16,28 +16,53 @@ import (
 )
 
 func MGetGroupInfoByParam(info *param.QueryGroupInfoParam) (*response.GroupInfo, error) {
-	group, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
+	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return nil, err
 	}
-
-	groupInfo, err := DO.MGetGroupInfofromPO(*group)
+	groupPO, err := group_dao.MGetGroupByUserIDandGroupID(utils.ShiftToNum64(info.UserID), utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return nil, err
 	}
+	groupInfoDO, err := DO.MGetGroupInfofromPO(*groupInfoPO)
+	if err != nil {
+		return nil, err
+	}
+	groupDO, err := DO.MGetGroupDOfromPO(*groupPO)
+	if err != nil {
+		return nil, err
+	}
+	userIds := *groupInfoDO.AdminIds
+	userIds = append(userIds, *groupInfoDO.UserIds...)
+	userIds = append(userIds, groupInfoDO.OwnerID)
+	OnlineNum := 0
+	for _, id := range userIds {
+		if _, ok := UserChan[id]; ok {
+			OnlineNum++
+		}
+	}
 
-	return &response.GroupInfo{
-		GroupID:     groupInfo.GroupID,
-		OwnerID:     groupInfo.OwnerID,
-		AdminIds:    *groupInfo.AdminIds,
-		SilenceList: *groupInfo.SilenceList,
-		UserIds:     *groupInfo.UserIds,
-		GroupName:   groupInfo.GroupName,
-		Description: *groupInfo.Description,
-		CreateTime:  groupInfo.CreateTime,
-		IsDeleted:   groupInfo.IsDeleted,
-		Extra:       *groupInfo.Extra,
-	}, nil
+	result := response.GroupInfo{
+		GroupID:     groupInfoDO.GroupID,
+		OwnerID:     groupInfoDO.OwnerID,
+		AdminIds:    *groupInfoDO.AdminIds,
+		SilenceList: *groupInfoDO.SilenceList,
+		UserIds:     *groupInfoDO.UserIds,
+		GroupName:   groupInfoDO.GroupName,
+		Description: *groupInfoDO.Description,
+		CreateTime:  groupInfoDO.CreateTime,
+		IsDeleted:   groupInfoDO.IsDeleted,
+		Extra:       *groupInfoDO.Extra,
+	}
+	result.Type = groupDO.Type
+	result.MyName = groupDO.Extra.MyName
+	msgType, err := GroupMSGType(info.UserID, info.GroupID)
+	if err != nil {
+		return nil, err
+	}
+	result.MsgType = int(msgType)
+	result.OnlineNum = OnlineNum
+	return &result, nil
 }
 
 func MGetGroupListByParam(info *param.QueryGroupListParam) (*[]response.GroupJoin, error) {
@@ -60,6 +85,57 @@ func MGetGroupListByParam(info *param.QueryGroupListParam) (*[]response.GroupJoi
 		})
 	}
 	return &result, nil
+}
+
+func GetGroupAllUserbyParam(info *param.GetGroupAllUserParam) (*[]response.GroupUserInfo, error) {
+	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
+	if err != nil {
+		return nil, err
+	}
+	groupInfoDO, err := DO.MGetGroupInfofromPO(*groupInfoPO)
+	if err != nil {
+		return nil, err
+	}
+	userIds := *groupInfoDO.AdminIds
+	userIds = append(userIds, *groupInfoDO.UserIds...)
+	userIds = append(userIds, groupInfoDO.OwnerID)
+
+	var List []response.GroupUserInfo
+
+	for _, id := range userIds {
+		groupPO, err := group_dao.MGetGroupByUserIDandGroupID(id, groupInfoDO.GroupID)
+		if err != nil {
+			return nil, err
+		}
+		groupDO, err := DO.MGetGroupDOfromPO(*groupPO)
+		if err != nil {
+			return nil, err
+		}
+		MsgType, err := GroupMSGType(info.UserID, info.GroupID)
+		if err != nil {
+			return nil, err
+		}
+		status := 0
+		if _, ok := UserChan[id]; ok {
+			status = 1
+		}
+		isSlienced := false
+		for _, id := range *groupInfoDO.SilenceList {
+			if id == utils.ShiftToNum64(info.UserID) {
+				isSlienced = true
+			}
+		}
+		List = append(List, response.GroupUserInfo{
+			UserID:     id,
+			MyName:     groupDO.Extra.MyName,
+			InsertTime: groupDO.CreateTime,
+			Status:     status,
+			Type:       int(MsgType),
+			IsSlienced: isSlienced,
+		})
+	}
+
+	return &List, nil
 }
 
 // 创建群聊
@@ -100,6 +176,7 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 	}
 	UserIDs = append(UserIDs, utils.ShiftToNum64(info.OwnerID))
 	UserIDs = append(UserIDs, 999999) // AI机器人
+	var groups []group_dao.GroupPO
 	for _, id := range UserIDs {
 		userInfo, err := user_dao.QueryUserInfo(id)
 		if err != nil {
@@ -126,10 +203,7 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 		userInfo.GroupChatWhite = &whiteList
 
 		users = append(users, userInfo)
-	}
 
-	var groups []group_dao.GroupPO
-	for _, id := range UserIDs {
 		var groupDO DO.GroupDO
 		groupDO.CreateTime = utils.GetNowTime()
 		groupDO.Extra = new(DO.GroupExtra)
@@ -139,6 +213,8 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 		groupDO.UserID = id
 		var extra DO.GroupExtra
 		extra.ReadTime = utils.GetNowTime()
+		extra.IsRemark = false
+		extra.MyName = userInfo.UserName
 		groupDO.Extra = &extra
 
 		groupPO, err := DO.TurnGroupPOfromDO(groupDO)
@@ -170,6 +246,59 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 		}
 	}
 
+	return nil
+}
+
+// 修改群信息
+func UpdateGroupInfoByParam(info *param.UpdateGroupInfoParam) error {
+	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
+	if err != nil {
+		return err
+	}
+	groupInfoDO, err := DO.MGetGroupInfofromPO(*groupInfoPO)
+	if err != nil {
+		return err
+	}
+
+	groupInfoDO.GroupName = info.GroupName
+	groupInfoDO.Description = info.Description
+
+	var userIDs []int64
+	userIDs = append(userIDs, groupInfoDO.OwnerID)
+	userIDs = append(userIDs, *groupInfoDO.AdminIds...)
+	userIDs = append(userIDs, *groupInfoDO.UserIds...)
+
+	for _, id := range userIDs {
+		groupPO, err := group_dao.MGetGroupByUserIDandGroupID(id, groupInfoDO.GroupID)
+		if err != nil {
+			return err
+		}
+		groupDO, err := DO.MGetGroupDOfromPO(*groupPO)
+		if err != nil {
+			return err
+		}
+		if !groupDO.Extra.IsRemark { // 未设有备注
+			groupDO.GroupName = info.GroupName
+			GroupPO, err := DO.TurnGroupPOfromDO(*groupDO)
+			if err != nil {
+				return err
+			}
+			_, err = group_dao.UpdateGroupByGroupPO(*GroupPO)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	GroupInfoPO, err := DO.TurnGroupInfoPOfromDO(*groupInfoDO)
+	if err != nil {
+		return err
+	}
+
+	err = group_dao.UpdateGroupInfo(GroupInfoPO)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -482,6 +611,8 @@ func AgreeGroupApplyByParam(info *param.AgreeGroupApplyParam) error {
 	groupDO.UserID = utils.ShiftToNum64(info.Applicant)
 	var extra DO.GroupExtra
 	extra.ReadTime = utils.GetNowTime()
+	extra.IsRemark = false
+	extra.MyName = userInfo.UserName
 	groupDO.Extra = &extra
 
 	groupPO, err := DO.TurnGroupPOfromDO(groupDO)
@@ -973,6 +1104,7 @@ func SetGroupNameByParam(info *param.SetGroupNameParam) error {
 	}
 
 	groupDO.GroupName = info.GroupName
+	groupDO.Extra.IsRemark = true
 
 	GroupPO, err := DO.TurnGroupPOfromDO(*groupDO)
 	if err != nil {
@@ -984,6 +1116,29 @@ func SetGroupNameByParam(info *param.SetGroupNameParam) error {
 		return err
 	}
 
+	return nil
+}
+
+// 设置在本群的昵称
+func SetMyNamebyParam(info *param.SetMyNameParam) error {
+	groupPO, err := group_dao.MGetGroupByUserIDandGroupID(utils.ShiftToNum64(info.UserID), utils.ShiftToNum64(info.GroupID))
+	if err != nil {
+		return err
+	}
+	groupDO, err := DO.MGetGroupDOfromPO(*groupPO)
+	if err != nil {
+		return err
+	}
+	groupDO.Extra.MyName = info.MyName
+	GroupPO, err := DO.TurnGroupPOfromDO(*groupDO)
+	if err != nil {
+		return err
+	}
+
+	_, err = group_dao.UpdateGroupByGroupPO(*GroupPO)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -1038,6 +1193,16 @@ func SetAIGPTbyParam(info *param.SetAIGPTParam) error {
 
 func GetPageOldMsgByParam(info *param.GetPageOldMsgParam) ([]VO.MessageVO, error) {
 	return QueryGroupOldMsgList(info.UserID, info.GroupID, info.PageNum, info.Num)
+}
+
+// 登录获取历史消息--获取15条消息
+func GetGroupOldMsgLoginbyParam(info *param.GetGroupOldMsgLoginParam) (*[]VO.MessageVO, error) {
+
+	return nil, nil
+}
+
+func GetGroupOldMsgUpbyParam(info *param.GetGroupOldMsgUpParam) (*[]VO.MessageVO, error) {
+	return nil, nil
 }
 
 func GetAllUserIDsbyGroupID(GroupID string) (*[]int64, error) {
