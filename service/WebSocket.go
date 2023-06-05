@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -138,26 +137,7 @@ func Connect(c *gin.Context) {
 		if msg.MsgType == 0 {
 			HandlePrivateChatMsg(*msg)
 		} else { // 群聊
-			IsSlience, err := IsGroupSlienceList(msg.SenderID, msg.ReceiverID)
-			if err != nil {
-				msg.ErrString = "系统内部错误，请稍后再试"
-			}
-			if IsSlience {
-				msg.ErrString = "已被禁言"
-			} else {
-				err = CreatGroupMsg(*msg)
-				if err != nil {
-					msg.ErrString = "系统内部错误，请稍后再试"
-				}
-				MsgChan <- *msg
-				if strings.HasPrefix(msg.Message, "@GPT") {
-					result, err := GetGPTMessage(msg)
-					if err != nil {
-						msg.ErrString = "系统内部错误，请稍后再试"
-					}
-					MsgChan <- *result
-				}
-			}
+			HandleGroupChatMsg(msg)
 		}
 
 	}

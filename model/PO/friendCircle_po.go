@@ -7,7 +7,7 @@ type FriendCirclePO struct {
 	Type       int     `json:"type" db:"type"`
 	BlackList  *string `json:"black_list" db:"black_list"`
 	WhiteList  *string `json:"white_list" db:"white_list"`
-	CteateTime string  `json:"cteate_time" db:"cteate_time"`
+	CreateTime string  `json:"create_time" db:"create_time"`
 	Likes      *string `json:"likes" db:"likes"`
 	IsDeleted  bool    `json:"is_deleted" db:"is_deleted"`
 	Extra      *string `json:"extra" db:"extra"`

@@ -1,9 +1,17 @@
 package param
 
+import "dou_yin/model/VO"
+
 // --------------需要返回详细数据
 
 // 查看群信息
 type QueryGroupInfoParam struct {
+	GroupID string `json:"group_id" form:"group_id" binding:"required"`
+	UserID  string `json:"user_id" form:"user_id" binding:"required"`
+}
+
+type GetGroupAllUserParam struct {
+	UserID  string `json:"user_id" form:"user_id" binding:"required"`
 	GroupID string `json:"group_id" form:"group_id" binding:"required"`
 }
 
@@ -26,6 +34,16 @@ type CreateGroupInfoParam struct {
 	GroupName   string    `json:"group_name" form:"group_name" binding:"required"`
 	Description *string   `json:"description" form:"description" binding:"required"`
 	UserIDs     *[]string `json:"user_ids" form:"user_ids"`
+}
+
+type UpdateGroupInfoParam struct {
+	GroupID     string  `json:"group_id" form:"group_id" binding:"required"`
+	GroupName   string  `json:"group_name" form:"group_name" binding:"required"`
+	Description *string `json:"description" form:"description" binding:"required"`
+}
+
+type UploadGroupPhotoParam struct {
+	GroupID string `json:"group_id" form:"group_id" binding:"required"`
 }
 
 // 解散群聊
@@ -146,6 +164,12 @@ type SetGroupNameParam struct {
 	GroupName string `json:"group_name" form:"group_name" binding:"required"`
 }
 
+type SetMyNameParam struct {
+	UserID  string `json:"user_id" form:"user_id" binding:"required"`
+	GroupID string `json:"group_id" form:"group_id" binding:"required"`
+	MyName  string `json:"my_name" form:"my_name" binding:"required"`
+}
+
 type SetGroupReadTimeParam struct {
 	UserID  string `json:"user_id" form:"user_id" binding:"required"`
 	GroupID string `json:"group_id" form:"group_id" binding:"required"`
@@ -161,4 +185,23 @@ type GetPageOldMsgParam struct {
 	GroupID string `json:"group_id" form:"group_id" binding:"required"`
 	PageNum int    `json:"page_num" form:"page_num" binding:"required"`
 	Num     int    `json:"num" form:"num" binding:"required"`
+}
+
+type GetGroupOldMsgLoginParam struct {
+	UserID  string `json:"user_id" form:"user_id" binding:"required"`
+	GroupID string `json:"group_id" form:"group_id" binding:"required"`
+}
+
+type GetGroupOldMsgUpParam struct {
+	UserID  string `json:"user_id" form:"user_id" binding:"required"`
+	GroupID string `json:"group_id" form:"group_id" binding:"required"`
+	TimeTag string `json:"time_tag" form:"time_tag" binding:"required"`
+}
+
+type UploadGroupChatPhotoParam struct {
+	Message VO.MessageVO `json:"message" binding:"required"`
+}
+
+type UploadGroupChatFileParam struct {
+	Message VO.MessageVO `json:"message" binding:"required"`
 }
