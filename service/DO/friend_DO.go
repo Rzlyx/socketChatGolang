@@ -23,6 +23,7 @@ type FriendInfo struct {
 	IsRemark            bool   `json:"is_remark"`
 	IsPrivateChatBlack  bool   `json:"is_private_chat_black"`
 	IsFriendCircleBlack bool   `json:"is_friend_circle_black"`
+	IsPrivateChatGray   bool   `json:"is_private_chat_gray"`
 }
 
 type AddFriendApplication struct {

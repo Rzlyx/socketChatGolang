@@ -251,3 +251,37 @@ func SetReadTime(c *gin.Context) {
 
 	response.ResponseSuccess(c, struct{}{})
 }
+
+func SetPrivateChatGray(c *gin.Context) {
+	param := new(param.SetPrivateChatGrayParam)
+	err := c.ShouldBind(param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	err = service.SetPrivateChatGray(*param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInternError)
+		return
+	}
+
+	response.ResponseSuccess(c, struct{}{})
+}
+
+func UnGrayPrivateChat(c *gin.Context) {
+	param := new(param.UnGrayPrivateChatParam)
+	err := c.ShouldBind(param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	err = service.UnGrayPrivateChat(*param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInternError)
+		return
+	}
+
+	response.ResponseSuccess(c, struct{}{})
+}

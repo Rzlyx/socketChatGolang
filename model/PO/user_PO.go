@@ -55,7 +55,8 @@ type FriendCircleBlack struct {
 }
 
 type UserExtra struct {
-	ContactorList *[]ContactInfoPO `json:"contactor_list"`
+	ContactorList   *[]ContactInfoPO `json:"contactor_list"`
+	PrivateChatGray *[]int64         `json:"private_chat_gray"`
 }
 
 type ContactInfoPO struct {

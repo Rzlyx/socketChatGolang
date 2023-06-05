@@ -102,6 +102,12 @@ func QueryFriendInfo(param param.QueryFriendInfoParam) (friendInfo DO.FriendInfo
 		friendInfo.IsFriendCircleBlack = false
 	}
 
+	isInPrivateChatGray, err := CheckPrivateChatGray(utils.ShiftToNum64(param.FriendID), utils.ShiftToNum64(param.UserID))
+	if err != nil {
+		return friendInfo, err
+	}
+	friendInfo.IsPrivateChatGray = isInPrivateChatGray
+
 	return friendInfo, nil
 }
 
@@ -121,6 +127,28 @@ func CheckPrivateChatBlack(userID int64, friendID int64) (bool, error) {
 		}
 
 		return IsContains(privateChatBlackList.BlackList, userID), nil
+	}
+
+	return false, nil
+}
+
+func CheckPrivateChatGray(userID int64, friendID int64) (bool, error) {
+	friendInfo, err := user_dao.QueryUserInfo(friendID)
+	if err != nil {
+		return false, err
+	}
+
+	var extra PO.UserExtra
+	if friendInfo.Extra != nil {
+		err = json.Unmarshal([]byte(*friendInfo.Extra), &extra)
+		if err != nil {
+			logger.Log.Error(err.Error())
+			return false, err
+		}
+
+		if extra.PrivateChatGray != nil {
+			return IsContains(*extra.PrivateChatGray, userID), nil
+		}
 	}
 
 	return false, nil
@@ -266,6 +294,78 @@ func SetFriendCircleBlack(param param.SetFriendCircleBlackParam) (err error) {
 
 func UnBlockFriendCircle(param param.UnBlockFriendCircleParam) (err error) {
 	err = AddFriendCircleWhiteFromBlack(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func SetPrivateChatGray(param param.SetPrivateChatGrayParam) (err error) {
+	userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.UserID))
+	if err != nil {
+		return err
+	}
+
+	var userExtra PO.UserExtra
+	if userInfo.Extra != nil {
+		err := json.Unmarshal([]byte(*userInfo.Extra), &userExtra)
+		if err != nil {
+			return err
+		}
+	}
+	if userExtra.PrivateChatGray != nil {
+		*userExtra.PrivateChatGray = append(*userExtra.PrivateChatGray, utils.ShiftToNum64(param.FriendID))
+	} else {
+		grayList := new([]int64)
+		*grayList = append(*grayList, utils.ShiftToNum64(param.FriendID))
+		userExtra.PrivateChatGray = grayList
+	}
+
+	extraJson, err := json.Marshal(userExtra)
+	if err != nil {
+		return err
+	}
+	extraStr := string(extraJson[:])
+	userInfo.Extra = &extraStr
+
+	err = user_dao.UpdateUserInfoByPO(&userInfo)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func UnGrayPrivateChat(param param.UnGrayPrivateChatParam) (err error) {
+	userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.UserID))
+	if err != nil {
+		return err
+	}
+
+	var userExtra PO.UserExtra
+	if userInfo.Extra != nil {
+		err := json.Unmarshal([]byte(*userInfo.Extra), &userExtra)
+		if err != nil {
+			return err
+		}
+	}
+	if userExtra.PrivateChatGray != nil {
+		for index, id := range *userExtra.PrivateChatGray {
+			if id == utils.ShiftToNum64(param.FriendID) {
+				*userExtra.PrivateChatGray = append((*userExtra.PrivateChatGray)[:index], (*userExtra.PrivateChatGray)[index+1:]...)
+			}
+		}
+	}
+
+	extraJson, err := json.Marshal(userExtra)
+	if err != nil {
+		return err
+	}
+	extraStr := string(extraJson[:])
+	userInfo.Extra = &extraStr
+
+	err = user_dao.UpdateUserInfoByPO(&userInfo)
 	if err != nil {
 		return err
 	}
@@ -857,10 +957,21 @@ func HandlePrivateChatMsg(msg VO.MessageVO) {
 		msg.ReceiverID, msg.SenderID = msg.SenderID, msg.ReceiverID
 		msg.ErrString = "已被对方拉黑"
 	} else {
+		// todo: tx
 		err = SavePrivateChatMsg(msg)
 		if err != nil {
 			msg.ReceiverID, msg.SenderID = msg.SenderID, msg.ReceiverID
 			msg.ErrString = "系统内部错误，请稍后重试"
+		}
+
+		isInGrayList, err := CheckPrivateChatGray(utils.ShiftToNum64(msg.SenderID), utils.ShiftToNum64(msg.ReceiverID))
+		if err != nil {
+			msg.ReceiverID, msg.SenderID = msg.SenderID, msg.ReceiverID
+			msg.ErrString = "系统内部错误，请稍后重试"
+		}
+
+		if isInGrayList {
+			msg.MsgType = 1
 		}
 	}
 
