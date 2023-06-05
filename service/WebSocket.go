@@ -1,6 +1,7 @@
 package service
 
 import (
+	"dou_yin/logger"
 	// "dou_yin/dao/redis"
 	"dou_yin/model/VO"
 	"dou_yin/pkg/jwt"
@@ -111,6 +112,7 @@ func Connect(c *gin.Context) {
 	//连接升级
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
