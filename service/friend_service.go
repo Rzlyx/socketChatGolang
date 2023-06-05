@@ -2,11 +2,13 @@ package service
 
 import (
 	"database/sql"
+	"dou_yin/controllers/chat"
 	"dou_yin/dao/mysql/apply_dao"
 	"dou_yin/dao/mysql/friend_dao"
 	"dou_yin/dao/mysql/user_dao"
 	"dou_yin/logger"
 	"dou_yin/model/PO"
+	"dou_yin/model/VO"
 	"dou_yin/model/VO/param"
 	"dou_yin/pkg/snowflake"
 	"dou_yin/pkg/utils"
@@ -843,4 +845,25 @@ func SetReadTime(param param.SetReadTime) (err error) {
 	}
 
 	return nil
+}
+
+func HandlePrivateChatMsg(msg VO.MessageVO) {
+	isInBlackList, err := CheckPrivateChatBlack(utils.ShiftToNum64(msg.SenderID), utils.ShiftToNum64(msg.ReceiverID))
+	if err != nil {
+		msg.ReceiverID, msg.SenderID = msg.SenderID, msg.ReceiverID
+		msg.ErrString = "系统内部错误，请稍后重试"
+	}
+
+	if isInBlackList {
+		msg.ReceiverID, msg.SenderID = msg.SenderID, msg.ReceiverID
+		msg.ErrString = "已被对方拉黑"
+	} else {
+		err = SavePrivateChatMsg(msg)
+		if err != nil {
+			msg.ReceiverID, msg.SenderID = msg.SenderID, msg.ReceiverID
+			msg.ErrString = "系统内部错误，请稍后重试"
+		}
+	}
+
+	chat.MsgChan <- msg
 }

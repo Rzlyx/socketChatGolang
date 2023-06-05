@@ -21,29 +21,33 @@ type QueryContactorListParam struct {
 }
 
 type SetContactorListParam struct {
-	UserID        int64            `json:"user_id"`
-	ContactorList []DO.ContactInfo `json:"contactor_list"`
+	UserID        string           `json:"user_id" binding:"required"`
+	ContactorList []DO.ContactInfo `json:"contactor_list" binding:"required"`
 }
 
 type UpdateUserInfoParam struct {
-	UserID      string `json:"user_id"`
-	UserName    string `json:"user_name"`
-	Password    string `json:"password"`
-	Sex         int    `json:"sex"`
-	PhoneNumber string `json:"phone_number"`
-	Email       string `json:"e_mail"`
-	Signature   string `json:"signature"`
-	Birthday    string `json:"birthday"`
-	Status      int    `json:"status"`
+	UserID      string `json:"user_id" form:"user_id" binding:"required"`
+	UserName    string `json:"user_name" form:"user_name" binding:"required"`
+	Password    string `json:"password" form:"password" binding:"required"`
+	Sex         int    `json:"sex" form:"sex" binding:"required"`
+	PhoneNumber string `json:"phone_number" form:"phone_number" binding:"required"`
+	Email       string `json:"e_mail" form:"e_mail" binding:"required"`
+	Signature   string `json:"signature" form:"signature" binding:"required"`
+	Birthday    string `json:"birthday" form:"birthday" binding:"required"`
+	Status      int    `json:"status" form:"status" binding:"required"`
 	//PrivateChatWhite     *string `json:"private_chat_white"`
 	//PrivateChatBlack     *string `json:"private_chat_black"`
 	//FriendCircleWhite    *string `json:"friend_circle_white"`
 	//FriendCircleBlack    *string `json:"friend_circle_black"`
-	FriendCircleVisiable int `json:"friend_circle_visiable"`
+	FriendCircleVisiable int `json:"friend_circle_visiable" form:"friend_circle_visiable" binding:"required"`
 	//GroupChatWhite       *string `json:"group_chat_white""`
 	//GroupChatBlack       *string `json:"group_chat_black"`
 	//GroupChatGray        *string `json:"group_chat_grey"`
 	//CreateTime           *string `json:"create_time"`
 	//IsDeleted            bool    `json:"is_deleted"`
 	//Extra                *string `json:"extra"`
+}
+
+type UploadPhoto struct {
+	UserID string `json:"user_id" form:"user_id" binding:"required"`
 }

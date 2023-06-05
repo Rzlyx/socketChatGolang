@@ -63,7 +63,7 @@ func QueryContactorList(param param.QueryContactorListParam) (contactors DO.Cont
 
 	for _, contact := range *extra.ContactorList {
 		contactDO := DO.ContactInfo{
-			ID:      contact.ID,
+			ID:      utils.ShiftToStringFromInt64(contact.ID),
 			Name:    contact.Name,
 			Message: contact.Message,
 			Time:    contact.Time,
@@ -76,7 +76,7 @@ func QueryContactorList(param param.QueryContactorListParam) (contactors DO.Cont
 }
 
 func SetContactorList(param param.SetContactorListParam) (err error) {
-	userInfo, err := user_dao.QueryUserInfo(param.UserID)
+	userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.UserID))
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func SetContactorList(param param.SetContactorListParam) (err error) {
 		var contactorsPO []PO.ContactInfoPO
 		for _, item := range param.ContactorList {
 			contactor := PO.ContactInfoPO{
-				ID:      item.ID,
+				ID:      utils.ShiftToNum64(item.ID),
 				Name:    item.Name,
 				Message: item.Message,
 				Time:    item.Time,

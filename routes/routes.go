@@ -47,6 +47,7 @@ func SetupRouter() *gin.Engine {
 	// private chat
 	r.POST("/queryPrivateChatMsg", chat.QueryPrivateChatMsg)
 	r.POST("/deletePrivateChatMsg", chat.DeletePrivateChatMsg)
+	r.POST("/uploadPrivateChatPhoto", chat.UploadPrivateChatPhoto)
 
 	// group
 	r.POST("/CreateGroupInfo", group.CreateGroupInfo)
