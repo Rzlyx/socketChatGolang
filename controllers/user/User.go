@@ -37,7 +37,7 @@ func Login(c *gin.Context) {
 		response.ResponseErrorWithMsg(c, response.CodeInvalidPassword, "")
 		return
 	}
-
+	
 	response.ResponseSuccess(c, gin.H{
 		"id":    user.UserID,
 		"token": token,

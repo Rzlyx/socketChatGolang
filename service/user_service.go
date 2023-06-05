@@ -39,6 +39,7 @@ func Login(p *param.ParamLogin) (user *PO.UserPO, token string, err error) {
 
 	if p.UserName == user.UserName && p.Password == user.Password {
 		token, err = jwt.GenToken(user.UserID, user.UserName)
+		
 		return user, token, err
 	}
 

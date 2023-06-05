@@ -162,10 +162,3 @@ type GetPageOldMsgParam struct {
 	PageNum int    `json:"page_num" form:"page_num" binding:"required"`
 	Num     int    `json:"num" form:"num" binding:"required"`
 }
-
-type StartSendNewMsgParam struct {
-	UserID  string `json:"user_id" form:"user_id" binding:"required"`
-	GroupID string `json:"group_id" form:"group_id" binding:"required"`
-	PageNum int    `json:"page_num" form:"page_num" binding:"required"`
-	Num     int    `json:"num" form:"num" binding:"required"`
-}
