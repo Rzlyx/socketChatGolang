@@ -24,7 +24,6 @@ func QueryPrivateChatMsg(param param.QueryPrivateChatMsgParam) (messageList DO.M
 			return messageList, err
 		}
 	}
-
 	var readTime string
 	if friendship.FirstID == utils.ShiftToNum64(param.UserID) {
 		readTime = extra.FirstReadTime
@@ -32,7 +31,7 @@ func QueryPrivateChatMsg(param param.QueryPrivateChatMsgParam) (messageList DO.M
 		readTime = extra.SecondReadTime
 	}
 
-	MsgPOs, err := privateChat_dao.QueryByFriendshipID(friendship.FriendshipID, param.Num, param.PageNum, readTime)
+	MsgPOs, err := privateChat_dao.QueryReadMsgByFriendshipID(friendship.FriendshipID, param.Num, param.PageNum, readTime)
 	for _, msg := range MsgPOs {
 		if msg.SenderID == utils.ShiftToNum64(param.UserID) {
 			if msg.Deleted_list&1 == 1 {
@@ -101,6 +100,55 @@ func SavePrivateChatMsg(msg VO.MessageVO) (err error) {
 	err = privateChat_dao.Insert(po)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func QueryAllUnreadPrivateChatMsg(UserID int64) (err error) {
+	friendships, err := friend_dao.QueryFriendshipList(UserID)
+	if err != nil {
+		return err
+	}
+
+	var msgVOs []VO.MessageVO
+	for _, friendship := range friendships {
+		var extra PO.FriendExtra
+		if friendship.Extra != nil {
+			err = json.Unmarshal([]byte(*friendship.Extra), &extra)
+			if err != nil {
+				return err
+			}
+		}
+		var readTime string
+		if friendship.FirstID == UserID {
+			readTime = extra.FirstReadTime
+		} else {
+			readTime = extra.SecondReadTime
+		}
+
+		msgs, err := privateChat_dao.QueryUnreadMsgByFriendshipID(friendship.FriendshipID, readTime)
+		if err != nil {
+			return err
+		}
+		for _, msg := range msgs {
+			msgVO := VO.MessageVO{
+				MsgID:       utils.ShiftToStringFromInt64(msg.MsgID),
+				MsgType:     0,
+				Message:     msg.Message,
+				CreateTime:  msg.CreateTime,
+				SenderID:    utils.ShiftToStringFromInt64(msg.SenderID),
+				ReceiverID:  utils.ShiftToStringFromInt64(msg.ReceiverID),
+				DataType:    msg.Type,
+				ErrString:   "",
+				IsAnonymous: false,
+			}
+			msgVOs = append(msgVOs, msgVO)
+		}
+	}
+
+	for _, msgVO := range msgVOs {
+		MsgChan <- msgVO
 	}
 
 	return nil

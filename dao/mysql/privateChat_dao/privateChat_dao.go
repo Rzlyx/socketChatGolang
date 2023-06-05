@@ -17,10 +17,21 @@ func Insert(privateMsgPO PO.PrivateMsgPO) (err error) {
 	return nil
 }
 
-func QueryByFriendshipID(friendshipID int64, num int, pageNum int, readTime string) (privateMsgPOs []PO.PrivateMsgPO, err error) {
+func QueryReadMsgByFriendshipID(friendshipID int64, num int, pageNum int, readTime string) (privateMsgPOs []PO.PrivateMsgPO, err error) {
 	startIndex := num * pageNum
 	sqlStr := "select * from private_message where friendship_id = ? and create_time < ? limit ?, ?"
 	err = mysql.DB.Select(&privateMsgPOs, sqlStr, friendshipID, readTime, startIndex, num)
+	if err != nil {
+		logger.Log.Error(err.Error())
+		return nil, err
+	}
+
+	return privateMsgPOs, nil
+}
+
+func QueryUnreadMsgByFriendshipID(friendshipID int64, readTime string) (privateMsgPOs []PO.PrivateMsgPO, err error) {
+	sqlStr := "select * from private_message where friendship_id = ? and create_time > ?"
+	err = mysql.DB.Select(&privateMsgPOs, sqlStr, friendshipID, readTime)
 	if err != nil {
 		logger.Log.Error(err.Error())
 		return nil, err

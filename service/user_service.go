@@ -67,15 +67,17 @@ func QueryContactorList(param param.QueryContactorListParam) (contactors DO.Cont
 		}
 	}
 
-	for _, contact := range *extra.ContactorList {
-		contactDO := DO.ContactInfo{
-			ID:      utils.ShiftToStringFromInt64(contact.ID),
-			Name:    contact.Name,
-			Message: contact.Message,
-			Time:    contact.Time,
-		}
+	if extra.ContactorList != nil {
+		for _, contact := range *extra.ContactorList {
+			contactDO := DO.ContactInfo{
+				ID:      utils.ShiftToStringFromInt64(contact.ID),
+				Name:    contact.Name,
+				Message: contact.Message,
+				Time:    contact.Time,
+			}
 
-		contactors.ContactorList = append(contactors.ContactorList, contactDO)
+			contactors.ContactorList = append(contactors.ContactorList, contactDO)
+		}
 	}
 
 	return contactors, err
