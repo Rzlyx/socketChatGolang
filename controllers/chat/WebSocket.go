@@ -1,16 +1,18 @@
 package chat
 
 import (
-	"dou_yin/dao/redis"
+	// "dou_yin/dao/redis"
 	"dou_yin/model/VO"
 	"dou_yin/pkg/jwt"
 	"dou_yin/pkg/utils"
 	"dou_yin/service"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"net/http"
 )
 
 var OtherMsgChan chan string
@@ -29,20 +31,65 @@ func ChanInit() {
 
 func MsgTransMit() {
 	for msg := range MsgChan {
-		if _, ok := UserChan[utils.ShiftToNum64(msg.ReceiverID)]; ok {
-			fmt.Println("receive_id:", msg.ReceiverID)
-			UserChan[utils.ShiftToNum64(msg.ReceiverID)] <- msg
-		} else {
-			id := msg.ReceiverID
-			res, _ := json.Marshal(msg)
+		if msg.MsgType == 0 { // 私聊
+			if _, ok := UserChan[utils.ShiftToNum64(msg.ReceiverID)]; ok {
+				fmt.Println("receive_id:", msg.ReceiverID)
+				UserChan[utils.ShiftToNum64(msg.ReceiverID)] <- msg
+			}
+			//  else {
+			// 	id := msg.ReceiverID
+			// 	res, _ := json.Marshal(msg)
 
-			err := redis.AddMsg(string(res), id)
+			// 	err := redis.AddMsg(string(res), id)
+			// 	if err != nil {
+			// 		fmt.Println("[MsgTransMit], 私聊 err is ", err.Error())
+			// 	}
+			// }
+		} else { // 群聊
+			userIds, err := service.GetAllUserIDsbyGroupID(msg.ReceiverID)
 			if err != nil {
-				fmt.Println(err)
+				fmt.Println("[MsgTransMit], 群聊 err is ", err.Error())
+			}
+			for _, id := range *userIds {
+				if id != utils.ShiftToNum64(msg.SenderID) && id != 999999 {
+					if _, ok := UserChan[id]; ok {
+						Type, err := service.GroupMSGType(utils.ShiftToStringFromInt64(id), msg.ReceiverID)
+						if err != nil {
+							fmt.Println("[MsgTransMit], GroupMSGType err is ", err.Error())
+						}
+						msg.MsgType = int(Type)
+						if Type == service.GROUP_WHITE_LIST || Type == service.GROUP_GRAY_LIST {
+							fmt.Println("receive_group:", msg.ReceiverID, " receive_id:", id)
+							UserChan[id] <- msg
+						}
+					}
+				}
 			}
 		}
-
 	}
+}
+
+func StartSendGroupNewMsg(UserId, GroupID string) error {
+	msgs, err := service.QueryGroupNewMsgList(UserId, GroupID)
+	if err != nil {
+		return err
+	}
+	id := utils.ShiftToNum64(UserId)
+	if _, ok := UserChan[id]; ok {
+		for _, msg := range msgs {
+			Type, err := service.GroupMSGType(UserId, GroupID)
+			if err != nil {
+				fmt.Println("[MsgTransMit], GroupMSGType err is ", err.Error())
+			}
+			msg.MsgType = int(Type)
+			if Type == service.GROUP_WHITE_LIST || Type == service.GROUP_GRAY_LIST {
+				fmt.Println("receive_group:", GroupID, " receive_id:", id)
+				UserChan[id] <- msg
+			}
+		}
+	}
+
+	return nil
 }
 
 func AddUser() {
@@ -109,9 +156,29 @@ func Connect(c *gin.Context) {
 				msg.ReceiverID, msg.SenderID = msg.SenderID, msg.ReceiverID
 				msg.ErrString = "系统内部错误，请稍后重试"
 			}
+		} else { // 群聊
+			IsSlience, err := service.IsGroupSlienceList(msg.SenderID, msg.ReceiverID)
+			if err != nil {
+				msg.ErrString = "系统内部错误，请稍后再试"
+			}
+			if IsSlience {
+				msg.ErrString = "已被禁言"
+			} else {
+				err = service.CreatGroupMsg(*msg)
+				if err != nil {
+					msg.ErrString = "系统内部错误，请稍后再试"
+				}
+				MsgChan <- *msg
+				if strings.HasPrefix(msg.Message, "@GPT") {
+					result, err := service.GetGPTMessage(msg)
+					if err != nil {
+						msg.ErrString = "系统内部错误，请稍后再试"
+					}
+					MsgChan <- *result
+				}
+			}
 		}
 
-		MsgChan <- *msg
 	}
 }
 

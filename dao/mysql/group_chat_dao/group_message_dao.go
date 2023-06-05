@@ -19,11 +19,10 @@ func MGetGroupMsgOldList(GroupID int64, ReadTime string, pageNum, num int) (*[]G
 }
 
 // 获取未读消息
-func MGetGroupNewList(GroupID int64, ReadTime string, pageNum, num int) (*[]GroupMsgPO, error) {
+func MGetGroupNewList(GroupID int64, ReadTime string) (*[]GroupMsgPO, error) {
 	var list []GroupMsgPO
-	startIndex := num * pageNum
-	strSql := "select * from group_message where group_id = ? and create_time > ? limit ?, ?"
-	err := mysql.DB.Select(&list, strSql, GroupID, ReadTime, startIndex, num)
+	strSql := "select * from group_message where group_id = ? and create_time > ?"
+	err := mysql.DB.Select(&list, strSql, GroupID, ReadTime)
 	if err != nil {
 		fmt.Println("[MGetGroupMsgOldList], select old err ", err.Error())
 		return nil, err

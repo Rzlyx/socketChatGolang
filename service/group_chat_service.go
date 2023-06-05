@@ -12,13 +12,13 @@ import (
 type GroupListType int
 
 const (
-	GROUP_LIST_UKNOW GroupListType = 0 // 不清楚
-	GROUP_WHITE_LIST GroupListType = 1 // 群聊处于白名单
-	GROUP_GRAY_LIST  GroupListType = 2 // 群聊处于灰名单
-	GROUP_BLACK_LIST GroupListType = 3 // 群聊处于黑名单
+	GROUP_LIST_UKNOW GroupListType = 1 // 不清楚
+	GROUP_WHITE_LIST GroupListType = 2 // 群聊处于白名单
+	GROUP_GRAY_LIST  GroupListType = 3 // 群聊处于灰名单
+	GROUP_BLACK_LIST GroupListType = 4 // 群聊处于黑名单
 )
 
-// 群聊是否在白名单
+// 群聊名单
 func GroupMSGType(UserID, GroupID string) (GroupListType, error) {
 	// TODO: 加缓存
 	userInfoPO, err := user_dao.QueryUserInfo(utils.ShiftToNum64(UserID))
@@ -115,7 +115,7 @@ func QueryGroupOldMsgList(UserID, GroupID string, pageNum, num int) ([]VO.Messag
 }
 
 // 获取未读信息by用户ID、群ID
-func QueryGroupNewMsgList(UserID, GroupID string, pageNum, num int) ([]VO.MessageVO, error) {
+func QueryGroupNewMsgList(UserID, GroupID string) ([]VO.MessageVO, error) {
 	var result []VO.MessageVO
 	groupID := utils.ShiftToNum64(GroupID)
 	userID := utils.ShiftToNum64(UserID)
@@ -134,7 +134,7 @@ func QueryGroupNewMsgList(UserID, GroupID string, pageNum, num int) ([]VO.Messag
 		return result, err
 	}
 
-	list, err := group_chat_dao.MGetGroupNewList(groupID, groupDO.Extra.ReadTime, pageNum, num)
+	list, err := group_chat_dao.MGetGroupNewList(groupID, groupDO.Extra.ReadTime)
 	if err != nil {
 		return result, err
 	}
@@ -155,20 +155,4 @@ func QueryGroupNewMsgList(UserID, GroupID string, pageNum, num int) ([]VO.Messag
 	return result, nil
 }
 
-// 接收新消息并保存
-func CreatGroupMsg(msg VO.MessageVO) error {
-	msgDO, err := DO.MGetMsgDOfromVO(&msg)
-	if err != nil {
-		return err
-	}
-	msgPO, err := DO.MGetGroupMsgPOfromDO(msgDO)
-	if err != nil {
-		return err
-	}
-	err = group_chat_dao.WriteGroupMsg(*msgPO)
-	if err != nil {
-		return err
-	}
 
-	return nil
-}
