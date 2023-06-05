@@ -78,18 +78,25 @@ func QueryContactorList(c *gin.Context) {
 }
 
 func GetPhotoByID(c *gin.Context) {
-	img := c.Param("id")
-	if img == "" {
+	ID := c.Param("id")
+	if ID == "" {
 		response.ResponseError(c, response.CodeInvalidParams)
 		return
 	}
 
 	pwd := GetCurrentPath()
-	imgPath := fmt.Sprintf("%v/img/%v", pwd, img)
+	imgPath := fmt.Sprintf("%v/img/%v", pwd, ID)
 	c.File(imgPath)
 }
 
 func UploadPhoto(c *gin.Context) {
+	param := new(param.UploadPhoto)
+	err := c.ShouldBind(param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
 	file, err := c.FormFile("img")
 	if err != nil {
 		response.ResponseError(c, response.CodeServerBusy)
@@ -97,7 +104,7 @@ func UploadPhoto(c *gin.Context) {
 	}
 
 	pwd := GetCurrentPath()
-	dst := fmt.Sprintf("%v/img/%v", pwd, file.Filename)
+	dst := fmt.Sprintf("%v/img/%v", pwd, param.UserID)
 	c.SaveUploadedFile(file, dst)
 
 	response.ResponseSuccess(c, struct{}{})

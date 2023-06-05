@@ -94,24 +94,8 @@ func Connect(c *gin.Context) {
 		}
 		// filter
 		if msg.MsgType == 0 {
-			isInBlackList, err := service.CheckPrivateChatBlack(utils.ShiftToNum64(msg.SenderID), utils.ShiftToNum64(msg.ReceiverID))
-			if err != nil {
-				msg.ReceiverID, msg.SenderID = msg.SenderID, msg.ReceiverID
-				msg.ErrString = "系统内部错误，请稍后重试"
-			}
-			if isInBlackList {
-				msg.ReceiverID, msg.SenderID = msg.SenderID, msg.ReceiverID
-				msg.ErrString = "已被对方拉黑"
-			}
-
-			err = service.SavePrivateChatMsg(*msg)
-			if err != nil {
-				msg.ReceiverID, msg.SenderID = msg.SenderID, msg.ReceiverID
-				msg.ErrString = "系统内部错误，请稍后重试"
-			}
+			service.HandlePrivateChatMsg(*msg)
 		}
-
-		MsgChan <- *msg
 	}
 }
 

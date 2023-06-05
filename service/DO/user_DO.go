@@ -5,8 +5,8 @@ type ContactList struct {
 }
 
 type ContactInfo struct {
-	ID      int64  `json:"id,string"`
-	Name    string `json:"name"`
-	Message string `json:"message"`
-	Time    string `json:"time"`
+	ID      string `json:"id" binding:"required"`
+	Name    string `json:"name" binding:"required"`
+	Message string `json:"message" binding:"required"`
+	Time    string `json:"time" binding:"required"`
 }
