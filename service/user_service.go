@@ -14,15 +14,21 @@ import (
 	"fmt"
 )
 
-func Register(p *param.ParamRegister) (*PO.User, error) {
-	p1 := new(PO.User)
-	p1.UserName = p.UserName
-	p1.Password = p.Password
-	p1.EMail = p.EMail
-	p1.UserID = snowflake.GenID() / 100000000000
-	err := mysql.Register(p1)
+func Register(info *param.ParamRegister) (*PO.UserPO, error) {
+	userInfo := &PO.UserPO{
+		UserID: snowflake.GenID() / 100000000000,
+		UserName: info.UserName,
+		Password: info.Password,
+		Sex: info.Sex,
+		PhoneNumber: info.PhoneNumber,
+		Email: info.EMail,
+		Signature: &info.Signature,
+		Birthday:  info.Birthday,
+	}
+	
+	err := mysql.Register(userInfo)
 	fmt.Println("[Register], err is ", err.Error())
-	return p1, err
+	return userInfo, err
 }
 
 func Login(p *param.ParamLogin) (user *PO.UserPO, token string, err error) {
