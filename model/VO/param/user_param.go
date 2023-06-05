@@ -56,3 +56,7 @@ type UploadPhotoParam struct {
 type QueryUserInfoParam struct {
 	UserID string `json:"user_id" form:"user_id" binding:"required"`
 }
+
+type SearchFriendOrGroupParam struct {
+	Context string `json:"context" form:"context" binding:"required"`
+}

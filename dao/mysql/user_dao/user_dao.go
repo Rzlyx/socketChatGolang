@@ -32,7 +32,6 @@ func GetContactorList(Id string) (p *PO.ContactorList, err error) {
 	return p, err
 }
 
-
 func QueryUserInfo(userID int64) (userPO PO.UserPO, err error) {
 	sqlStr := "select * from user where user_id = ? "
 	err = mysql.DB.Get(&userPO, sqlStr, userID)
@@ -167,4 +166,14 @@ func UpdateUserInfoByPO(user *PO.UserPO) error {
 		return err
 	}
 	return nil
+}
+
+func QueryLike(str string) (users []PO.UserPO, err error) {
+	sqlStr := "select * from user where user_name like %" + str + "%"
+	err = mysql.DB.Select(&users, sqlStr)
+	if err != nil {
+		return users, err
+	}
+
+	return users, nil
 }

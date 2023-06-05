@@ -42,7 +42,7 @@ func QueryFriendList(param param.QueryFriendListParam) (friendList DO.FriendList
 		if friendDO.Status == 2 {
 			friendDO.Status = 0
 		}
-		
+
 		friendList.Friends = append(friendList.Friends, friendDO)
 	}
 
@@ -117,6 +117,12 @@ func QueryFriendInfo(param param.QueryFriendInfoParam) (friendInfo DO.FriendInfo
 		return friendInfo, err
 	}
 	friendInfo.IsPrivateChatGray = isInPrivateChatGray
+
+	tags, err := GetTags(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
+	if err != nil {
+		return friendInfo, err
+	}
+	friendInfo.Tags = tags
 
 	return friendInfo, nil
 }
@@ -1107,4 +1113,31 @@ func RemoveFriendTag(param param.RemoveFriendTagParam) (err error) {
 	}
 
 	return nil
+}
+
+func GetTags(userID int64, friendID int64) (tags []string, err error) {
+	friendship, err := friend_dao.QueryFriendshipBy2ID(userID, friendID)
+	if err != nil {
+		return tags, err
+	}
+
+	var extra PO.FriendExtra
+	if friendship.Extra != nil {
+		err = json.Unmarshal([]byte(*friendship.Extra), &extra)
+		if err != nil {
+			return tags, err
+		}
+	}
+
+	if friendship.FirstID == userID {
+		if extra.FirstTagSecond != nil {
+			tags = *extra.FirstTagSecond
+		}
+	} else {
+		if extra.SecondTagFirst != nil {
+			tags = *extra.SecondTagFirst
+		}
+	}
+
+	return tags, nil
 }

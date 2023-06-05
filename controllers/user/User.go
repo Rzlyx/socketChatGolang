@@ -161,3 +161,21 @@ func QueryUserInfo(c *gin.Context) {
 	resp.UserInfo = userInfo
 	response.ResponseSuccess(c, resp)
 }
+
+func SearchFriendOrGroup(c *gin.Context) {
+	param := new(param.SearchFriendOrGroupParam)
+	err := c.ShouldBind(param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	context, err := service.SearchFriendOrGroup(*param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInternError)
+		return
+	}
+	resp := new(response.SearchFriendOrGroup)
+	resp.Context = context
+	response.ResponseSuccess(c, resp)
+}

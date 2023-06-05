@@ -9,3 +9,7 @@ type QueryContactorList struct {
 type QueryUserInfo struct {
 	UserInfo DO.UserInfo `json:"user_info"`
 }
+
+type SearchFriendOrGroup struct {
+	Context DO.SearchFriendOrGroupContexts `json:"context"`
+}

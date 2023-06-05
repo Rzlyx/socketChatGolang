@@ -33,3 +33,13 @@ type UserInfo struct {
 	//IsDeleted            bool    `json:"is_deleted"`
 	//Extra                *string `json:"extra"`
 }
+
+type SearchFriendOrGroupContexts struct {
+	Result []SearchFriendOrGroupContext `json:"result"`
+}
+
+type SearchFriendOrGroupContext struct {
+	Type int    `json:"type"`
+	ID   int64  `json:"id,string"`
+	Name string `json:"name"`
+}
