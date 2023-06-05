@@ -508,23 +508,11 @@ func GetPageOldMsg(c *gin.Context) {
 		return
 	}
 	response.ResponseSuccess(c, p1)
-}
 
-func StartSendNewMsg(c *gin.Context) {
-	p := new(param.StartSendNewMsgParam)
-	err := c.ShouldBind(p)
-	if err != nil {
-		// 无效参数
-		response.ResponseError(c, response.CodeInvalidParams)
-		fmt.Println("[StartSendNewMsg] ShouldBind err is ", err.Error())
-		return
-	}
-	err = service.StartSendGroupNewMsg(p.UserID, p.GroupID)
-	if err != nil {
-		// 内部错误
-		response.ResponseError(c, response.CodeInternError)
-		fmt.Println("[StartSendNewMsg]  err is ", err.Error())
-		return
-	}
-	response.ResponseSuccess(c, struct{}{})
+	go func(){
+		err := service.SendGroupNewMsg(p.UserID)
+		if err != nil {
+			fmt.Println("[AddUser], SenndGroupNewMsg err is ", err.Error())
+		}
+	}()
 }

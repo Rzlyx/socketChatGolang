@@ -114,6 +114,34 @@ func QueryGroupOldMsgList(UserID, GroupID string, pageNum, num int) ([]VO.Messag
 	return result, nil
 }
 
+func SendGroupNewMsg(UserId string) error {
+	userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(UserId))
+	if err != nil {
+		return err
+	}
+	whiteList, grayList, _, err := turnUserGroupList(userInfo)
+	if err != nil {
+		return err
+	}
+	if whiteList != nil {
+		for _, groupID := range *whiteList {
+			err := StartSendGroupNewMsg(UserId, utils.ShiftToStringFromInt64(groupID), int(GROUP_WHITE_LIST))
+			if err != nil {
+				return err
+			}
+		}
+	}
+	if grayList != nil {
+		for _, groupID := range *grayList {
+			err := StartSendGroupNewMsg(UserId, utils.ShiftToStringFromInt64(groupID), int(GROUP_GRAY_LIST))
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // 获取未读信息by用户ID、群ID
 func QueryGroupNewMsgList(UserID, GroupID string) ([]VO.MessageVO, error) {
 	var result []VO.MessageVO
@@ -154,5 +182,3 @@ func QueryGroupNewMsgList(UserID, GroupID string) ([]VO.MessageVO, error) {
 
 	return result, nil
 }
-
-
