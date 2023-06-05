@@ -5,6 +5,7 @@ import (
 	"dou_yin/dao/mysql/group_dao"
 	"dou_yin/dao/mysql/user_dao"
 	"dou_yin/model/PO"
+	"dou_yin/model/VO"
 	"dou_yin/model/VO/param"
 	"dou_yin/model/VO/response"
 	"dou_yin/pkg/snowflake"
@@ -77,10 +78,12 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 	groupInfo.SilenceList = new([]int64)
 	// 将好友拉入群聊
 	var userIds []int64
-	for _, id := range *info.UserIDs {
-		userIds = append(userIds, utils.ShiftToNum64(id))
+	if info.UserIDs != nil && len(*info.UserIDs) > 0 {
+		for _, id := range *info.UserIDs {
+			userIds = append(userIds, utils.ShiftToNum64(id))
+		}
 	}
-	userIds = append(userIds, 999999) 	// AI机器人
+	userIds = append(userIds, 999999) // AI机器人
 	groupInfo.UserIds = &userIds
 
 	groupInfoPO, err := DO.TurnGroupInfoPOfromDO(groupInfo)
@@ -90,11 +93,13 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 
 	var users []PO.UserPO
 	var UserIDs []int64
-	if info.UserIDs != nil {
-		UserIDs = append(UserIDs, userIds...)
+	if info.UserIDs != nil && len(*info.UserIDs) > 0 {
+		for _, id := range *info.UserIDs {
+			UserIDs = append(UserIDs, utils.ShiftToNum64(id))
+		}
 	}
 	UserIDs = append(UserIDs, utils.ShiftToNum64(info.OwnerID))
-	UserIDs = append(UserIDs, 999999) 	// AI机器人
+	UserIDs = append(UserIDs, 999999) // AI机器人
 	for _, id := range UserIDs {
 		userInfo, err := user_dao.QueryUserInfo(id)
 		if err != nil {
@@ -1018,7 +1023,7 @@ func SetAIGPTbyParam(info *param.SetAIGPTParam) error {
 		return err
 	}
 	groupInfoDO.Extra.AIGPT = !groupInfoDO.Extra.AIGPT
-	
+
 	GroupInfoPO, err := DO.TurnGroupInfoPOfromDO(*groupInfoDO)
 	if err != nil {
 		return err
@@ -1029,4 +1034,25 @@ func SetAIGPTbyParam(info *param.SetAIGPTParam) error {
 		return err
 	}
 	return nil
+}
+
+func GetPageOldMsgByParam(info *param.GetPageOldMsgParam) ([]VO.MessageVO, error) {
+	return QueryGroupOldMsgList(info.UserID, info.GroupID, info.PageNum, info.Num)
+}
+
+func GetAllUserIDsbyGroupID(GroupID string) (*[]int64, error) {
+	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(GroupID))
+	if err != nil {
+		return nil, err
+	}
+	groupInfoDO, err := DO.MGetGroupInfofromPO(*groupInfoPO)
+	if err != nil {
+		return nil, err
+	}
+	var result []int64
+	result = append(result, groupInfoDO.OwnerID)
+	result = append(result, *groupInfoDO.AdminIds...)
+	result = append(result, *groupInfoDO.UserIds...)
+
+	return &result, nil
 }

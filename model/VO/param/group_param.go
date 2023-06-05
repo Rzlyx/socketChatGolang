@@ -23,8 +23,8 @@ type QueryGroupApplyListParam struct {
 // 创建群聊
 type CreateGroupInfoParam struct {
 	OwnerID     string    `json:"owner_id" form:"owner_id" binding:"required"`
-	GroupName   string   `json:"group_name" form:"group_name" binding:"required"`
-	Description *string  `json:"description" form:"description" binding:"required"`
+	GroupName   string    `json:"group_name" form:"group_name" binding:"required"`
+	Description *string   `json:"description" form:"description" binding:"required"`
 	UserIDs     *[]string `json:"user_ids" form:"user_ids"`
 }
 
@@ -36,8 +36,8 @@ type DissolveGroupInfoParam struct {
 
 // 申请加群
 type ApplyJoinGroupParam struct {
-	UserID  string  `json:"user_id" form:"user_id" binding:"required"`
-	GroupID string  `json:"group_id" form:"group_id" binding:"required"`
+	UserID  string `json:"user_id" form:"user_id" binding:"required"`
+	GroupID string `json:"group_id" form:"group_id" binding:"required"`
 	Reason  string `json:"reason" form:"reason" binding:"required"`
 }
 
@@ -63,9 +63,9 @@ type AgreeGroupApplyParam struct {
 
 // 拒绝加群申请（管理员/群主）
 type DisAgreeGroupApplyParam struct {
-	ApplyID   string `json:"apply_id" form:"apply_id" binding:"required"`
-	UserID    string `json:"user_id" form:"user_id" binding:"required"`
-	GroupID   string `json:"group_id" form:"group_id" binding:"required"`
+	ApplyID string `json:"apply_id" form:"apply_id" binding:"required"`
+	UserID  string `json:"user_id" form:"user_id" binding:"required"`
+	GroupID string `json:"group_id" form:"group_id" binding:"required"`
 }
 
 // 禁言（管理员/群主）
@@ -118,14 +118,14 @@ type SetGroupUserParam struct {
 }
 
 type InviteJoinGroupParam struct {
-	UserID  string `json:"user_id" form:"user_id" binding:"required"`
+	UserID   string `json:"user_id" form:"user_id" binding:"required"`
 	GroupID  string `json:"group_id" form:"group_id" binding:"required"`
 	TargetID string `json:"target_id" form:"target_id" binding:"required"`
 }
 
 type QueryInviteGroupParam struct {
 	UserID  string `json:"user_id" form:"user_id" binding:"required"`
-	GroupID  string `json:"group_id" form:"group_id" binding:"required"`
+	GroupID string `json:"group_id" form:"group_id" binding:"required"`
 }
 
 type AgreeInviteGroupParam struct {
@@ -136,22 +136,36 @@ type AgreeInviteGroupParam struct {
 }
 
 type DisAgreeInviteGroupParam struct {
-	ApplyID   string `json:"apply_id" form:"apply_id" binding:"required"`
-	UserID    string `json:"user_id" form:"user_id" binding:"required"`
-	GroupID   string `json:"group_id" form:"group_id" binding:"required"`
+	ApplyID string `json:"apply_id" form:"apply_id" binding:"required"`
+	UserID  string `json:"user_id" form:"user_id" binding:"required"`
+	GroupID string `json:"group_id" form:"group_id" binding:"required"`
 }
 type SetGroupNameParam struct {
-	UserID  string `json:"user_id" form:"user_id" binding:"required"`
-	GroupID  string `json:"group_id" form:"group_id" binding:"required"`
-	GroupName   string   `json:"group_name" form:"group_name" binding:"required"`
+	UserID    string `json:"user_id" form:"user_id" binding:"required"`
+	GroupID   string `json:"group_id" form:"group_id" binding:"required"`
+	GroupName string `json:"group_name" form:"group_name" binding:"required"`
 }
 
 type SetGroupReadTimeParam struct {
 	UserID  string `json:"user_id" form:"user_id" binding:"required"`
-	GroupID  string `json:"group_id" form:"group_id" binding:"required"`
+	GroupID string `json:"group_id" form:"group_id" binding:"required"`
 }
 
 type SetAIGPTParam struct {
 	UserID  string `json:"user_id" form:"user_id" binding:"required"`
-	GroupID  string `json:"group_id" form:"group_id" binding:"required"`
+	GroupID string `json:"group_id" form:"group_id" binding:"required"`
+}
+
+type GetPageOldMsgParam struct {
+	UserID  string `json:"user_id" form:"user_id" binding:"required"`
+	GroupID string `json:"group_id" form:"group_id" binding:"required"`
+	PageNum int    `json:"page_num" form:"page_num" binding:"required"`
+	Num     int    `json:"num" form:"num" binding:"required"`
+}
+
+type StartSendNewMsgParam struct {
+	UserID  string `json:"user_id" form:"user_id" binding:"required"`
+	GroupID string `json:"group_id" form:"group_id" binding:"required"`
+	PageNum int    `json:"page_num" form:"page_num" binding:"required"`
+	Num     int    `json:"num" form:"num" binding:"required"`
 }
