@@ -47,9 +47,12 @@ func SetupRouter() *gin.Engine {
 	r.POST("/setReadTime", friend.SetReadTime)
 	r.POST("/setPrivateChatGray", friend.SetPrivateChatGray)
 	r.POST("/unGrayPrivateChat", friend.UnGrayPrivateChat)
+	r.POST("/addFriendTag", friend.AddFriendTag)
+	r.POST("/removeFriendTag", friend.RemoveFriendTag)
 
 	// privateChat
 	r.POST("/queryPrivateChatMsg", privateChat.QueryPrivateChatMsg)
+	r.POST("/queryPrivateChatMsgByDate", privateChat.QueryPrivateChatMsgByDate)
 	r.POST("/deletePrivateChatMsg", privateChat.DeletePrivateChatMsg)
 	r.POST("/uploadPrivateChatPhoto", privateChat.UploadPrivateChatPhoto)
 	r.POST("/uploadPrivateChatFile", privateChat.UploadPrivateChatFile)

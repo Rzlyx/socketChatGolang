@@ -21,3 +21,10 @@ type UploadPrivateChatPhotoParam struct {
 type UploadPrivateChatFileParam struct {
 	Message VO.MessageVO `json:"message" binding:"required"`
 }
+
+type QueryPrivateChatMsgByDateParam struct {
+	UserID    string `json:"user_id" form:"user_id" binding:"required"`
+	FriendID  string `json:"friend_id" form:"friend_id" binding:"required"`
+	StartTime string `json:"start_time" form:"start_time" binding:"required"`
+	EndTime   string `json:"end_time" form:"end_time" binding:"required"`
+}

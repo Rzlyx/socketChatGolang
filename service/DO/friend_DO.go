@@ -8,6 +8,7 @@ type Friend struct {
 	FriendshipID int64  `json:"friendship_id,string"`
 	FriendID     int64  `json:"friend_id,string"`
 	Name         string `json:"name"`
+	Status       int    `json:"status"`
 }
 
 type FriendInfo struct {
