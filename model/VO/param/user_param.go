@@ -8,7 +8,8 @@ type ParamRegister struct {
 	Sex         int    `json:"sex" form:"sex" binding:"required"`
 	PhoneNumber string `json:"phone_number" form:"phone_number" binding:"required"`
 	EMail       string `json:"e_mail" form:"e_mail" binding:"required"`
-	Signature 	string `json:"signature" form:"signature" binding:"required"`
+	Signature   string `json:"signature" form:"signature" binding:"required"`
+	Birthday    string `json:"birthday" form:"birthday" binding:"required"`
 }
 
 type ParamLogin struct {

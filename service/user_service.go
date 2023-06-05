@@ -1,7 +1,6 @@
 package service
 
 import (
-	"dou_yin/dao/mysql"
 	"dou_yin/dao/mysql/user_dao"
 	"dou_yin/model/PO"
 	"dou_yin/model/VO/param"
@@ -14,19 +13,25 @@ import (
 	"fmt"
 )
 
-func Register(p *param.ParamRegister) (*PO.User, error) {
-	p1 := new(PO.User)
-	p1.UserName = p.UserName
-	p1.Password = p.Password
-	p1.EMail = p.EMail
-	p1.UserID = snowflake.GenID() / 100000000000
-	err := mysql.Register(p1)
+func Register(info *param.ParamRegister) (*PO.UserPO, error) {
+	userInfo := &PO.UserPO{
+		UserID: snowflake.GenID() / 100000000000,
+		UserName: info.UserName,
+		Password: info.Password,
+		Sex: info.Sex,
+		PhoneNumber: info.PhoneNumber,
+		Email: info.EMail,
+		Signature: &info.Signature,
+		Birthday:  info.Birthday,
+	}
+	
+	err := user_dao.Register(userInfo)
 	fmt.Println("[Register], err is ", err.Error())
-	return p1, err
+	return userInfo, err
 }
 
 func Login(p *param.ParamLogin) (user *PO.UserPO, token string, err error) {
-	user, err = mysql.Login(p.UserName)
+	user, err = user_dao.Login(p.UserName)
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, "", errors.New("用户不存在")
@@ -34,6 +39,7 @@ func Login(p *param.ParamLogin) (user *PO.UserPO, token string, err error) {
 
 	if p.UserName == user.UserName && p.Password == user.Password {
 		token, err = jwt.GenToken(user.UserID, user.UserName)
+		
 		return user, token, err
 	}
 
@@ -42,7 +48,7 @@ func Login(p *param.ParamLogin) (user *PO.UserPO, token string, err error) {
 
 func GetContactorList(Id string) (*PO.ContactorList, error) {
 
-	p, err := mysql.GetContactorList(Id)
+	p, err := user_dao.GetContactorList(Id)
 
 	return p, err
 }

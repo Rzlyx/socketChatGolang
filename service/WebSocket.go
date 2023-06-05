@@ -69,7 +69,7 @@ func MsgTransMit() {
 	}
 }
 
-func StartSendGroupNewMsg(UserId, GroupID string) error {
+func StartSendGroupNewMsg(UserId, GroupID string, Type int) error {
 	msgs, err := QueryGroupNewMsgList(UserId, GroupID)
 	if err != nil {
 		return err
@@ -77,15 +77,9 @@ func StartSendGroupNewMsg(UserId, GroupID string) error {
 	id := utils.ShiftToNum64(UserId)
 	if _, ok := UserChan[id]; ok {
 		for _, msg := range msgs {
-			Type, err := GroupMSGType(UserId, GroupID)
-			if err != nil {
-				fmt.Println("[MsgTransMit], GroupMSGType err is ", err.Error())
-			}
-			msg.MsgType = int(Type)
-			if Type == GROUP_WHITE_LIST || Type == GROUP_GRAY_LIST {
-				fmt.Println("receive_group:", GroupID, " receive_id:", id)
-				UserChan[id] <- msg
-			}
+			msg.MsgType = Type
+			fmt.Println("receive_group:", GroupID, " receive_id:", id)
+			UserChan[id] <- msg
 		}
 	}
 

@@ -8,6 +8,30 @@ import (
 )
 
 // todo: concurrent
+func Register(p *PO.UserPO) error {
+	sqlStr := "insert into user (user_id, user_name, password, sex, phone_number, email, signature, birthdaay) VALUES (?,?,?,?,?,?,?,?)"
+	_, err := mysql.DB.Exec(sqlStr, p.UserID, p.UserName, p.Password, p.Sex, p.PhoneNumber, p.Email, p.Signature, p.Birthday)
+	if err != nil {
+		fmt.Println("[Register], insert err is ", err)
+	}
+	return err
+}
+
+func Login(username string) (p1 *PO.UserPO, err error) {
+	p1 = new(PO.UserPO)
+	sqlStr := "select * from user where user_name = ?"
+	err = mysql.DB.Get(p1, sqlStr, username)
+	return p1, err
+}
+
+func GetContactorList(Id string) (p *PO.ContactorList, err error) {
+	p = new(PO.ContactorList)
+	sqlStr := "select * from `" + Id + "`"
+	err = mysql.DB.Select(&p.ContactorList, sqlStr)
+	fmt.Println(err)
+	return p, err
+}
+
 
 func QueryUserInfo(userID int64) (userPO PO.UserPO, err error) {
 	sqlStr := "select * from user where user_id = ? "
