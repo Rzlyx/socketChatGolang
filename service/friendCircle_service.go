@@ -18,10 +18,12 @@ import (
 
 func SendCirclebyParam(info *param.SendCircleParam) (*response.CreateCircle, error) {
 	circle := DO.FriendCircleDO{
-		NewsID:   snowflake.GenID(),
-		SenderID: utils.ShiftToNum64(info.Sender),
-		News:     &info.News,
-		Type:     info.Type,
+		NewsID:    snowflake.GenID(),
+		SenderID:  utils.ShiftToNum64(info.Sender),
+		News:      &info.News,
+		Type:      info.Type,
+		WhiteList: new([]int64),
+		Likes:     new([]int64),
 		Extra: &DO.FriendCircleExtra{
 			Paths: new([]int64),
 			List:  new([]DO.Comment),

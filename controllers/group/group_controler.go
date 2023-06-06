@@ -658,12 +658,14 @@ func UploadGroupChatPhoto(c *gin.Context) {
 	p := new(param.UploadGroupChatPhotoParam)
 	err := c.ShouldBind(p)
 	if err != nil {
+		fmt.Println("[UploadGroupChatPhoto], ShouldBind err is ", err.Error())
 		response.ResponseError(c, response.CodeInvalidParams)
 		return
 	}
 
 	file, err := c.FormFile("img")
 	if err != nil {
+		fmt.Println("[UploadGroupChatPhoto], FormFile err is ", err.Error())
 		response.ResponseError(c, response.CodeServerBusy)
 		return
 	}
@@ -672,6 +674,7 @@ func UploadGroupChatPhoto(c *gin.Context) {
 	dst := fmt.Sprintf("%v/img/%v", pwd, p.Message.MsgID)
 	err = c.SaveUploadedFile(file, dst)
 	if err != nil {
+		fmt.Println("[UploadGroupChatPhoto], SaveUploadedFile err is ", err.Error())
 		response.ResponseError(c, response.CodeServerBusy)
 		return
 	}
@@ -685,12 +688,14 @@ func UploadGroupChatFile(c *gin.Context) {
 	p := new(param.UploadGroupChatFileParam)
 	err := c.ShouldBind(p)
 	if err != nil {
+		fmt.Println("[UploadGroupChatFile], ShouldBind err is ", err.Error())
 		response.ResponseError(c, response.CodeInvalidParams)
 		return
 	}
 
 	file, err := c.FormFile("file")
 	if err != nil {
+		fmt.Println("[UploadGroupChatFile], FormFile err is ", err.Error())
 		response.ResponseError(c, response.CodeServerBusy)
 		return
 	}
@@ -699,6 +704,7 @@ func UploadGroupChatFile(c *gin.Context) {
 	dst := fmt.Sprintf("%v/file/%v", pwd, p.Message.MsgID)
 	err = c.SaveUploadedFile(file, dst)
 	if err != nil {
+		fmt.Println("[UploadGroupChatFile], SaveUploadedFile err is ", err.Error())
 		response.ResponseError(c, response.CodeServerBusy)
 		return
 	}
