@@ -58,7 +58,6 @@ func SetupRouter() *gin.Engine {
 	r.POST("/queryPrivateChatMsg", privateChat.QueryPrivateChatMsg)
 	r.POST("/queryPrivateChatMsgByDate", privateChat.QueryPrivateChatMsgByDate)
 	r.POST("/queryPrivateChatMsgByReadTime", privateChat.QueryPrivateChatMsgByReadTime)
-	r.POST("/queryPrivateChatMsgByReadTime")
 	r.POST("/deletePrivateChatMsg", privateChat.DeletePrivateChatMsg)
 	r.POST("/uploadPrivateChatPhoto", privateChat.UploadPrivateChatPhoto)
 	r.POST("/uploadPrivateChatFile", privateChat.UploadPrivateChatFile)
@@ -101,6 +100,7 @@ func SetupRouter() *gin.Engine {
 	// r.POST("/", group.)
 
 	// friend circle
+	r.POST("/queryAllFriendCircle", friendCircle.QueryAllFriendCircle)
 	r.POST("/queryFriendCircle", friendCircle.QueryFriendCircle)
 
 	return r

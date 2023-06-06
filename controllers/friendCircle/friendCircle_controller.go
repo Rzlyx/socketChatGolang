@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func QueryFriendCircle(c *gin.Context) {
+func QueryAllFriendCircle(c *gin.Context) {
 	param := new(param.QueryAllFriendCircleParam)
 	err := c.ShouldBind(param)
 	if err != nil {
@@ -16,6 +16,23 @@ func QueryFriendCircle(c *gin.Context) {
 	}
 
 	context, err := service.QueryAllFriendCircle(*param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInternError)
+		return
+	}
+
+	response.ResponseSuccess(c, context)
+}
+
+func QueryFriendCircle(c *gin.Context) {
+	param := new(param.QueryFriendCircleParam)
+	err := c.ShouldBind(param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	context, err := service.QueryFriendCircle(*param)
 	if err != nil {
 		response.ResponseError(c, response.CodeInternError)
 		return
