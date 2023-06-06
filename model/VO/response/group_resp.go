@@ -14,10 +14,11 @@ type GroupInfo struct {
 	CreateTime  string            `json:"create_time"`
 	IsDeleted   bool              `json:"is_deleted"`
 	Extra       DO.GroupInfoExtra `json:"extra"`
-	MyName      string            `json:"my_name"`    // 在此群的昵称
-	Type        int               `json:"type"`       // 群身份 0-普通成员，1-管理员，2-群主
-	OnlineNum   int               `json:"online_num"` // 在线人数
-	MsgType     int               `json:"msg_type"`   // 消息类型 6-接收并通知，7-接收不通知，8-不接收
+	MyGroupName string            `json:"my_group_name"` // 对群名的备注
+	MyName      string            `json:"my_name"`       // 在此群的昵称
+	Type        int               `json:"type"`          // 群身份 0-普通成员，1-管理员，2-群主
+	OnlineNum   int               `json:"online_num"`    // 在线人数
+	MsgType     int               `json:"msg_type"`      // 消息类型 6-接收并通知，7-接收不通知，8-不接收
 }
 
 type GroupUserInfo struct {

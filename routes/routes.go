@@ -25,6 +25,7 @@ func SetupRouter() *gin.Engine {
 	// user
 	r.POST("/register", user.Register)
 	r.POST("/login", user.Login)
+	r.POST("/StartSendWebSocket", user.StartSendWebSocket) // 开始发送未读信息
 	r.GET("/test", user.TestRedis)
 	g := r.Group("/api", middleware.JWTAuthMiddleware())
 	g.GET("/get_contactor_list/:id", user.GetContactorList)

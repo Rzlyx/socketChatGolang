@@ -67,10 +67,13 @@ func QueryFriendCircle(c *gin.Context) {
 }
 
 
-	// 上传图片
+// 上传图片
 func UploadCirclePhoto(c *gin.Context) {
 	p := new(param.UploadCirclePhotoParam)
 	err := c.ShouldBind(p)
+	if err != nil {
+		return
+	}
 	form, err := c.MultipartForm()
 	if err != nil {
 		return
@@ -98,4 +101,14 @@ func UploadCirclePhoto(c *gin.Context) {
 		return
 	}
 	response.ResponseSuccess(c, struct{}{})
+}
+
+// 点赞朋友圈
+func IsLikeCircle(c *gin.Context) {
+
+}
+
+// 评论朋友圈
+func CommentCircle(c *gin.Context) {
+	
 }

@@ -54,6 +54,11 @@ func MGetGroupInfoByParam(info *param.QueryGroupInfoParam) (*response.GroupInfo,
 		IsDeleted:   groupInfoDO.IsDeleted,
 		Extra:       *groupInfoDO.Extra,
 	}
+	if groupDO.Extra.IsRemark {
+		result.MyGroupName = groupDO.GroupName
+	}else{
+		result.MyGroupName = "无群备注"
+	}
 	result.Type = groupDO.Type
 	result.MyName = groupDO.Extra.MyName
 	msgType, err := GroupMSGType(info.UserID, info.GroupID)
