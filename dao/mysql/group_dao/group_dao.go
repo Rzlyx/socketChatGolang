@@ -3,6 +3,7 @@ package group_dao
 import (
 	"database/sql"
 	"dou_yin/dao/mysql"
+	"dou_yin/logger"
 	"fmt"
 )
 
@@ -158,9 +159,10 @@ func UpdateGroupByGroupPO(group GroupPO) (bool, error) {
 }
 
 func QueryLike(str string) (groups []GroupInfoPO, err error) {
-	sqlStr := "select * from group_info where user_name like %" + str + "%"
-	err = mysql.DB.Select(groups, sqlStr)
+	sqlStr := "select * from group_info where group_name like '%" + str + "%'"
+	err = mysql.DB.Select(&groups, sqlStr)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		return groups, err
 	}
 
