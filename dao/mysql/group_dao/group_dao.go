@@ -17,9 +17,9 @@ func MGetGroupInfoByGroupID(GroupID int64) (*GroupInfoPO, error) {
 	return &group, nil
 }
 
-func CreateGroupInfo(info *GroupInfoPO) (error) {
+func CreateGroupInfo(info *GroupInfoPO) error {
 	strSql := "INSERT group_info (group_id, owner_id, group_name, description, user_ids, admin_ids, slience_list, create_time, is_deleted, extra) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	_, err := mysql.DB.Exec(strSql, 
+	_, err := mysql.DB.Exec(strSql,
 		info.GroupID,
 		info.OwnerID,
 		info.GroupName,
@@ -34,12 +34,12 @@ func CreateGroupInfo(info *GroupInfoPO) (error) {
 		fmt.Println("[CreateGroupInfo] insert group_info err is ", err.Error())
 		return err
 	}
-	return  nil
+	return nil
 }
 
 func UpdateGroupInfo(info *GroupInfoPO) error {
 	strSql := "UPDATE group_info SET owner_id = ?, group_name = ?, description = ?, user_ids = ?, admin_ids = ?, slience_list = ?, create_time = ?, is_deleted = ?, extra = ? WHERE group_id = ?"
-	_, err := mysql.DB.Exec(strSql, 
+	_, err := mysql.DB.Exec(strSql,
 		info.OwnerID,
 		info.GroupName,
 		info.Description,
@@ -113,7 +113,7 @@ func DeleteGroupByUserIDandGroupID(UserId, GroupID int64) (bool, error) {
 
 func CreateGroupByGroupPO(group GroupPO) (bool, error) {
 	strSql := "INSERT INTO group_num (group_id, group_name, user_id, type, create_time, extra) VALUES (?, ?, ?, ?, ?, ?)"
-	_, err := mysql.DB.Exec(strSql, 
+	_, err := mysql.DB.Exec(strSql,
 		group.GroupID,
 		group.GroupName,
 		group.UserID,
@@ -129,7 +129,7 @@ func CreateGroupByGroupPO(group GroupPO) (bool, error) {
 
 func UpdateGroupByGroupPO(group GroupPO) (bool, error) {
 	strSql := "UPDATE group_num SET group_id = ?, group_name = ?, user_id = ?, type = ?, create_time = ?, extra = ? WHERE user_id = ? and group_id = ?"
-	_, err := mysql.DB.Exec(strSql, 
+	_, err := mysql.DB.Exec(strSql,
 		group.GroupID,
 		group.GroupName,
 		group.UserID,
@@ -143,4 +143,14 @@ func UpdateGroupByGroupPO(group GroupPO) (bool, error) {
 		return false, err
 	}
 	return true, nil
-} 
+}
+
+func QueryLike(str string) (groups []GroupInfoPO, err error) {
+	sqlStr := "select * from group_info where user_name like %" + str + "%"
+	err = mysql.DB.Select(groups, sqlStr)
+	if err != nil {
+		return groups, err
+	}
+
+	return groups, nil
+}
