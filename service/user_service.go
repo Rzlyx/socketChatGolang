@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"dou_yin/dao/mysql/group_dao"
 	"dou_yin/dao/mysql/user_dao"
+	"dou_yin/logger"
 	"dou_yin/model/PO"
 	"dou_yin/model/VO/param"
 	"dou_yin/pkg/jwt"
@@ -195,16 +196,21 @@ func QueryUserInfo(param param.QueryUserInfoParam) (DO.UserInfo, error) {
 }
 
 func SearchFriendOrGroup(param param.SearchFriendOrGroupParam) (context DO.SearchFriendOrGroupContexts, err error) {
+	fmt.Println(param)
 	users, err := user_dao.QueryLike(param.Context)
 	if err != nil && err != sql.ErrNoRows {
+		logger.Log.Error(err.Error())
 		return context, err
 	} else {
 		for _, user := range users {
-			context.Result = append(context.Result, DO.SearchFriendOrGroupContext{
+			ctx := DO.SearchFriendOrGroupContext{
 				Type: 0,
 				ID:   user.UserID,
 				Name: user.UserName,
-			})
+			}
+			if !IsSearchFriendOrGroupContextContain(context.Result, ctx) {
+				context.Result = append(context.Result, ctx)
+			}
 		}
 	}
 
@@ -212,11 +218,16 @@ func SearchFriendOrGroup(param param.SearchFriendOrGroupParam) (context DO.Searc
 	if err != nil && err != sql.ErrNoRows {
 		return context, err
 	} else {
-		context.Result = append(context.Result, DO.SearchFriendOrGroupContext{
-			Type: 0,
-			ID:   user.UserID,
-			Name: user.UserName,
-		})
+		if err != sql.ErrNoRows {
+			ctx := DO.SearchFriendOrGroupContext{
+				Type: 0,
+				ID:   user.UserID,
+				Name: user.UserName,
+			}
+			if !IsSearchFriendOrGroupContextContain(context.Result, ctx) {
+				context.Result = append(context.Result, ctx)
+			}
+		}
 	}
 
 	groupInfos, err := group_dao.QueryLike(param.Context)
@@ -224,11 +235,14 @@ func SearchFriendOrGroup(param param.SearchFriendOrGroupParam) (context DO.Searc
 		return context, err
 	} else {
 		for _, groupInfo := range groupInfos {
-			context.Result = append(context.Result, DO.SearchFriendOrGroupContext{
+			ctx := DO.SearchFriendOrGroupContext{
 				Type: 1,
 				ID:   groupInfo.GroupID,
 				Name: groupInfo.GroupName,
-			})
+			}
+			if !IsSearchFriendOrGroupContextContain(context.Result, ctx) {
+				context.Result = append(context.Result, ctx)
+			}
 		}
 	}
 
@@ -236,12 +250,26 @@ func SearchFriendOrGroup(param param.SearchFriendOrGroupParam) (context DO.Searc
 	if err != nil && err != sql.ErrNoRows {
 		return context, err
 	} else {
-		context.Result = append(context.Result, DO.SearchFriendOrGroupContext{
-			Type: 1,
-			ID:   groupInfo.GroupID,
-			Name: groupInfo.GroupName,
-		})
+		if err != sql.ErrNoRows {
+			ctx := DO.SearchFriendOrGroupContext{
+				Type: 1,
+				ID:   groupInfo.GroupID,
+				Name: groupInfo.GroupName,
+			}
+			if !IsSearchFriendOrGroupContextContain(context.Result, ctx) {
+				context.Result = append(context.Result, ctx)
+			}
+		}
 	}
 
 	return context, nil
+}
+
+func IsSearchFriendOrGroupContextContain(list []DO.SearchFriendOrGroupContext, ctx DO.SearchFriendOrGroupContext) bool {
+	for _, item := range list {
+		if item.ID == ctx.ID {
+			return true
+		}
+	}
+	return false
 }

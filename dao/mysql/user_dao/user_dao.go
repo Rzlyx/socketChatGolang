@@ -44,8 +44,13 @@ func QueryUserInfo(userID int64) (userPO PO.UserPO, err error) {
 }
 
 func UpdatePrivateChatWhite(userID int64, whiteList string) (err error) {
-	sqlStr := "update user set private_chat_white = ? where user_id = ?"
-	_, err = mysql.DB.Exec(sqlStr, whiteList, userID)
+	if whiteList != "" {
+		sqlStr := "update user set private_chat_white = ? where user_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, whiteList, userID)
+	} else {
+		sqlStr := "update user set private_chat_white = null where user_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, userID)
+	}
 	if err != nil {
 		logger.Log.Error(err.Error())
 		return err
@@ -55,8 +60,14 @@ func UpdatePrivateChatWhite(userID int64, whiteList string) (err error) {
 }
 
 func UpdatePrivateChatBlack(userID int64, blackList string) (err error) {
-	sqlStr := "update user set private_chat_black = ? where user_id = ?"
-	_, err = mysql.DB.Exec(sqlStr, blackList, userID)
+	if blackList != "" {
+		sqlStr := "update user set private_chat_black = ? where user_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, blackList, userID)
+	} else {
+		sqlStr := "update user set private_chat_black = null where user_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, userID)
+	}
+
 	if err != nil {
 		logger.Log.Error(err.Error())
 		return err
@@ -66,8 +77,13 @@ func UpdatePrivateChatBlack(userID int64, blackList string) (err error) {
 }
 
 func UpdateFriendCircleWhite(userID int64, whiteList string) (err error) {
-	sqlStr := "update user set friend_circle_white = ? where user_id = ?"
-	_, err = mysql.DB.Exec(sqlStr, whiteList, userID)
+	if whiteList == "" {
+		sqlStr := "update user set friend_circle_white = null where user_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, userID)
+	} else {
+		sqlStr := "update user set friend_circle_white = ? where user_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, whiteList, userID)
+	}
 	if err != nil {
 		logger.Log.Error(err.Error())
 		return err
@@ -77,8 +93,14 @@ func UpdateFriendCircleWhite(userID int64, whiteList string) (err error) {
 }
 
 func UpdateFriendCircleBlack(userID int64, blackList string) (err error) {
-	sqlStr := "update user set friend_circle_black = ? where user_id = ?"
-	_, err = mysql.DB.Exec(sqlStr, blackList, userID)
+	if blackList != "" {
+		sqlStr := "update user set friend_circle_black = ? where user_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, blackList, userID)
+	} else {
+		sqlStr := "update user set friend_circle_black = null where user_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, userID)
+	}
+
 	if err != nil {
 		logger.Log.Error(err.Error())
 		return err
@@ -88,8 +110,24 @@ func UpdateFriendCircleBlack(userID int64, blackList string) (err error) {
 }
 
 func UpdatePrivateChatBlackWhite(userID int64, whiteList string, blackList string) (err error) {
-	sqlStr := "update user set private_chat_white = ? and private_chat_black where user_id = ?"
-	_, err = mysql.DB.Exec(sqlStr, whiteList, blackList, userID)
+	fmt.Println(whiteList, blackList)
+	if whiteList != "" && blackList != "" {
+		fmt.Println("*")
+		sqlStr := "update user set private_chat_white = ?, private_chat_black = ? where user_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, whiteList, blackList, userID)
+	} else if whiteList == "" && blackList != "" {
+		fmt.Println("**")
+		sqlStr := "update user set private_chat_white = null, private_chat_black = ? where user_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, blackList, userID)
+	} else if whiteList != "" && blackList == "" {
+		fmt.Println("***")
+		sqlStr := "update user set private_chat_white = ?, private_chat_black = null where user_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, whiteList, userID)
+	} else {
+		fmt.Println("****")
+		sqlStr := "update user set private_chat_white = null, private_chat_black = null where user_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, userID)
+	}
 	if err != nil {
 		logger.Log.Error(err.Error())
 		return err
@@ -99,8 +137,19 @@ func UpdatePrivateChatBlackWhite(userID int64, whiteList string, blackList strin
 }
 
 func UpdateFriendCircleBlackWhite(userID int64, whiteList string, blackList string) (err error) {
-	sqlStr := "update user set friend_circle_white = ? and friend_circle_black where user_id = ?"
-	_, err = mysql.DB.Exec(sqlStr, whiteList, blackList, userID)
+	if whiteList != "" && blackList != "" {
+		sqlStr := "update user set friend_circle_white = ?, friend_circle_black = ? where user_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, whiteList, blackList, userID)
+	} else if whiteList == "" && blackList != "" {
+		sqlStr := "update user set friend_circle_white = null, friend_circle_black =? where user_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, blackList, userID)
+	} else if whiteList != "" && blackList == "" {
+		sqlStr := "update user set friend_circle_white = ?, friend_circle_black = null where user_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, whiteList, userID)
+	} else {
+		sqlStr := "update user set friend_circle_white = null, friend_circle_black = null where user_id = ?"
+		_, err = mysql.DB.Exec(sqlStr, userID)
+	}
 	if err != nil {
 		return err
 	}
@@ -169,7 +218,7 @@ func UpdateUserInfoByPO(user *PO.UserPO) error {
 }
 
 func QueryLike(str string) (users []PO.UserPO, err error) {
-	sqlStr := "select * from user where user_name like %" + str + "%"
+	sqlStr := "select * from user where user_name like '%" + str + "%'"
 	err = mysql.DB.Select(&users, sqlStr)
 	if err != nil {
 		return users, err

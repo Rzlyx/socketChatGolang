@@ -2,6 +2,7 @@ package user
 
 import (
 	"dou_yin/dao/redis"
+	"dou_yin/logger"
 	"dou_yin/model/VO/param"
 	"dou_yin/model/VO/response"
 	"dou_yin/pkg/utils"
@@ -172,9 +173,11 @@ func SearchFriendOrGroup(c *gin.Context) {
 
 	context, err := service.SearchFriendOrGroup(*param)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		response.ResponseError(c, response.CodeInternError)
 		return
 	}
+	fmt.Println(context)
 	resp := new(response.SearchFriendOrGroup)
 	resp.Context = context
 	response.ResponseSuccess(c, resp)

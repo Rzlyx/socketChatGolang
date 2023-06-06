@@ -693,9 +693,11 @@ func AddPrivateChatWhiteFromBlack(userID int64, friendID int64) (err error) {
 	}
 
 	var blackList PO.PrivateChatBlack
-	err = json.Unmarshal([]byte(*userPO.PrivateChatBlack), &blackList)
-	if err != nil {
-		return err
+	if userPO.PrivateChatBlack != nil {
+		err = json.Unmarshal([]byte(*userPO.PrivateChatBlack), &blackList)
+		if err != nil {
+			return err
+		}
 	}
 	for index, id := range blackList.BlackList {
 		if id == friendID {
@@ -853,9 +855,12 @@ func RemoveFriendFromWhiteBlackList(userID int64, friendID int64) (err error) {
 			return err
 		}
 	}
-	err = json.Unmarshal([]byte(*userPO.FriendCircleWhite), &friendCircleWhite)
-	if err != nil {
-		return err
+
+	if userPO.FriendCircleWhite != nil {
+		err = json.Unmarshal([]byte(*userPO.FriendCircleWhite), &friendCircleWhite)
+		if err != nil {
+			return err
+		}
 	}
 	for index, id := range friendCircleWhite.WhiteList {
 		if id == friendID {
@@ -880,9 +885,11 @@ func RemoveFriendFromWhiteBlackList(userID int64, friendID int64) (err error) {
 
 	if !friendCircleInWhite {
 		var blackList PO.FriendCircleBlack
-		err = json.Unmarshal([]byte(*userPO.FriendCircleBlack), &blackList)
-		if err != nil {
-			return err
+		if userPO.FriendCircleBlack != nil {
+			err = json.Unmarshal([]byte(*userPO.FriendCircleBlack), &blackList)
+			if err != nil {
+				return err
+			}
 		}
 		for index, id := range blackList.BlackList {
 			if id == friendID {
