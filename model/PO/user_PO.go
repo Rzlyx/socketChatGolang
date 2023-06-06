@@ -64,4 +64,5 @@ type ContactInfoPO struct {
 	Name    string `json:"name"`
 	Message string `json:"message"`
 	Time    string `json:"time"`
+	Status  int    `json:"status"`
 }
