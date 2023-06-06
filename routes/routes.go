@@ -2,6 +2,7 @@ package routes
 
 import (
 	"dou_yin/controllers/friend"
+	"dou_yin/controllers/friendCircle"
 	"dou_yin/controllers/group"
 	"dou_yin/controllers/privateChat"
 	"dou_yin/controllers/user"
@@ -56,6 +57,8 @@ func SetupRouter() *gin.Engine {
 	// privateChat
 	r.POST("/queryPrivateChatMsg", privateChat.QueryPrivateChatMsg)
 	r.POST("/queryPrivateChatMsgByDate", privateChat.QueryPrivateChatMsgByDate)
+	r.POST("/queryPrivateChatMsgByReadTime", privateChat.QueryPrivateChatMsgByReadTime)
+	r.POST("/queryPrivateChatMsgByReadTime")
 	r.POST("/deletePrivateChatMsg", privateChat.DeletePrivateChatMsg)
 	r.POST("/uploadPrivateChatPhoto", privateChat.UploadPrivateChatPhoto)
 	r.POST("/uploadPrivateChatFile", privateChat.UploadPrivateChatFile)
@@ -90,6 +93,9 @@ func SetupRouter() *gin.Engine {
 	r.POST("/UploadGroupChatPhoto", group.UploadGroupChatPhoto) // 上传群相册
 	r.POST("/UploadGroupChatFile", group.UploadGroupChatFile)   // 上传群文件
 	// r.POST("/", group.)
+
+	// friend circle
+	r.POST("/queryFriendCircle", friendCircle.QueryFriendCircle)
 
 	return r
 }

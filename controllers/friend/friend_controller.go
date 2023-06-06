@@ -226,6 +226,7 @@ func SetFriendRemark(c *gin.Context) {
 		return
 	}
 
+	logger.Log.Info((*param).FriendID + " " + (*param).UserID + " " + *param.Remark)
 	err = service.SetFriendRemark(*param)
 	if err != nil {
 		response.ResponseError(c, response.CodeInternError)

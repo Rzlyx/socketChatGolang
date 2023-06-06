@@ -6,6 +6,7 @@ import (
 	"dou_yin/model/PO"
 	"dou_yin/service/DO"
 	"errors"
+	"fmt"
 )
 
 func QueryFriendshipList(userID int64) (friends []PO.FriendPO, err error) {
@@ -31,6 +32,7 @@ func QueryFriendship(friendShipID int64) (friend PO.FriendPO, err error) {
 }
 
 func QueryFriendshipBy2ID(firstID int64, secondID int64) (friend PO.FriendPO, err error) {
+	fmt.Println(firstID, secondID)
 	sqlStr := "select * from friend where (first_id = ? and second_id = ?) or (first_id = ? and second_id = ?)"
 	err = mysql.DB.Get(&friend, sqlStr, firstID, secondID, secondID, firstID)
 	if err != nil {
