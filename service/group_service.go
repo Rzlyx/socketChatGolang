@@ -111,10 +111,6 @@ func GetGroupAllUserbyParam(info *param.GetGroupAllUserParam) (*[]response.Group
 		if err != nil {
 			return nil, err
 		}
-		MsgType, err := GroupMSGType(info.UserID, info.GroupID)
-		if err != nil {
-			return nil, err
-		}
 		status := 0
 		if _, ok := UserChan[id]; ok {
 			status = 1
@@ -130,7 +126,7 @@ func GetGroupAllUserbyParam(info *param.GetGroupAllUserParam) (*[]response.Group
 			MyName:     groupDO.Extra.MyName,
 			InsertTime: groupDO.CreateTime,
 			Status:     status,
-			Type:       int(MsgType),
+			Type:       groupDO.Type,
 			IsSlienced: isSlienced,
 		})
 	}
@@ -1072,22 +1068,78 @@ func SetGroupUserByParam(info *param.SetGroupUserParam) error {
 
 // 邀请加入群聊
 func InviteJoinGroupByParam(info *param.InviteJoinGroupParam) error {
+	applyDO := DO.ApplyDO{
+		ApplyID:    snowflake.GenID(),
+		Applicant:  utils.ShiftToNum64(info.TargetID),
+		TargetID:   utils.ShiftToNum64(info.GroupID),
+		Type:       2,
+		Status:     0,
+		Reason:     info.Reason,
+		CreateTime: utils.GetNowTime(),
+		Extra: &DO.ApplyExtra{
+			InvitedID: utils.ShiftToNum64(info.UserID),
+		},
+	}
+	applyPO, err := DO.MGetApplyPOFromDO(&applyDO)
+	if err != nil {
+		return err
+	}
+
+	err = apply_dao.CreateApplication(applyPO)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func QueryInviteGroupByParam(info *param.QueryInviteGroupParam) ([]response.InviteGroupInfo, error) {
+func QueryInviteGroupByParam(info *param.QueryInviteGroupParam) (*[]response.InviteGroupInfo, error) {
 	var result []response.InviteGroupInfo
 
-	return result, nil
+	list, err := apply_dao.MGetApplicationListByUserID(utils.ShiftToNum64(info.UserID))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, apply := range *list {
+		applyDO, err := DO.MGetApplyDOFromPO(&apply)
+		if err != nil {
+			return nil, err
+		}
+		resp := response.InviteGroupInfo{
+			ApplyID:   applyDO.ApplyID,
+			InvitedID: applyDO.Extra.InvitedID,
+			Applicant: applyDO.Applicant,
+			TargetID:  applyDO.TargetID,
+			Reason:    applyDO.Reason,
+		}
+		result = append(result, resp)
+	}
+
+	return &result, nil
 }
 
 func AgreeInviteGroupByParam(info *param.AgreeInviteGroupParam) error {
+	Info := param.AgreeGroupApplyParam{
+		ApplyID:   info.ApplyID,
+		Applicant: info.Applicant,
+		GroupID:   info.GroupID,
+		UserID:    info.UserID,
+	}
+	err := AgreeGroupApplyByParam(&Info)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func DisAgreeInviteGroupByParam(info *param.DisAgreeInviteGroupParam) error {
+
+	err := apply_dao.DeleteApplicationByApplyID(utils.ShiftToNum64(info.ApplyID))
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -1197,12 +1249,17 @@ func GetPageOldMsgByParam(info *param.GetPageOldMsgParam) ([]VO.MessageVO, error
 
 // 登录获取历史消息--获取15条消息
 func GetGroupOldMsgLoginbyParam(info *param.GetGroupOldMsgLoginParam) (*[]VO.MessageVO, error) {
-
-	return nil, nil
+	return QueryGroupOldMsgLogin(info.UserID, info.GroupID)
 }
 
+// 向上滑动刷新消息
 func GetGroupOldMsgUpbyParam(info *param.GetGroupOldMsgUpParam) (*[]VO.MessageVO, error) {
-	return nil, nil
+	return QueryGroupOldMsgUp(info.UserID, info.GroupID, info.TimeTag)
+}
+
+// 根据时间（天）获取消息
+func GetGroupOldMsgDaybyParam(info *param.GetGroupOldMsgDayParam) (*[]VO.MessageVO, error) {
+	return QueryGroupOldMsgDay(info.UserID, info.GroupID, info.StartTime, info.EndTime)
 }
 
 func GetAllUserIDsbyGroupID(GroupID string) (*[]int64, error) {

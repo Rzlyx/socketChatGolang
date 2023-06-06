@@ -115,6 +115,105 @@ func QueryGroupOldMsgList(UserID, GroupID string, pageNum, num int) ([]VO.Messag
 	return result, nil
 }
 
+func QueryGroupOldMsgLogin(UserID, GroupID string) (*[]VO.MessageVO, error) {
+	var result []VO.MessageVO
+
+	groupID := utils.ShiftToNum64(GroupID)
+	userID := utils.ShiftToNum64(UserID)
+
+	Type, err := GroupMSGType(UserID, GroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	groupPO, err := group_dao.MGetGroupByUserIDandGroupID(userID, groupID)
+	if err != nil {
+		return &result, err
+	}
+	groupDO, err := DO.MGetGroupDOfromPO(*groupPO)
+	if err != nil {
+		return &result, err
+	}
+
+	list, err := group_chat_dao.MGetGroupOldMsgListLogin(groupID, groupDO.Extra.ReadTime)
+	if err != nil {
+		return &result, err
+	}
+
+	for _, msg := range *list {
+		msgDO, err := DO.MGetGroupMsgDOfromPO(&msg)
+		if err != nil {
+			return nil, err
+		}
+		if !IsDeletedMsg(userID, *msgDO.DeletedList) {
+			MSG := DO.MGetMsgVOfromDO(msgDO, int(Type))
+			result = append(result, *MSG)
+		}
+	}
+
+	return &result, nil
+}
+
+func QueryGroupOldMsgUp(UserID, GroupID, TimeTag string) (*[]VO.MessageVO, error) {
+	var result []VO.MessageVO
+
+	groupID := utils.ShiftToNum64(GroupID)
+	userID := utils.ShiftToNum64(UserID)
+
+	Type, err := GroupMSGType(UserID, GroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := group_chat_dao.MGetGroupOldMsgListLogin(groupID, TimeTag)
+	if err != nil {
+		return &result, err
+	}
+
+	for _, msg := range *list {
+		msgDO, err := DO.MGetGroupMsgDOfromPO(&msg)
+		if err != nil {
+			return nil, err
+		}
+		if !IsDeletedMsg(userID, *msgDO.DeletedList) {
+			MSG := DO.MGetMsgVOfromDO(msgDO, int(Type))
+			result = append(result, *MSG)
+		}
+	}
+
+	return &result, nil
+}
+
+func QueryGroupOldMsgDay(UserID, GroupID, StartTime, EndTime string) (*[]VO.MessageVO, error) {
+	var result []VO.MessageVO
+
+	groupID := utils.ShiftToNum64(GroupID)
+	userID := utils.ShiftToNum64(UserID)
+
+	Type, err := GroupMSGType(UserID, GroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	list, err := group_chat_dao.MGetGroupOldMsgListDay(groupID, StartTime, EndTime)
+	if err != nil {
+		return &result, err
+	}
+
+	for _, msg := range *list {
+		msgDO, err := DO.MGetGroupMsgDOfromPO(&msg)
+		if err != nil {
+			return nil, err
+		}
+		if !IsDeletedMsg(userID, *msgDO.DeletedList) {
+			MSG := DO.MGetMsgVOfromDO(msgDO, int(Type))
+			result = append(result, *MSG)
+		}
+	}
+
+	return &result, nil
+}
+
 func SendGroupNewMsg(UserId string) error {
 	userInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(UserId))
 	if err != nil {
