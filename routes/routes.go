@@ -64,6 +64,8 @@ func SetupRouter() *gin.Engine {
 	r.POST("/UploadGroupPhoto", group.UploadGroupPhoto)         // 上传头像
 	r.POST("/QueryGroupInfo", group.QueryGroupInfo)             // 查看群信息
 	r.POST("/QueryGroupList", group.QueryGroupList)             // 查看已添加群
+	r.POST("/GetGroupAllUser", group.GetGroupAllUser)           // 获取所有群成员
+	r.POST("/UpdateGroupInfo", group.UpdateGroupInfo)           // 更新群信息
 	r.POST("/DissolveGroupInfo", group.DissolveGroupInfo)       // 解散群
 	r.POST("/ApplyJoinGroup", group.ApplyJoinGroup)             // 申请加群
 	r.POST("/QuitGroup", group.QuitGroup)                       // 退群
@@ -84,8 +86,12 @@ func SetupRouter() *gin.Engine {
 	r.POST("/AgreeInviteGroup", group.AgreeInviteGroup)         // 同意邀请
 	r.POST("/DisAgreeInviteGroup", group.DisAgreeInviteGroup)   // 拒绝邀请
 	r.POST("/SetGroupName", group.SetGroupName)                 // 设置群备注
+	r.POST("/SetMyName", group.SetMyName)                       // 设置在本群的昵称
 	r.POST("/SetGroupReadTime", group.SetGroupReadTime)         // 设置群聊已读时间
-	r.POST("/GetPageOldMsg", group.GetPageOldMsg)               // 获取历史消息
+	r.POST("/GetPageOldMsg", group.GetPageOldMsg)               // 按页查询历史消息
+	r.POST("/GetGroupOldMsgLogin", group.GetGroupOldMsgLogin)   // 登录获取历史消息--获取15条消息
+	r.POST("/GetGroupOldMsgUp", group.GetGroupOldMsgUp)         // 加载向上的信息
+	r.POST("/GetGroupOldMsgDay", group.GetGroupOldMsgDay)       // 按天数获取信息
 	r.POST("/UploadGroupChatPhoto", group.UploadGroupChatPhoto) // 上传群相册
 	r.POST("/UploadGroupChatFile", group.UploadGroupChatFile)   // 上传群文件
 	// r.POST("/", group.)

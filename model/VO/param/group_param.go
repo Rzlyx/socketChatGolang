@@ -139,6 +139,7 @@ type InviteJoinGroupParam struct {
 	UserID   string `json:"user_id" form:"user_id" binding:"required"`
 	GroupID  string `json:"group_id" form:"group_id" binding:"required"`
 	TargetID string `json:"target_id" form:"target_id" binding:"required"`
+	Reason  string `json:"reason" form:"reason" binding:"required"`
 }
 
 type QueryInviteGroupParam struct {
@@ -196,6 +197,13 @@ type GetGroupOldMsgUpParam struct {
 	UserID  string `json:"user_id" form:"user_id" binding:"required"`
 	GroupID string `json:"group_id" form:"group_id" binding:"required"`
 	TimeTag string `json:"time_tag" form:"time_tag" binding:"required"`
+}
+
+type GetGroupOldMsgDayParam struct {
+	UserID    string `json:"user_id" form:"user_id" binding:"required"`
+	GroupID   string `json:"group_id" form:"group_id" binding:"required"`
+	StartTime string `json:"start_time" form:"start_time" binding:"required"`
+	EndTime   string `json:"end_time" form:"end_time" binding:"required"`
 }
 
 type UploadGroupChatPhotoParam struct {

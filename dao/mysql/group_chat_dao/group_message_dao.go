@@ -5,12 +5,45 @@ import (
 	"fmt"
 )
 
-// 获取历史消息
+// 获取历史消息(分页式)
 func MGetGroupMsgOldList(GroupID int64, ReadTime string, pageNum, num int) (*[]GroupMsgPO, error) {
 	var list []GroupMsgPO
 	startIndex := num * pageNum
 	strSql := "select * from group_message where group_id = ? and create_time < ? limit ?, ?"
 	err := mysql.DB.Select(&list, strSql, GroupID, ReadTime, startIndex, num)
+	if err != nil {
+		fmt.Println("[MGetGroupMsgOldList], select old err ", err.Error())
+		return nil, err
+	}
+	return &list, nil
+}
+
+func MGetGroupOldMsgListLogin(GroupID int64, ReadTime string) (*[]GroupMsgPO, error) {
+	var list []GroupMsgPO
+	strSql := "select * from group_message where group_id = ? and create_time < ? limit 15"
+	err := mysql.DB.Select(&list, strSql, GroupID, ReadTime)
+	if err != nil {
+		fmt.Println("[MGetGroupMsgOldList], select old err ", err.Error())
+		return nil, err
+	}
+	return &list, nil
+}
+
+func MGetGroupOldMsgListUp(GroupID int64, TimeTag string) (*[]GroupMsgPO, error) {
+	var list []GroupMsgPO
+	strSql := "select * from group_message where group_id = ? and create_time < ? limit 15"
+	err := mysql.DB.Select(&list, strSql, GroupID, TimeTag)
+	if err != nil {
+		fmt.Println("[MGetGroupMsgOldList], select old err ", err.Error())
+		return nil, err
+	}
+	return &list, nil
+}
+
+func MGetGroupOldMsgListDay(GroupID int64, StartTime, EndTime string) (*[]GroupMsgPO, error) {
+	var list []GroupMsgPO
+	strSql := "select * from group_message where group_id = ? and create_time < ? and create_time > ?"
+	err := mysql.DB.Select(&list, strSql, GroupID, StartTime, EndTime)
 	if err != nil {
 		fmt.Println("[MGetGroupMsgOldList], select old err ", err.Error())
 		return nil, err
