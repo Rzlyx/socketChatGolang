@@ -253,7 +253,17 @@ func AddFriend(addFriendParam param.AddFriendParam) (application DO.AddFriendApp
 		return application, err
 	}
 
+	msg := VO.MessageVO{
+		MsgType:    11,
+		ReceiverID: addFriendParam.FriendID,
+	}
+	NotifyFriend(msg)
+
 	return application, nil
+}
+
+func NotifyFriend(msg VO.MessageVO) {
+	HandlePrivateChatMsg(msg)
 }
 
 func DeleteFriend(p param.DeleteFriendParam) (err error) {
