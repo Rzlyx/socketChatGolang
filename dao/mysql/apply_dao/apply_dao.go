@@ -109,6 +109,23 @@ func MGetApplicationListByGroupID(GroupID int64) (*[]PO.ApplyPO, error) {
 	return &list, nil
 }
 
+// 获取被邀请记录
+func MGetApplicationListByUserID(UserID int64) (*[]PO.ApplyPO, error) {
+	var list []PO.ApplyPO
+	sqlStr := "select * from apply where applicant = ? and type = 2"
+	err := mysql.DB.Select(&list, sqlStr, UserID)
+	if err != nil {
+		fmt.Println("[MGetApplicationListByUserID], query select err is ", err.Error())
+		return nil, err
+	}
+
+	if len(list) == 0 {
+		return nil, nil
+	}
+
+	return &list, nil
+}
+
 func MGetApplicationByGroupIDandUserID(GroupID, UserID int64) (*PO.ApplyPO, error) {
 	var application PO.ApplyPO
 	sqlStr := "select * from apply where target_id = ? and applicant = ? and type = 0"

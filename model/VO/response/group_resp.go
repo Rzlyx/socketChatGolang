@@ -22,11 +22,11 @@ type GroupInfo struct {
 
 type GroupUserInfo struct {
 	UserID     int64  `json:"user_id,string"`
-	MyName     string  `json:"name,string"` // 在此群的昵称
-	InsertTime string `json:"date"`        // 入群时间
-	Status     int    `json:"online"`      // 0-离线，1-在线,2-潜水
-	Type       int    `json:"identity"`    // 群身份 0-普通成员，1-管理员，2-群主
-	IsSlienced bool   `json:"status"`      // 是否被禁言
+	MyName     string `json:"name"`     // 在此群的昵称
+	InsertTime string `json:"date"`     // 入群时间
+	Status     int    `json:"online"`   // 0-离线，1-在线,2-潜水
+	Type       int    `json:"identity"` // 群身份 0-普通成员，1-管理员，2-群主
+	IsSlienced bool   `json:"status"`   // 是否被禁言
 }
 
 // 加入群聊信息,仅展示 群名和头像
@@ -46,8 +46,9 @@ type GroupJoinApply struct {
 
 // 邀请加群申请
 type InviteGroupInfo struct {
-	ApplyID   int64 `json:"apply_id,string"`
-	Applicant int64 `json:"applicant,string"`  // 发起邀请人
-	TargetID  int64 `json:"target_id,string"`  // 群ID
-	InvitedID int64 `json:"invited_id,string"` // 被邀请人
+	ApplyID   int64  `json:"apply_id,string"`
+	Applicant int64  `json:"applicant,string"`  // 被邀请人
+	TargetID  int64  `json:"target_id,string"`  // 群ID
+	InvitedID int64  `json:"invited_id,string"` // 发起邀请人
+	Reason    string `json:"reason"`
 }

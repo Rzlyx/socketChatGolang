@@ -51,6 +51,7 @@ func QueryGroupList(c *gin.Context) {
 	response.ResponseSuccess(c, p1)
 }
 
+// 获取所有群成员
 func GetGroupAllUser(c *gin.Context) {
 	p := new(param.GetGroupAllUserParam)
 	err := c.ShouldBind(p)
@@ -532,6 +533,7 @@ func SetGroupName(c *gin.Context) {
 	response.ResponseSuccess(c, struct{}{})
 }
 
+// 设置在本群的昵称
 func SetMyName(c *gin.Context) {
 	p := new(param.SetMyNameParam)
 	err := c.ShouldBind(p)
@@ -591,7 +593,6 @@ func GetPageOldMsg(c *gin.Context) {
 	response.ResponseSuccess(c, p1)
 }
 
-
 // 登录获取历史消息--获取15条消息
 func GetGroupOldMsgLogin(c *gin.Context) {
 	p := new(param.GetGroupOldMsgLoginParam)
@@ -611,7 +612,7 @@ func GetGroupOldMsgLogin(c *gin.Context) {
 	}
 	response.ResponseSuccess(c, p1)
 
-	go func(){
+	go func() {
 		err := service.SendGroupNewMsg(p.UserID)
 		if err != nil {
 			fmt.Println("[GetGroupOldMsgLogin], SenndGroupNewMsg err is ", err.Error())
@@ -640,8 +641,23 @@ func GetGroupOldMsgUp(c *gin.Context) {
 }
 
 // 按天数获取信息
-func GetGroupOldMsgDay() {
-
+func GetGroupOldMsgDay(c *gin.Context) {
+	p := new(param.GetGroupOldMsgDayParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[GetGroupOldMsgDay] ShouldBind err is ", err.Error())
+		return
+	}
+	p1, err := service.GetGroupOldMsgDaybyParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[GetGroupOldMsgDay]  err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, p1)
 }
 
 // 上传群相册
