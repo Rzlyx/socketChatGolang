@@ -2,11 +2,10 @@ package service
 
 import (
 	"context"
-	"dou_yin/dao/mysql/group_chat_dao"
+	// "dou_yin/dao/mysql/group_dao"
 	"dou_yin/model/VO"
 	"dou_yin/pkg/snowflake"
 	"dou_yin/pkg/utils"
-	"dou_yin/service/DO"
 	"fmt"
 
 	openai "github.com/sashabaranov/go-openai"
@@ -40,6 +39,8 @@ func GetGPTMessage(msg *VO.MessageVO) (*VO.MessageVO, error) {
 		DataType:    0,
 		IsAnonymous: false,
 	}
+	// result.SenderName =
+
 	if result.MsgType == 0 { // 私聊
 		result.ReceiverID = msg.SenderID
 	} else { // 群聊
@@ -50,22 +51,4 @@ func GetGPTMessage(msg *VO.MessageVO) (*VO.MessageVO, error) {
 		}
 	}
 	return &result, nil
-}
-
-// 接收新消息并保存
-func CreatGroupMsg(msg VO.MessageVO) error {
-	msgDO, err := DO.MGetMsgDOfromVO(&msg)
-	if err != nil {
-		return err
-	}
-	msgPO, err := DO.MGetGroupMsgPOfromDO(msgDO)
-	if err != nil {
-		return err
-	}
-	err = group_chat_dao.WriteGroupMsg(*msgPO)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

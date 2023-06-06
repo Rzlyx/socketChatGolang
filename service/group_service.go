@@ -422,6 +422,25 @@ func ApplyJoinGroupByParam(info *param.ApplyJoinGroupParam) error {
 		return err
 	}
 
+	// 通知群主和管理员处理
+	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
+	if err != nil {
+		return err
+	}
+	groupInfoDO, err := DO.MGetGroupInfofromPO(*groupInfoPO)
+	if err != nil {
+		return err
+	}
+	userIds := *groupInfoDO.AdminIds
+	userIds = append(userIds, groupInfoDO.OwnerID)
+	for _, id := range userIds {
+		msg := VO.MessageVO{
+			MsgType: 11,
+			ReceiverID: utils.ShiftToStringFromInt64(id),
+		}
+		HandlePrivateChatMsg(msg) 	//发送通知
+	}
+
 	return nil
 }
 
@@ -1090,6 +1109,12 @@ func InviteJoinGroupByParam(info *param.InviteJoinGroupParam) error {
 		return err
 	}
 
+	msg := VO.MessageVO{
+		MsgType: 11,
+		ReceiverID: utils.ShiftToStringFromInt64(utils.ShiftToNum64(info.TargetID)),
+	}
+	HandlePrivateChatMsg(msg) 	//发送通知
+
 	return nil
 }
 
@@ -1243,7 +1268,7 @@ func SetAIGPTbyParam(info *param.SetAIGPTParam) error {
 	return nil
 }
 
-func GetPageOldMsgByParam(info *param.GetPageOldMsgParam) ([]VO.MessageVO, error) {
+func GetPageOldMsgByParam(info *param.GetPageOldMsgParam) (*[]VO.MessageVO, error) {
 	return QueryGroupOldMsgList(info.UserID, info.GroupID, info.PageNum, info.Num)
 }
 

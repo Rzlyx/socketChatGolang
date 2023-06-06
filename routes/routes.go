@@ -2,6 +2,7 @@ package routes
 
 import (
 	"dou_yin/controllers/friend"
+	friendcircle "dou_yin/controllers/friendCircle"
 	"dou_yin/controllers/group"
 	"dou_yin/controllers/privateChat"
 	"dou_yin/controllers/user"
@@ -96,6 +97,11 @@ func SetupRouter() *gin.Engine {
 	r.POST("/UploadGroupChatPhoto", group.UploadGroupChatPhoto) // 上传群相册
 	r.POST("/UploadGroupChatFile", group.UploadGroupChatFile)   // 上传群文件
 	// r.POST("/", group.)
+
+	// friend_circle
+	r.POST("/SendCircle", friendcircle.SendCircle)               // 发朋友圈
+	r.POST("/UploadCirclePhoto", friendcircle.UploadCirclePhoto) // 上传图片
+
 
 	return r
 }
