@@ -107,6 +107,7 @@ func SetContactorList(param param.SetContactorListParam) (err error) {
 				Name:    item.Name,
 				Message: item.Message,
 				Time:    item.Time,
+				Status:  item.Status,
 			}
 
 			contactorsPO = append(contactorsPO, contactor)
