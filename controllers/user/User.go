@@ -119,7 +119,7 @@ func SetContactorList(c *gin.Context) {
 		response.ResponseError(c, response.CodeInvalidParams)
 		return
 	}
-
+	fmt.Println(*param)
 	err = service.SetContactorList(*param)
 	if err != nil {
 		response.ResponseError(c, response.CodeInternError)

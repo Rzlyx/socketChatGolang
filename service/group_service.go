@@ -56,7 +56,7 @@ func MGetGroupInfoByParam(info *param.QueryGroupInfoParam) (*response.GroupInfo,
 	}
 	if groupDO.Extra.IsRemark {
 		result.MyGroupName = groupDO.GroupName
-	}else{
+	} else {
 		result.MyGroupName = "无群备注"
 	}
 	result.Type = groupDO.Type
@@ -440,10 +440,10 @@ func ApplyJoinGroupByParam(info *param.ApplyJoinGroupParam) error {
 	userIds = append(userIds, groupInfoDO.OwnerID)
 	for _, id := range userIds {
 		msg := VO.MessageVO{
-			MsgType: 11,
+			MsgType:    11,
 			ReceiverID: utils.ShiftToStringFromInt64(id),
 		}
-		HandlePrivateChatMsg(msg) 	//发送通知
+		HandlePrivateChatMsg(msg) //发送通知
 	}
 
 	return nil
@@ -852,9 +852,21 @@ func SetBlackListByParam(info *param.SetBlackListParam) error {
 	if err != nil {
 		return err
 	}
-	userInfo.GroupChatWhite = white
-	userInfo.GroupChatGray = gray
-	userInfo.GroupChatBlack = black
+	if len(*white) > 0 {
+		userInfo.GroupChatWhite = white
+	} else {
+		userInfo.GroupChatWhite = nil
+	}
+	if len(*gray) > 0 {
+		userInfo.GroupChatGray = gray
+	} else {
+		userInfo.GroupChatGray = nil
+	}
+	if len(*black) > 0 {
+		userInfo.GroupChatBlack = black
+	}else{
+		userInfo.GroupChatBlack = nil
+	}
 
 	err = user_dao.UpdateUserInfoByPO(&userInfo)
 	if err != nil {
@@ -892,9 +904,21 @@ func SetGrayListByParam(info *param.SetGrayListParam) error {
 	if err != nil {
 		return err
 	}
-	userInfo.GroupChatWhite = white
-	userInfo.GroupChatGray = gray
-	userInfo.GroupChatBlack = black
+	if len(*white) > 0 {
+		userInfo.GroupChatWhite = white
+	} else {
+		userInfo.GroupChatWhite = nil
+	}
+	if len(*gray) > 0 {
+		userInfo.GroupChatGray = gray
+	} else {
+		userInfo.GroupChatGray = nil
+	}
+	if len(*black) > 0 {
+		userInfo.GroupChatBlack = black
+	}else{
+		userInfo.GroupChatBlack = nil
+	}
 
 	err = user_dao.UpdateUserInfoByPO(&userInfo)
 	if err != nil {
@@ -933,9 +957,21 @@ func SetWhiteListByParam(info *param.SetWhiteListParam) error {
 	if err != nil {
 		return err
 	}
-	userInfo.GroupChatWhite = white
-	userInfo.GroupChatGray = gray
-	userInfo.GroupChatBlack = black
+	if len(*white) > 0 {
+		userInfo.GroupChatWhite = white
+	} else {
+		userInfo.GroupChatWhite = nil
+	}
+	if len(*gray) > 0 {
+		userInfo.GroupChatGray = gray
+	} else {
+		userInfo.GroupChatGray = nil
+	}
+	if len(*black) > 0 {
+		userInfo.GroupChatBlack = black
+	}else{
+		userInfo.GroupChatBlack = nil
+	}
 
 	err = user_dao.UpdateUserInfoByPO(&userInfo)
 	if err != nil {
@@ -1115,10 +1151,10 @@ func InviteJoinGroupByParam(info *param.InviteJoinGroupParam) error {
 	}
 
 	msg := VO.MessageVO{
-		MsgType: 11,
+		MsgType:    11,
 		ReceiverID: utils.ShiftToStringFromInt64(utils.ShiftToNum64(info.TargetID)),
 	}
-	HandlePrivateChatMsg(msg) 	//发送通知
+	HandlePrivateChatMsg(msg) //发送通知
 
 	return nil
 }

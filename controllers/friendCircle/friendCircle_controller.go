@@ -72,15 +72,19 @@ func UploadCirclePhoto(c *gin.Context) {
 	p := new(param.UploadCirclePhotoParam)
 	err := c.ShouldBind(p)
 	if err != nil {
+		fmt.Println("[UploadCirclePhoto], ShouldBind err ", err.Error())
 		return
 	}
 	form, err := c.MultipartForm()
 	if err != nil {
+		fmt.Println("[UploadCirclePhoto], MultipartForm err ", err.Error())
 		return
 	}
 	paths := form.File["photo"]
 
 	var PathIDs []int64
+
+	fmt.Println("[UploadCirclePhoto], paths is ", PathIDs, " and len(photo) is ", len(paths))
 
 	pwd := utils.GetCurrentPath()
 	for _, file := range paths {
@@ -90,13 +94,16 @@ func UploadCirclePhoto(c *gin.Context) {
 		dst := fmt.Sprintf("%v/file/%v", pwd, utils.ShiftToStringFromInt64(path))
 		err = c.SaveUploadedFile(file, dst)
 		if err != nil {
+			fmt.Println("[UploadCirclePhoto], SaveUploadedFile err ", err.Error())
 			response.ResponseError(c, response.CodeInternError)
 			return
 		}
 	}
+	fmt.Println("[UploadCirclePhoto], paths is ", PathIDs, " and len(photo) is ", len(paths))
 
 	err = service.UploadCirclePhotoPath(p, PathIDs)
 	if err != nil {
+		fmt.Println("[UploadCirclePhoto], UploadCirclePhotoPath err ", err.Error())
 		response.ResponseError(c, response.CodeInternError)
 		return
 	}
@@ -110,5 +117,5 @@ func IsLikeCircle(c *gin.Context) {
 
 // 评论朋友圈
 func CommentCircle(c *gin.Context) {
-	
+
 }
