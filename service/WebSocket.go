@@ -30,7 +30,7 @@ func ChanInit() {
 
 func MsgTransMit() {
 	for msg := range MsgChan {
-		if msg.MsgType == 0 { // 私聊
+		if msg.MsgType == 0 || msg.MsgType == 1 { // 私聊
 			if _, ok := UserChan[utils.ShiftToNum64(msg.ReceiverID)]; ok {
 				fmt.Println("receive_id:", msg.ReceiverID)
 				UserChan[utils.ShiftToNum64(msg.ReceiverID)] <- msg
@@ -44,7 +44,7 @@ func MsgTransMit() {
 			// 		fmt.Println("[MsgTransMit], 私聊 err is ", err.Error())
 			// 	}
 			// }
-		} else { // 群聊
+		} else if msg.MsgType == 6 || msg.MsgType == 7 { // 群聊
 			userIds, err := GetAllUserIDsbyGroupID(msg.ReceiverID)
 			if err != nil {
 				fmt.Println("[MsgTransMit], 群聊 err is ", err.Error())

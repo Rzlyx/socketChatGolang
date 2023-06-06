@@ -95,29 +95,29 @@ func MGetGroupMsgPOfromDO(msg *GroupMsgDO) (*group_chat_dao.GroupMsgPO, error) {
 
 func MGetMsgVOfromDO(msg *GroupMsgDO, Type int) *VO.MessageVO {
 	return &VO.MessageVO{
-		MsgID: utils.ShiftToStringFromInt64(msg.MsgID),
-		MsgType: Type,
-		Message: msg.Message,
+		MsgID:      utils.ShiftToStringFromInt64(msg.MsgID),
+		MsgType:    Type,
+		Message:    msg.Message,
 		CreateTime: msg.CreateTime,
-		SenderID: utils.ShiftToStringFromInt64(msg.SenderID),
+		SenderID:   utils.ShiftToStringFromInt64(msg.SenderID),
 		ReceiverID: utils.ShiftToStringFromInt64(msg.GroupID),
-		DataType: msg.Type,
+		DataType:   msg.Type,
 	}
 }
 
 func MGetMsgDOfromVO(msg *VO.MessageVO) (*GroupMsgDO, error) {
 	result := GroupMsgDO{
-		MsgID: utils.ShiftToNum64(msg.MsgID),
-		GroupID: utils.ShiftToNum64(msg.ReceiverID),
-		SenderID: utils.ShiftToNum64(msg.SenderID),
-		Message: msg.Message,
-		Type: msg.MsgType,
+		MsgID:       utils.ShiftToNum64(msg.MsgID),
+		GroupID:     utils.ShiftToNum64(msg.ReceiverID),
+		SenderID:    utils.ShiftToNum64(msg.SenderID),
+		Message:     msg.Message,
+		Type:        msg.MsgType,
 		IsAnonymous: msg.IsAnonymous,
-		CreateTime: msg.CreateTime,
+		CreateTime:  msg.CreateTime,
 	}
 	var deletedList []int64
 	result.DeletedList = &deletedList
 	result.Extra = &GroupMsgExtra{}
-	
+
 	return &result, nil
 }

@@ -80,6 +80,18 @@ func MGetGroupListByUserID(UserID int64) ([]GroupPO, error) {
 	return list, nil
 }
 
+func MGetGroupListByGroupID(GroupID int64) ([]GroupPO, error) {
+	var list []GroupPO
+	strSql := "select * from group_num where group_id = ?"
+	err := mysql.DB.Select(&list, strSql, GroupID)
+	if err != nil {
+		fmt.Println("[MGetGroupListByUserID] select mysql err is ", err.Error())
+		return list, err
+	}
+
+	return list, nil
+}
+
 func MGetGroupByUserIDandGroupID(UserId, GroupID int64) (*GroupPO, error) {
 	var group GroupPO
 	strSql := "select * from group_num where user_id = ? and group_id = ?"

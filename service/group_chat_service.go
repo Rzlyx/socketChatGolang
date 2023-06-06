@@ -13,10 +13,11 @@ import (
 type GroupListType int
 
 const (
-	GROUP_LIST_UKNOW GroupListType = 5 // 不清楚
-	GROUP_WHITE_LIST GroupListType = 6 // 群聊处于白名单
-	GROUP_GRAY_LIST  GroupListType = 7 // 群聊处于灰名单
-	GROUP_BLACK_LIST GroupListType = 8 // 群聊处于黑名单
+	GROUP_LIST_UKNOW GroupListType = 5  // 不清楚
+	GROUP_WHITE_LIST GroupListType = 6  // 群聊处于白名单
+	GROUP_GRAY_LIST  GroupListType = 7  // 群聊处于灰名单
+	GROUP_BLACK_LIST GroupListType = 8  // 群聊处于黑名单
+	GROUP_APPLY_TYPE GroupListType = 10 // 申请/邀请通知
 )
 
 // 群聊名单
@@ -77,7 +78,20 @@ func IsDeletedMsg(UserID int64, List []int64) bool {
 }
 
 // 获取历史消息by用户ID、群ID，pageNum， Num
-func QueryGroupOldMsgList(UserID, GroupID string, pageNum, num int) ([]VO.MessageVO, error) {
+func QueryGroupOldMsgList(UserID, GroupID string, pageNum, num int) (*[]VO.MessageVO, error) {
+	groupPOList, err := group_dao.MGetGroupListByGroupID(utils.ShiftToNum64(GroupID))
+	if err != nil {
+		return nil, err
+	}
+	groupDOList, err := DO.MGetGroupListfromPOList(groupPOList)
+	if err != nil {
+		return nil, err
+	}
+	Names := make(map[int64]string)
+	for _, group := range *groupDOList {
+		Names[group.UserID] = group.Extra.MyName
+	}
+
 	var result []VO.MessageVO
 	groupID := utils.ShiftToNum64(GroupID)
 	userID := utils.ShiftToNum64(UserID)
@@ -89,16 +103,16 @@ func QueryGroupOldMsgList(UserID, GroupID string, pageNum, num int) ([]VO.Messag
 
 	groupPO, err := group_dao.MGetGroupByUserIDandGroupID(userID, groupID)
 	if err != nil {
-		return result, err
+		return &result, err
 	}
 	groupDO, err := DO.MGetGroupDOfromPO(*groupPO)
 	if err != nil {
-		return result, err
+		return &result, err
 	}
 
 	list, err := group_chat_dao.MGetGroupMsgOldList(groupID, groupDO.Extra.ReadTime, pageNum, num)
 	if err != nil {
-		return result, err
+		return &result, err
 	}
 
 	for _, msg := range *list {
@@ -108,14 +122,28 @@ func QueryGroupOldMsgList(UserID, GroupID string, pageNum, num int) ([]VO.Messag
 		}
 		if !IsDeletedMsg(userID, *msgDO.DeletedList) {
 			MSG := DO.MGetMsgVOfromDO(msgDO, int(Type))
+			MSG.SenderName = Names[msgDO.SenderID]
 			result = append(result, *MSG)
 		}
 	}
 
-	return result, nil
+	return &result, nil
 }
 
 func QueryGroupOldMsgLogin(UserID, GroupID string) (*[]VO.MessageVO, error) {
+	groupPOList, err := group_dao.MGetGroupListByGroupID(utils.ShiftToNum64(GroupID))
+	if err != nil {
+		return nil, err
+	}
+	groupDOList, err := DO.MGetGroupListfromPOList(groupPOList)
+	if err != nil {
+		return nil, err
+	}
+	Names := make(map[int64]string)
+	for _, group := range *groupDOList {
+		Names[group.UserID] = group.Extra.MyName
+	}
+
 	var result []VO.MessageVO
 
 	groupID := utils.ShiftToNum64(GroupID)
@@ -147,6 +175,7 @@ func QueryGroupOldMsgLogin(UserID, GroupID string) (*[]VO.MessageVO, error) {
 		}
 		if !IsDeletedMsg(userID, *msgDO.DeletedList) {
 			MSG := DO.MGetMsgVOfromDO(msgDO, int(Type))
+			MSG.SenderName = Names[msgDO.SenderID]
 			result = append(result, *MSG)
 		}
 	}
@@ -155,6 +184,19 @@ func QueryGroupOldMsgLogin(UserID, GroupID string) (*[]VO.MessageVO, error) {
 }
 
 func QueryGroupOldMsgUp(UserID, GroupID, TimeTag string) (*[]VO.MessageVO, error) {
+	groupPOList, err := group_dao.MGetGroupListByGroupID(utils.ShiftToNum64(GroupID))
+	if err != nil {
+		return nil, err
+	}
+	groupDOList, err := DO.MGetGroupListfromPOList(groupPOList)
+	if err != nil {
+		return nil, err
+	}
+	Names := make(map[int64]string)
+	for _, group := range *groupDOList {
+		Names[group.UserID] = group.Extra.MyName
+	}
+
 	var result []VO.MessageVO
 
 	groupID := utils.ShiftToNum64(GroupID)
@@ -177,6 +219,7 @@ func QueryGroupOldMsgUp(UserID, GroupID, TimeTag string) (*[]VO.MessageVO, error
 		}
 		if !IsDeletedMsg(userID, *msgDO.DeletedList) {
 			MSG := DO.MGetMsgVOfromDO(msgDO, int(Type))
+			MSG.SenderName = Names[msgDO.SenderID]
 			result = append(result, *MSG)
 		}
 	}
@@ -185,6 +228,19 @@ func QueryGroupOldMsgUp(UserID, GroupID, TimeTag string) (*[]VO.MessageVO, error
 }
 
 func QueryGroupOldMsgDay(UserID, GroupID, StartTime, EndTime string) (*[]VO.MessageVO, error) {
+	groupPOList, err := group_dao.MGetGroupListByGroupID(utils.ShiftToNum64(GroupID))
+	if err != nil {
+		return nil, err
+	}
+	groupDOList, err := DO.MGetGroupListfromPOList(groupPOList)
+	if err != nil {
+		return nil, err
+	}
+	Names := make(map[int64]string)
+	for _, group := range *groupDOList {
+		Names[group.UserID] = group.Extra.MyName
+	}
+
 	var result []VO.MessageVO
 
 	groupID := utils.ShiftToNum64(GroupID)
@@ -207,6 +263,7 @@ func QueryGroupOldMsgDay(UserID, GroupID, StartTime, EndTime string) (*[]VO.Mess
 		}
 		if !IsDeletedMsg(userID, *msgDO.DeletedList) {
 			MSG := DO.MGetMsgVOfromDO(msgDO, int(Type))
+			MSG.SenderName = Names[msgDO.SenderID]
 			result = append(result, *MSG)
 		}
 	}
@@ -244,6 +301,19 @@ func SendGroupNewMsg(UserId string) error {
 
 // 获取未读信息by用户ID、群ID
 func QueryGroupNewMsgList(UserID, GroupID string) ([]VO.MessageVO, error) {
+	groupPOList, err := group_dao.MGetGroupListByGroupID(utils.ShiftToNum64(GroupID))
+	if err != nil {
+		return nil, err
+	}
+	groupDOList, err := DO.MGetGroupListfromPOList(groupPOList)
+	if err != nil {
+		return nil, err
+	}
+	Names := make(map[int64]string)
+	for _, group := range *groupDOList {
+		Names[group.UserID] = group.Extra.MyName
+	}
+
 	var result []VO.MessageVO
 	groupID := utils.ShiftToNum64(GroupID)
 	userID := utils.ShiftToNum64(UserID)
@@ -275,6 +345,7 @@ func QueryGroupNewMsgList(UserID, GroupID string) ([]VO.MessageVO, error) {
 		if !IsDeletedMsg(userID, *msgDO.DeletedList) {
 			if Type == GROUP_WHITE_LIST || Type == GROUP_GRAY_LIST {
 				MSG := DO.MGetMsgVOfromDO(msgDO, int(Type))
+				MSG.SenderName = Names[msgDO.SenderID]
 				result = append(result, *MSG)
 			}
 		}
@@ -304,4 +375,22 @@ func HandleGroupChatMsg(msg *VO.MessageVO) {
 			MsgChan <- *result
 		}
 	}
+}
+
+// 接收新消息并保存
+func CreatGroupMsg(msg VO.MessageVO) error {
+	msgDO, err := DO.MGetMsgDOfromVO(&msg)
+	if err != nil {
+		return err
+	}
+	msgPO, err := DO.MGetGroupMsgPOfromDO(msgDO)
+	if err != nil {
+		return err
+	}
+	err = group_chat_dao.WriteGroupMsg(*msgPO)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

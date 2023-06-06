@@ -8,6 +8,8 @@ import (
 	"dou_yin/pkg/utils"
 	"dou_yin/service"
 	"fmt"
+	"sync"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -181,4 +183,37 @@ func SearchFriendOrGroup(c *gin.Context) {
 	resp := new(response.SearchFriendOrGroup)
 	resp.Context = context
 	response.ResponseSuccess(c, resp)
+}
+
+func StartSendWebSocket(c *gin.Context) {
+	p := new(param.StartSendWebSocketParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[StartSendWebSocket] ShouldBind err is ", err.Error())
+		return
+	}
+	var wg sync.WaitGroup
+	wg.Add(2)
+	// 群聊
+	go func() {
+		err := service.SendGroupNewMsg(p.UserID)
+		if err != nil {
+			fmt.Println("[StartSendWebSocket], SendGroupNewMsg err is ", err.Error())
+		}
+		wg.Done()
+	}()
+	// 私聊
+	go func() {
+		err := service.QueryAllUnreadPrivateChatMsg(utils.ShiftToNum64(p.UserID))
+		if err != nil {
+			fmt.Println("[StartSendWebSocket], QueryAllUnreadPrivateChatMsg err is ", err.Error())
+		}
+		wg.Done()
+	}()
+
+	wg.Wait()
+
+	response.ResponseSuccess(c, struct{}{})
 }

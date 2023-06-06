@@ -611,13 +611,6 @@ func GetGroupOldMsgLogin(c *gin.Context) {
 		return
 	}
 	response.ResponseSuccess(c, p1)
-
-	go func() {
-		err := service.SendGroupNewMsg(p.UserID)
-		if err != nil {
-			fmt.Println("[GetGroupOldMsgLogin], SenndGroupNewMsg err is ", err.Error())
-		}
-	}()
 }
 
 // 加载向上的信息

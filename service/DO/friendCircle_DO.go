@@ -21,7 +21,8 @@ type FriendCircleDO struct {
 }
 
 type FriendCircleExtra struct {
-	List *[]Comment `json:"list"`
+	Paths *[]int64   `json:"paths"`
+	List  *[]Comment `json:"list"`
 }
 
 type Comment struct {
