@@ -60,3 +60,7 @@ type QueryUserInfoParam struct {
 type SearchFriendOrGroupParam struct {
 	Context string `json:"context" form:"context" binding:"required"`
 }
+
+type StartSendWebSocketParam struct {
+	UserID string `json:"user_id" form:"user_id" binding:"required"`
+}

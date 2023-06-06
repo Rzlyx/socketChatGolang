@@ -99,7 +99,9 @@ func SetupRouter() *gin.Engine {
 	r.POST("/UploadGroupChatFile", group.UploadGroupChatFile)   // 上传群文件
 	// r.POST("/", group.)
 
-	// friend circle
+	// friend_circle
+	r.POST("/SendCircle", friendCircle.SendCircle)               // 发朋友圈
+	r.POST("/UploadCirclePhoto", friendCircle.UploadCirclePhoto) // 上传图片
 	r.POST("/queryAllFriendCircle", friendCircle.QueryAllFriendCircle)
 	r.POST("/queryFriendCircle", friendCircle.QueryFriendCircle)
 
