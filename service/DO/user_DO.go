@@ -9,6 +9,7 @@ type ContactInfo struct {
 	Name    string `json:"name" binding:"required"`
 	Message string `json:"message" binding:"required"`
 	Time    string `json:"time" binding:"required"`
+	Status  int    `json:"status" binding:"status"`
 }
 
 type UserInfo struct {

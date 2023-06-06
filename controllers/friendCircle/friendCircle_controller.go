@@ -1,4 +1,4 @@
-package friendcircle
+package friendCircle
 
 import (
 	"dou_yin/model/VO/param"
@@ -31,15 +31,46 @@ func SendCircle(c *gin.Context) {
 	response.ResponseSuccess(c, p1)
 }
 
-// 上传图片
-func UploadCirclePhoto(c *gin.Context) {
-	p := new(param.UploadCirclePhotoParam)
-	err := c.ShouldBind(p)
+
+func QueryAllFriendCircle(c *gin.Context) {
+	param := new(param.QueryAllFriendCircleParam)
+	err := c.ShouldBind(param)
 	if err != nil {
 		response.ResponseError(c, response.CodeInvalidParams)
 		return
 	}
 
+	context, err := service.QueryAllFriendCircle(*param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInternError)
+		return
+	}
+
+	response.ResponseSuccess(c, context)
+}
+
+func QueryFriendCircle(c *gin.Context) {
+	param := new(param.QueryFriendCircleParam)
+	err := c.ShouldBind(param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInvalidParams)
+		return
+	}
+
+	context, err := service.QueryFriendCircle(*param)
+	if err != nil {
+		response.ResponseError(c, response.CodeInternError)
+		return
+	}
+	
+	response.ResponseSuccess(c, context)
+}
+
+
+	// 上传图片
+func UploadCirclePhoto(c *gin.Context) {
+	p := new(param.UploadCirclePhotoParam)
+	err := c.ShouldBind(p)
 	form, err := c.MultipartForm()
 	if err != nil {
 		return
@@ -66,6 +97,5 @@ func UploadCirclePhoto(c *gin.Context) {
 		response.ResponseError(c, response.CodeInternError)
 		return
 	}
-
 	response.ResponseSuccess(c, struct{}{})
 }

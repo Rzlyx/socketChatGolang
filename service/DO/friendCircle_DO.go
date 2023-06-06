@@ -17,6 +17,7 @@ type FriendCircleDO struct {
 	Likes      *[]int64           `json:"likes" db:"likes"`
 	IsDeleted  bool               `json:"is_deleted" db:"is_deleted"`
 	Extra      *FriendCircleExtra `json:"extra" db:"extra"`
+	SenderName string             `json:"sender_name"`
 }
 
 type FriendCircleExtra struct {
