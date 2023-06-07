@@ -42,10 +42,6 @@ type UpdateGroupInfoParam struct {
 	Description *string `json:"description" form:"description" binding:"required"`
 }
 
-type UploadGroupPhotoParam struct {
-	GroupID string `json:"group_id" form:"group_id" binding:"required"`
-}
-
 // 解散群聊
 type DissolveGroupInfoParam struct {
 	UserID  string `json:"user_id" form:"user_id" binding:"required"`

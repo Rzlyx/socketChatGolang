@@ -1,6 +1,7 @@
 package group
 
 import (
+	"dou_yin/model/VO"
 	"dou_yin/model/VO/param"
 	"dou_yin/model/VO/response"
 	"dou_yin/pkg/utils"
@@ -113,12 +114,7 @@ func UpdateGroupInfo(c *gin.Context) {
 
 // 上传头像
 func UploadGroupPhoto(c *gin.Context) {
-	param := new(param.UploadGroupPhotoParam)
-	err := c.ShouldBind(param)
-	if err != nil {
-		response.ResponseError(c, response.CodeInvalidParams)
-		return
-	}
+	GroupID := c.PostForm("group_id")
 
 	file, err := c.FormFile("img")
 	if err != nil {
@@ -127,7 +123,7 @@ func UploadGroupPhoto(c *gin.Context) {
 	}
 
 	pwd := utils.GetCurrentPath()
-	dst := fmt.Sprintf("%v/img/%v", pwd, param.GroupID)
+	dst := fmt.Sprintf("%v/img/%v", pwd, GroupID)
 	c.SaveUploadedFile(file, dst)
 
 	response.ResponseSuccess(c, struct{}{})
@@ -655,12 +651,32 @@ func GetGroupOldMsgDay(c *gin.Context) {
 
 // 上传群相册
 func UploadGroupChatPhoto(c *gin.Context) {
-	p := new(param.UploadGroupChatPhotoParam)
-	err := c.ShouldBind(p)
-	if err != nil {
-		fmt.Println("[UploadGroupChatPhoto], ShouldBind err is ", err.Error())
-		response.ResponseError(c, response.CodeInvalidParams)
-		return
+	// err := c.ShouldBind(p)
+	// if err != nil {
+	// 	fmt.Println("[UploadGroupChatPhoto], ShouldBind err is ", err.Error())
+	// 	response.ResponseError(c, response.CodeInvalidParams)
+	// 	return
+	// }
+	MsgType := c.PostForm("msg_type")
+	Message := c.PostForm("context")
+	CreateTime := c.PostForm("time")
+	SendID := c.PostForm("send_id")
+	SendName := c.PostForm("send_name")
+	ReceiveID := c.PostForm("receive_id")
+	Type := c.PostForm("type")
+	IsAnonymous := c.PostForm("is_anonymous")
+	fmt.Println("[UploadGroupChatPhoto], IsAnonymous is ", IsAnonymous)
+	p := param.UploadGroupChatPhotoParam{
+		Message: VO.MessageVO{
+			MsgType:    utils.ShiftToNum(MsgType),
+			Message:    Message,
+			CreateTime: CreateTime,
+			SenderID:   SendID,
+			SenderName: SendName,
+			ReceiverID: ReceiveID,
+			DataType:   utils.ShiftToNum(Type),
+			// IsAnonymous: ,
+		},
 	}
 
 	file, err := c.FormFile("img")

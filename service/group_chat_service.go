@@ -4,9 +4,11 @@ import (
 	"dou_yin/dao/mysql/group_chat_dao"
 	"dou_yin/dao/mysql/group_dao"
 	"dou_yin/dao/mysql/user_dao"
+	"dou_yin/dao/redis"
 	"dou_yin/model/VO"
 	"dou_yin/pkg/utils"
 	"dou_yin/service/DO"
+	"fmt"
 	"strings"
 )
 
@@ -21,37 +23,109 @@ const (
 )
 
 // 群聊名单
+func GroupMSGTypeRedis(UserID, GroupID string) (GroupListType, error) {
+	// TODO: 加缓存
+	var Type GroupListType
+	key := UserID + GroupID
+	value, err := redis.GetUserGroup(key)
+	if err == nil && len(value) > 0 { // 查到缓存
+		node, err := redis.TurnNodeFromNode(value[0])
+		if err != nil {
+			return GROUP_LIST_UKNOW, err
+		}
+		return GroupListType(node.Type), nil
+	} else { // 没有缓存
+		Type, err = GroupMSGType(UserID, GroupID)
+		if err != nil {
+			fmt.Println("[GroupMSGTypeRedis], GroupMSGType err is ", err.Error())
+			return GROUP_LIST_UKNOW, err
+		}
+		IsSlience, err := IsGroupSlienceList(UserID, GroupID)
+		if err == nil {
+			AddRedisUserGroup(UserID, GroupID, int(Type), IsSlience)
+		}
+
+		return Type, nil
+	}
+}
+
+// 群聊名单
 func GroupMSGType(UserID, GroupID string) (GroupListType, error) {
 	// TODO: 加缓存
+	var Type GroupListType
 	userInfoPO, err := user_dao.QueryUserInfo(utils.ShiftToNum64(UserID))
 	if err != nil {
 		return GROUP_LIST_UKNOW, err
 	}
 	whiteList, grayList, blackList, err := turnUserGroupList(userInfoPO)
 	if err != nil {
-		return GROUP_LIST_UKNOW, err
+		Type = GROUP_LIST_UKNOW
 	}
 	for _, id := range *whiteList {
 		if id == utils.ShiftToNum64(GroupID) {
-			return GROUP_WHITE_LIST, nil
+			Type = GROUP_WHITE_LIST
 		}
 	}
 	for _, id := range *grayList {
 		if id == utils.ShiftToNum64(GroupID) {
-			return GROUP_GRAY_LIST, nil
+			Type = GROUP_GRAY_LIST
 		}
 	}
 	for _, id := range *blackList {
 		if id == utils.ShiftToNum64(GroupID) {
-			return GROUP_BLACK_LIST, nil
+			Type = GROUP_BLACK_LIST
 		}
 	}
-	return GROUP_LIST_UKNOW, nil
+
+	return Type, nil
+
+}
+
+func AddRedisUserGroup(UserID, GroupID string, Type int, IsSlience bool) error {
+	// 加入缓存
+	key := UserID + GroupID
+	value, _ := redis.TurnStringFromNode(&redis.UserGroup{
+		UserId:    utils.ShiftToNum64(UserID),
+		GroupID:   utils.ShiftToNum64(GroupID),
+		Type:      int(Type),
+		IsSlience: IsSlience,
+	})
+	err := redis.AddUserGroup(value, key)
+	if err != nil {
+		fmt.Println("[GroupMSGType], redis.AddUserGroup err is ", err.Error())
+		return err
+	}
+	return nil
 }
 
 // 在禁言名单
-func IsGroupSlienceList(UserID, GroupID string) (bool, error) {
+func IsGroupSlienceListRedis(UserID, GroupID string) (bool, error) {
 	// TODO: 加缓存
+	key := UserID + GroupID
+	value, err := redis.GetUserGroup(key)
+	if err == nil && len(value) > 0 { // 查到缓存
+		node, err := redis.TurnNodeFromNode(value[0])
+		if err == nil {
+			return node.IsSlience, nil
+		}
+	} else { // 无缓存
+		IsSlience, err := IsGroupSlienceList(UserID, GroupID)
+		Type, _ := GroupMSGType(UserID, GroupID)
+		if err != nil {
+			fmt.Println("[IsGroupSlienceListRedis], IsGroupSlienceList err is ", err.Error())
+		}
+		if err == nil {
+			err := AddRedisUserGroup(UserID, GroupID, int(Type), IsSlience)
+			fmt.Println("[IsGroupSlienceListRedis], AddRedisUserGroup err is ", err.Error())
+		}
+		return IsSlience, nil
+	}
+
+	return false, nil
+
+}
+
+func IsGroupSlienceList(UserID, GroupID string) (bool, error) {
 	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(GroupID))
 	if err != nil {
 		return false, err
@@ -65,7 +139,9 @@ func IsGroupSlienceList(UserID, GroupID string) (bool, error) {
 			return true, nil
 		}
 	}
+
 	return false, nil
+
 }
 
 func IsDeletedMsg(UserID int64, List []int64) bool {
@@ -355,7 +431,7 @@ func QueryGroupNewMsgList(UserID, GroupID string) ([]VO.MessageVO, error) {
 }
 
 func HandleGroupChatMsg(msg *VO.MessageVO) {
-	IsSlience, err := IsGroupSlienceList(msg.SenderID, msg.ReceiverID)
+	IsSlience, err := IsGroupSlienceListRedis(msg.SenderID, msg.ReceiverID)
 	if err != nil {
 		msg.ErrString = "系统内部错误，请稍后再试"
 	}
@@ -366,12 +442,14 @@ func HandleGroupChatMsg(msg *VO.MessageVO) {
 		if err != nil {
 			msg.ErrString = "系统内部错误，请稍后再试"
 		}
+		fmt.Println("转发群聊消息 ", msg.SenderID,"-->", msg.ReceiverID," msg:", msg)
 		MsgChan <- *msg
 		if strings.HasPrefix(msg.Message, "@GPT") {
 			result, err := GetGPTMessage(msg)
 			if err != nil {
 				msg.ErrString = "系统内部错误，请稍后再试"
 			}
+			fmt.Println("转发GPT群聊消息 ", msg.SenderID,"-->", msg.ReceiverID," msg:", msg)
 			MsgChan <- *result
 		}
 	}
