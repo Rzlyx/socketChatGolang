@@ -1,7 +1,5 @@
 package param
 
-import "dou_yin/model/VO"
-
 type QueryPrivateChatMsgParam struct {
 	UserID   string `json:"user_id" form:"user_id" binding:"required"`
 	FriendID string `json:"friend_id" form:"friend_id" binding:"required"`
@@ -15,11 +13,11 @@ type DeletePrivateChatMsgParam struct {
 }
 
 type UploadPrivateChatPhotoParam struct {
-	Message VO.MessageVO `json:"message" binding:"required"`
+	Message string `json:"message" binding:"required"`
 }
 
 type UploadPrivateChatFileParam struct {
-	Message VO.MessageVO `json:"message" binding:"required"`
+	Message string `json:"message" binding:"required"`
 }
 
 type QueryPrivateChatMsgByDateParam struct {

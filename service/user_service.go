@@ -86,7 +86,7 @@ func QueryContactorList(param param.QueryContactorListParam) (contactors DO.Cont
 			contactors.ContactorList = append(contactors.ContactorList, contactDO)
 		}
 	}
-
+	fmt.Println(extra, contactors)
 	return contactors, err
 }
 
@@ -325,7 +325,7 @@ func SendHeartBeat(userID int64, conn *websocket.Conn) {
 			MsgType:    999,
 			ReceiverID: utils.ShiftToStringFromInt64(userID),
 		}
-		fmt.Printf("func(SendHeartBeat): [param: %v]\n", userID)
+		//fmt.Printf("func(SendHeartBeat): [param: %v]\n", userID)
 		select {
 		case <-UserHeartBeat[userID]:
 			interval = 0

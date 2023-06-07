@@ -6,6 +6,7 @@ import (
 	"dou_yin/dao/mysql/apply_dao"
 	"dou_yin/dao/mysql/friend_dao"
 	"dou_yin/dao/mysql/user_dao"
+	"dou_yin/dao/redis"
 	"dou_yin/logger"
 	"dou_yin/model/PO"
 	"dou_yin/model/VO"
@@ -130,6 +131,19 @@ func QueryFriendInfo(param param.QueryFriendInfoParam) (friendInfo DO.FriendInfo
 
 func CheckPrivateChatBlack(userID int64, friendID int64) (bool, error) {
 	// 查friend是否把我拉黑
+	val, err := redis.Get(utils.ShiftToStringFromInt64(friendID))
+	if err == nil {
+		var cache PO.PrivateChatBlack
+		err := json.Unmarshal([]byte(val), &cache)
+		if err != nil {
+			return false, err
+		}
+
+		return IsContains(cache.BlackList, userID), nil
+	} else {
+		logger.Log.Error(err.Error())
+	}
+
 	friendInfo, err := user_dao.QueryUserInfo(friendID)
 	if err != nil {
 		return false, err
@@ -737,6 +751,11 @@ func AddPrivateChatWhiteFromBlack(userID int64, friendID int64) (err error) {
 		return err
 	}
 	blackStr := string(blackJson[:])
+	err = redis.Add(utils.ShiftToStringFromInt64(userID), blackStr)
+	if err != nil {
+		return err
+	}
+
 	if len(blackList.BlackList) == 0 {
 		blackStr = ""
 	}
@@ -769,6 +788,11 @@ func AddPrivateChatBlack(userID int64, friendID int64) (err error) {
 		return err
 	}
 	blackStr := string(blackJson[:])
+	err = redis.Add(utils.ShiftToStringFromInt64(userID), blackStr)
+	if err != nil {
+		return err
+	}
+
 	if len(blackList.BlackList) == 0 {
 		blackStr = ""
 	}
@@ -863,6 +887,11 @@ func RemoveFriendFromWhiteBlackList(tx *sql.Tx, userID int64, friendID int64) (e
 			return err
 		}
 		blackStr := string(blackJson[:])
+		err = redis.Add(utils.ShiftToStringFromInt64(userID), blackStr)
+		if err != nil {
+			return err
+		}
+
 		if len(blackList.BlackList) == 0 {
 			blackStr = ""
 		}
@@ -871,6 +900,7 @@ func RemoveFriendFromWhiteBlackList(tx *sql.Tx, userID int64, friendID int64) (e
 		if err != nil {
 			return err
 		}
+
 	}
 
 	friendCircleInWhite := false

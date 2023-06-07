@@ -144,7 +144,7 @@ func Connect(c *gin.Context) {
 			fmt.Println(err)
 		}
 		// filter
-		fmt.Println(msg)
+		//fmt.Println(msg)
 		if msg.MsgType == 0 {
 			HandlePrivateChatMsg(*msg)
 		} else if msg.MsgType == 999 {
