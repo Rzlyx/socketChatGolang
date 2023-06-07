@@ -277,38 +277,48 @@ func IsSearchFriendOrGroupContextContain(list []DO.SearchFriendOrGroupContext, c
 }
 
 func LogIn(userID int64) (err error) {
+	fmt.Printf("func(LogIn): [param: %v]\n", userID)
 	userInfo, err := user_dao.QueryUserInfo(userID)
 	if err != nil {
 		return err
 	}
 
 	userInfo.Status = 1
+	fmt.Println(userInfo)
 	err = user_dao.UpdateUserInfoByPO(&userInfo)
 	if err != nil {
 		return err
 	}
-	SendHeartBeat(userID)
+	go SendHeartBeat(userID)
 
 	return nil
 }
 
 func SendHeartBeat(userID int64) {
+	var interval int64
+	interval = 0
 	for {
-		MsgChan <- VO.MessageVO{
+		UserChan[userID] <- VO.MessageVO{
 			MsgType:    999,
 			ReceiverID: utils.ShiftToStringFromInt64(userID),
 		}
+		fmt.Printf("func(SendHeartBeat): [param: %v]\n", userID)
 		select {
 		case <-UserHeartBeat[userID]:
-			continue
+			interval = 0
 		case <-time.After(time.Second):
-			err := LogOut(userID)
-			if err != nil {
-				logger.Log.Error(err.Error())
+			logger.Log.Error("维持心跳失败 userID: " + utils.ShiftToStringFromInt64(userID) + " " + utils.ShiftToStringFromInt64(interval))
+			interval++
+			if interval == 5 {
+				logger.Log.Error("维持心跳失败 userID: " + utils.ShiftToStringFromInt64(userID))
+				err := LogOut(userID)
+				if err != nil {
+					logger.Log.Error(err.Error())
+				}
+				return
 			}
-			break
 		}
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 2)
 	}
 }
 
