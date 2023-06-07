@@ -51,9 +51,9 @@ func Login(p *param.ParamLogin) (user *PO.UserPO, token string, err error) {
 		return nil, "", errors.New("用户不存在")
 	}
 
-	if user.Status == 1 {
-		return user, "", errors.New("用户已经登录")
-	}
+	// if user.Status == 1 {
+	// 	return user, "", errors.New("用户已经登录")
+	// }
 
 	if p.UserName == user.UserName && p.Password == user.Password {
 		token, err = jwt.GenToken(user.UserID, user.UserName)
@@ -323,7 +323,7 @@ func SendHeartBeat(userID int64, conn *websocket.Conn) {
 			MsgType:    999,
 			ReceiverID: utils.ShiftToStringFromInt64(userID),
 		}
-		fmt.Printf("func(SendHeartBeat): [param: %v]\n", userID)
+		// fmt.Printf("func(SendHeartBeat): [param: %v]\n", userID)
 		select {
 		case <-UserHeartBeat[userID]:
 			interval = 0
