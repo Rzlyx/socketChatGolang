@@ -41,7 +41,7 @@ func Register(info *param.ParamRegister) (*PO.UserPO, error) {
 		fmt.Println("[Register], err is ", err.Error())
 		return nil, err
 	}
-	
+
 	return userInfo, nil
 }
 
@@ -62,13 +62,16 @@ func Login(p *param.ParamLogin) (user *PO.UserPO, token string, err error) {
 		return user, token, err
 	}
 
-	user.Status = 1 
+	user.Status = 1
 
-	err = user_dao.UpdateUserInfoByPO(user)
-	if err != nil {
-		fmt.Println("[login], 修改在线状态失败， err is ", err.Error())
-	}
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = user_dao.UpdateUserInfoByPO(tx, user)
+		if err != nil {
+			fmt.Println("[login], 修改在线状态失败， err is ", err.Error())
+		}
 
+		return nil
+	})
 
 	return nil, "", errors.New("信息错误")
 }
@@ -367,13 +370,16 @@ func SendHeartBeat(userID int64, conn *websocket.Conn) {
 
 func LogOut(userID int64, conn *websocket.Conn) (err error) {
 	delete(UserHeartBeat, userID)
+	fmt.Println("1*****")
 	delete(UserChan, userID)
 
+	fmt.Println("2*****")
 	userInfo, err := user_dao.QueryUserInfo(userID)
 	if err != nil {
 		return err
 	}
 
+	fmt.Println("******************log out: ", userID)
 	userInfo.Status = 0
 	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
 		err = user_dao.UpdateUserInfoByPO(tx, &userInfo)
