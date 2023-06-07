@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"time"
 )
 
@@ -276,7 +277,7 @@ func IsSearchFriendOrGroupContextContain(list []DO.SearchFriendOrGroupContext, c
 	return false
 }
 
-func LogIn(userID int64) (err error) {
+func LogIn(userID int64, conn *websocket.Conn) (err error) {
 	fmt.Printf("func(LogIn): [param: %v]\n", userID)
 	userInfo, err := user_dao.QueryUserInfo(userID)
 	if err != nil {
@@ -289,12 +290,12 @@ func LogIn(userID int64) (err error) {
 	if err != nil {
 		return err
 	}
-	go SendHeartBeat(userID)
+	go SendHeartBeat(userID, conn)
 
 	return nil
 }
 
-func SendHeartBeat(userID int64) {
+func SendHeartBeat(userID int64, conn *websocket.Conn) {
 	var interval int64
 	interval = 0
 	for {
@@ -311,7 +312,7 @@ func SendHeartBeat(userID int64) {
 			interval++
 			if interval == 5 {
 				logger.Log.Error("维持心跳失败 userID: " + utils.ShiftToStringFromInt64(userID))
-				err := LogOut(userID)
+				err := LogOut(userID, conn)
 				if err != nil {
 					logger.Log.Error(err.Error())
 				}
@@ -322,7 +323,7 @@ func SendHeartBeat(userID int64) {
 	}
 }
 
-func LogOut(userID int64) (err error) {
+func LogOut(userID int64, conn *websocket.Conn) (err error) {
 	delete(UserHeartBeat, userID)
 	delete(UserChan, userID)
 
@@ -337,5 +338,6 @@ func LogOut(userID int64) (err error) {
 		return err
 	}
 
+	conn.Close()
 	return nil
 }

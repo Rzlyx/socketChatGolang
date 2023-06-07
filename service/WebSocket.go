@@ -116,7 +116,7 @@ func Connect(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	err = LogIn(mc.ID)
+	err = LogIn(mc.ID, conn)
 	if err != nil {
 		logger.Log.Error(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -149,6 +149,12 @@ func Connect(c *gin.Context) {
 			HandlePrivateChatMsg(*msg)
 		} else if msg.MsgType == 999 {
 			UserHeartBeat[utils.ShiftToNum64(msg.ReceiverID)] <- *msg
+		} else if msg.MsgType == 998 {
+			err = LogOut(utils.ShiftToNum64(msg.SenderID), conn)
+			if err != nil {
+				logger.Log.Error(err.Error())
+				return
+			}
 		} else { // 群聊
 			HandleGroupChatMsg(msg)
 		}
