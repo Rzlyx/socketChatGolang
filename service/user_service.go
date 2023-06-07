@@ -15,8 +15,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 func Register(info *param.ParamRegister) (*PO.UserPO, error) {
@@ -31,16 +32,27 @@ func Register(info *param.ParamRegister) (*PO.UserPO, error) {
 		Birthday:    info.Birthday,
 	}
 
-	err := user_dao.Register(userInfo)
-	fmt.Println("[Register], err is ", err.Error())
-	return userInfo, err
+	CreateTime := utils.GetNowTime()
+	userInfo.CreateTime = &CreateTime
+
+	err := user_dao.CreateUserInfoByPO(userInfo)
+	if err != nil {
+		fmt.Println("[Register], err is ", err.Error())
+		return nil, err
+	}
+	
+	return userInfo, nil
 }
 
 func Login(p *param.ParamLogin) (user *PO.UserPO, token string, err error) {
 	user, err = user_dao.Login(p.UserName)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("[Login], err is ", err.Error())
 		return nil, "", errors.New("用户不存在")
+	}
+
+	if user.Status == 1 {
+		return user, "", errors.New("用户已经登录")
 	}
 
 	if p.UserName == user.UserName && p.Password == user.Password {
@@ -48,6 +60,14 @@ func Login(p *param.ParamLogin) (user *PO.UserPO, token string, err error) {
 
 		return user, token, err
 	}
+
+	user.Status = 1 
+
+	err = user_dao.UpdateUserInfoByPO(user)
+	if err != nil {
+		fmt.Println("[login], 修改在线状态失败， err is ", err.Error())
+	}
+
 
 	return nil, "", errors.New("信息错误")
 }

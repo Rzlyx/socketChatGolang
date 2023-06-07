@@ -88,29 +88,44 @@ func DeletePrivateChatMsg(c *gin.Context) {
 }
 
 func UploadPrivateChatPhoto(c *gin.Context) {
-	p := new(param.UploadPrivateChatPhotoParam)
-	err := c.ShouldBind(p)
-	if err != nil {
-		response.ResponseError(c, response.CodeInvalidParams)
+	file,err:=c.FormFile("img")
+	if err!=nil{
+		fmt.Println("[UploadPrivateChatPhoto], FormFile err is ", err.Error())
 		return
 	}
-
-	file, err := c.FormFile("img")
-	if err != nil {
-		response.ResponseError(c, response.CodeServerBusy)
-		return
-	}
+	message:=c.PostForm("pictire_msg")
+	fmt.Println("[UploadPrivateChatPhoto],message is ", message)
 
 	pwd := utils.GetCurrentPath()
-	dst := fmt.Sprintf("%v/img/%v", pwd, p.Message.MsgID)
-	err = c.SaveUploadedFile(file, dst)
-	if err != nil {
-		response.ResponseError(c, response.CodeServerBusy)
+	dst := fmt.Sprintf("%v/file/%v", pwd, "454555")
+	err = c.SaveUploadedFile(file,dst)
+	if err!=nil{
+		fmt.Println("[UploadPrivateChatPhoto], SaveUploadedFile err is ", err.Error())
 		return
 	}
-	service.HandlePrivateChatMsg(p.Message)
+	// p := new(param.UploadPrivateChatPhotoParam)
+	// err := c.ShouldBind(p)
+	// if err != nil {
+	// 	response.ResponseError(c, response.CodeInvalidParams)
+	// 	return
+	// }
 
-	response.ResponseSuccess(c, struct{}{})
+	// file, err := c.FormFile("img")
+	// if err != nil {
+	// 	response.ResponseError(c, response.CodeServerBusy)
+	// 	return
+	// }
+
+	// pwd := utils.GetCurrentPath()
+	// dst := fmt.Sprintf("%v/img/%v", pwd, p.Message.MsgID)
+	// err = c.SaveUploadedFile(file, dst)
+	// if err != nil {
+	// 	response.ResponseError(c, response.CodeServerBusy)
+	// 	return
+	// }
+	// service.HandlePrivateChatMsg(p.Message)
+
+	// response.ResponseSuccess(c, struct{}{})
 }
 
 func UploadPrivateChatFile(c *gin.Context) {

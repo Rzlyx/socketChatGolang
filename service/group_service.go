@@ -6,6 +6,7 @@ import (
 	"dou_yin/dao/mysql/apply_dao"
 	"dou_yin/dao/mysql/group_dao"
 	"dou_yin/dao/mysql/user_dao"
+	"dou_yin/dao/redis"
 	"dou_yin/model/PO"
 	"dou_yin/model/VO"
 	"dou_yin/model/VO/param"
@@ -212,13 +213,18 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 		groupDO.Extra = new(DO.GroupExtra)
 		groupDO.GroupID = groupInfo.GroupID
 		groupDO.GroupName = groupInfoPO.GroupName
-		groupDO.Type = 0
 		groupDO.UserID = id
 		var extra DO.GroupExtra
 		extra.ReadTime = utils.GetNowTime()
 		extra.IsRemark = false
 		extra.MyName = userInfo.UserName
 		groupDO.Extra = &extra
+
+		if id == utils.ShiftToNum64(info.OwnerID) {
+			groupDO.Type = 2
+		} else {
+			groupDO.Type = 0
+		}
 
 		groupPO, err := DO.TurnGroupPOfromDO(groupDO)
 		if err != nil {
@@ -929,6 +935,9 @@ func SetBlackListByParam(info *param.SetBlackListParam) error {
 	} else {
 		userInfo.GroupChatBlack = nil
 	}
+	// 删缓存
+	redis.DeleteUserGroup(info.UserID+info.GroupID)
+
 	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
 		err = user_dao.UpdateUserInfoByPOTx(tx, &userInfo)
 		if err != nil {
@@ -940,6 +949,10 @@ func SetBlackListByParam(info *param.SetBlackListParam) error {
 	if err != nil {
 		return err
 	}
+
+	// 删缓存
+	redis.DeleteUserGroup(info.UserID+info.GroupID)
+	
 
 	return nil
 }
@@ -987,6 +1000,11 @@ func SetGrayListByParam(info *param.SetGrayListParam) error {
 	} else {
 		userInfo.GroupChatBlack = nil
 	}
+
+	// 删缓存
+	redis.DeleteUserGroup(info.UserID+info.GroupID)
+
+
 	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
 		err = user_dao.UpdateUserInfoByPOTx(tx, &userInfo)
 		if err != nil {
@@ -997,6 +1015,9 @@ func SetGrayListByParam(info *param.SetGrayListParam) error {
 	if err != nil {
 		return err
 	}
+
+	// 删缓存
+	redis.DeleteUserGroup(info.UserID+info.GroupID)
 
 	return nil
 }
@@ -1045,6 +1066,10 @@ func SetWhiteListByParam(info *param.SetWhiteListParam) error {
 	} else {
 		userInfo.GroupChatBlack = nil
 	}
+
+	// 删缓存
+	redis.DeleteUserGroup(info.UserID+info.GroupID)
+
 	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
 		err = user_dao.UpdateUserInfoByPOTx(tx, &userInfo)
 		if err != nil {
@@ -1055,6 +1080,9 @@ func SetWhiteListByParam(info *param.SetWhiteListParam) error {
 	if err != nil {
 		return err
 	}
+
+	// 删缓存
+	redis.DeleteUserGroup(info.UserID+info.GroupID)
 
 	return nil
 }

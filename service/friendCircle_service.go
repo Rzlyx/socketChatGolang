@@ -52,8 +52,8 @@ func SendCirclebyParam(info *param.SendCircleParam) (*response.CreateCircle, err
 	}, nil
 }
 
-func UploadCirclePhotoPath(info *param.UploadCirclePhotoParam, paths []int64) error {
-	circlePO, err := friendCircle_dao.MGetFriendCircle(utils.ShiftToNum64(info.NewsID))
+func UploadCirclePhotoPath(newsID string, paths []int64) error {
+	circlePO, err := friendCircle_dao.MGetFriendCircle(utils.ShiftToNum64(newsID))
 	if err != nil {
 		return err
 

@@ -5,7 +5,12 @@ func AddMsg(msg string, id string) error {
 	return res.Err()
 }
 
-func GetMsg(id string) (error, []string) {
+func GetMsg(id string) ([]string, error) {
 	res := rdb.LRange(id, 0, -1)
-	return res.Err(), res.Val()
+	return res.Val(), res.Err()
+}
+
+func DeleteMsg(id string) error {
+	res := rdb.Del(id)
+	return res.Err()
 }
