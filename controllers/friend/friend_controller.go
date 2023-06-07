@@ -5,6 +5,7 @@ import (
 	param "dou_yin/model/VO/param"
 	"dou_yin/model/VO/response"
 	"dou_yin/service"
+	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -246,15 +247,16 @@ func SetReadTime(c *gin.Context) {
 
 	if len(p.FriendID) > 15 {
 		err = service.SetGroupReadTimebyParam(&param.SetGroupReadTimeParam{
-			UserID: p.UserID,
+			UserID:  p.UserID,
 			GroupID: p.FriendID,
 		})
 		if err != nil {
 			response.ResponseError(c, response.CodeInternError)
 			return
-		}	
+		}
 	}
 
+	fmt.Println("*/*/*/*/*/*/*/*SetReadTime: ", *p)
 	err = service.SetReadTime(*p)
 	if err != nil {
 		response.ResponseError(c, response.CodeInternError)

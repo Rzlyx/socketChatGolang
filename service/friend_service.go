@@ -397,14 +397,16 @@ func UnGrayPrivateChat(param param.UnGrayPrivateChatParam) (err error) {
 			return err
 		}
 	}
+	newList := new([]int64)
 	if userExtra.PrivateChatGray != nil {
-		for index, id := range *userExtra.PrivateChatGray {
-			if id == utils.ShiftToNum64(param.FriendID) {
-				*userExtra.PrivateChatGray = append((*userExtra.PrivateChatGray)[:index], (*userExtra.PrivateChatGray)[index+1:]...)
+		for _, id := range *userExtra.PrivateChatGray {
+			if id != utils.ShiftToNum64(param.FriendID) {
+				*newList = append(*newList, id)
 			}
 		}
 	}
 
+	userExtra.PrivateChatGray = newList
 	extraJson, err := json.Marshal(userExtra)
 	if err != nil {
 		return err

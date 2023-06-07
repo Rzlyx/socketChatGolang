@@ -41,7 +41,7 @@ func Register(info *param.ParamRegister) (*PO.UserPO, error) {
 		fmt.Println("[Register], err is ", err.Error())
 		return nil, err
 	}
-	
+
 	return userInfo, nil
 }
 
@@ -62,13 +62,19 @@ func Login(p *param.ParamLogin) (user *PO.UserPO, token string, err error) {
 		return user, token, err
 	}
 
-	user.Status = 1 
+	user.Status = 1
 
-	err = user_dao.UpdateUserInfoByPO(user)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = user_dao.UpdateUserInfoByPO(tx, user)
+		if err != nil {
+			fmt.Println("[login], 修改在线状态失败， err is ", err.Error())
+		}
+
+		return nil
+	})
 	if err != nil {
-		fmt.Println("[login], 修改在线状态失败， err is ", err.Error())
+		return nil, "", err
 	}
-
 
 	return nil, "", errors.New("信息错误")
 }
