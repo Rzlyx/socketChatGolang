@@ -17,6 +17,7 @@ func Register(c *gin.Context) {
 	p := new(param.ParamRegister)
 	err := c.ShouldBind(p)
 	if err != nil {
+		fmt.Println("[Register] ShouldBind err is ", err.Error())
 		response.ResponseError(c, response.CodeInvalidParams)
 		return
 	}

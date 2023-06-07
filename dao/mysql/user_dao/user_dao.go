@@ -10,7 +10,7 @@ import (
 
 // todo: concurrent
 func Register(p *PO.UserPO) error {
-	sqlStr := "insert into user (user_id, user_name, password, sex, phone_number, email, signature, birthdaay) VALUES (?,?,?,?,?,?,?,?)"
+	sqlStr := "insert into user (user_id, user_name, password, sex, phone_number, e_mail, signature, birthday) VALUES (?,?,?,?,?,?,?,?)"
 	_, err := mysql.DB.Exec(sqlStr, p.UserID, p.UserName, p.Password, p.Sex, p.PhoneNumber, p.Email, p.Signature, p.Birthday)
 	if err != nil {
 		fmt.Println("[Register], insert err is ", err)
@@ -159,7 +159,7 @@ func UpdateFriendCircleBlackWhite(userID int64, whiteList string, blackList stri
 }
 
 func CreateUserInfoByPO(user *PO.UserPO) error {
-	strSql := "INSERT INTO user (user_id, user_name, password, sex, phone_number, e_mail, signature, birthday, status, private_chat_white, private_chat_black, friend_circle_white, friend_circle_black, friend_circle_visiable, group_chat_white, group_chat_black, group_chat_gray, create_time, is_deleted, extra ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+	strSql := "INSERT INTO user (user_id, user_name, password, sex, phone_number, e_mail, signature, birthday, status, private_chat_white, private_chat_black, friend_circle_white, friend_circle_black, friend_circle_visiable, group_chat_white, group_chat_black, group_chat_gray, create_time, is_deleted, extra ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	_, err := mysql.DB.Exec(strSql,
 		user.UserID,
 		user.UserName,

@@ -50,7 +50,7 @@ func MsgTransMit() {
 		} else if msg.MsgType == 6 || msg.MsgType == 7 { // 群聊
 			userIds, err := GetAllUserIDsbyGroupID(msg.ReceiverID)
 			if err != nil {
-				fmt.Println("[MsgTransMit], 群聊 err is ", err.Error())
+				fmt.Println("[MsgTransMit], 群聊GetAllUserIDsbyGroupID err is ", err.Error())
 			}
 			for _, id := range *userIds {
 				if id != utils.ShiftToNum64(msg.SenderID) && id != 999999 {
@@ -61,7 +61,7 @@ func MsgTransMit() {
 						}
 						msg.MsgType = int(Type)
 						if Type == GROUP_WHITE_LIST || Type == GROUP_GRAY_LIST {
-							fmt.Println("receive_group:", msg.ReceiverID, " receive_id:", id)
+							fmt.Println("向群成员发送群聊消息: GroupID", msg.ReceiverID, " receive_id:", id)
 							UserChan[id] <- msg
 						}
 					}
@@ -144,7 +144,12 @@ func Connect(c *gin.Context) {
 			fmt.Println(err)
 		}
 		// filter
-		//fmt.Println(msg)
+		if msg.MsgType == 0 {
+			fmt.Println("收到私聊消息 ", msg.SenderID,"-->", msg.ReceiverID," msg:", msg)
+		}else{
+			fmt.Println("收到群聊消息 ", msg.SenderID,"-->", msg.ReceiverID," msg:", msg)
+		}
+		
 		if msg.MsgType == 0 {
 			HandlePrivateChatMsg(*msg)
 		} else if msg.MsgType == 999 {

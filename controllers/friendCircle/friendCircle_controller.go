@@ -31,7 +31,6 @@ func SendCircle(c *gin.Context) {
 	response.ResponseSuccess(c, p1)
 }
 
-
 func QueryAllFriendCircle(c *gin.Context) {
 	param := new(param.QueryAllFriendCircleParam)
 	err := c.ShouldBind(param)
@@ -62,19 +61,20 @@ func QueryFriendCircle(c *gin.Context) {
 		response.ResponseError(c, response.CodeInternError)
 		return
 	}
-	
+
 	response.ResponseSuccess(c, context)
 }
 
-
 // 上传图片
 func UploadCirclePhoto(c *gin.Context) {
-	p := new(param.UploadCirclePhotoParam)
-	err := c.ShouldBind(p)
-	if err != nil {
-		fmt.Println("[UploadCirclePhoto], ShouldBind err ", err.Error())
-		return
-	}
+	// p := new(param.UploadCirclePhotoParam)
+	// err := c.ShouldBind(p)
+	// if err != nil {
+	// 	fmt.Println("[UploadCirclePhoto], ShouldBind err ", err.Error())
+	// 	return
+	// }
+	news_id := c.PostForm("news_id")
+
 	form, err := c.MultipartForm()
 	if err != nil {
 		fmt.Println("[UploadCirclePhoto], MultipartForm err ", err.Error())
@@ -101,7 +101,7 @@ func UploadCirclePhoto(c *gin.Context) {
 	}
 	fmt.Println("[UploadCirclePhoto], paths is ", PathIDs, " and len(photo) is ", len(paths))
 
-	err = service.UploadCirclePhotoPath(p, PathIDs)
+	err = service.UploadCirclePhotoPath(news_id, PathIDs)
 	if err != nil {
 		fmt.Println("[UploadCirclePhoto], UploadCirclePhotoPath err ", err.Error())
 		response.ResponseError(c, response.CodeInternError)
