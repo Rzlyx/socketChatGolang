@@ -1,6 +1,8 @@
 package service
 
 import (
+	"database/sql"
+	"dou_yin/dao/mysql"
 	"dou_yin/dao/mysql/apply_dao"
 	"dou_yin/dao/mysql/group_dao"
 	"dou_yin/dao/mysql/user_dao"
@@ -227,24 +229,30 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 	}
 
 	// TODO: Tx
-	// 创建群
-	err = group_dao.CreateGroupInfo(groupInfoPO)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		// 创建群
+		err = group_dao.CreateGroupInfo(tx, groupInfoPO)
+		if err != nil {
+			return err
+		}
+		// 修改用户白名单
+		for _, user := range users {
+			err = user_dao.UpdateUserInfoByPOTx(tx, &user)
+			if err != nil {
+				return err
+			}
+		}
+		// 添加群关系信息
+		for _, group := range groups {
+			_, err = group_dao.CreateGroupByGroupPO(tx, group)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return err
-	}
-	// 修改用户白名单
-	for _, user := range users {
-		err = user_dao.UpdateUserInfoByPO(&user)
-		if err != nil {
-			return err
-		}
-	}
-	// 添加群关系信息
-	for _, group := range groups {
-		_, err = group_dao.CreateGroupByGroupPO(group)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -269,6 +277,8 @@ func UpdateGroupInfoByParam(info *param.UpdateGroupInfoParam) error {
 	userIDs = append(userIDs, *groupInfoDO.AdminIds...)
 	userIDs = append(userIDs, *groupInfoDO.UserIds...)
 
+	var groupPOs []group_dao.GroupPO
+
 	for _, id := range userIDs {
 		groupPO, err := group_dao.MGetGroupByUserIDandGroupID(id, groupInfoDO.GroupID)
 		if err != nil {
@@ -284,10 +294,7 @@ func UpdateGroupInfoByParam(info *param.UpdateGroupInfoParam) error {
 			if err != nil {
 				return err
 			}
-			_, err = group_dao.UpdateGroupByGroupPO(*GroupPO)
-			if err != nil {
-				return err
-			}
+			groupPOs = append(groupPOs, *GroupPO)
 		}
 	}
 
@@ -296,10 +303,23 @@ func UpdateGroupInfoByParam(info *param.UpdateGroupInfoParam) error {
 		return err
 	}
 
-	err = group_dao.UpdateGroupInfo(GroupInfoPO)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = group_dao.UpdateGroupInfo(tx, GroupInfoPO)
+		if err != nil {
+			return err
+		}
+		for _, GroupPO := range groupPOs {
+			_, err = group_dao.UpdateGroupByGroupPO(tx, GroupPO)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -373,25 +393,31 @@ func DissolveGroupInfoByParam(info *param.DissolveGroupInfoParam) error {
 	}
 
 	// TODO:Tx
-	err = group_dao.UpdateGroupInfo(groupInfoPO)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = group_dao.UpdateGroupInfo(tx, groupInfoPO)
+		if err != nil {
+			return err
+		}
+
+		// 修改群聊名单
+		for _, userPO := range UserPOList {
+			err := user_dao.UpdateUserInfoByPOTx(tx, &userPO)
+			if err != nil {
+				return err
+			}
+		}
+
+		// 删除加群关系
+		for _, id := range userIds {
+			_, err := group_dao.DeleteGroupByUserIDandGroupID(tx, id, utils.ShiftToNum64(info.GroupID))
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return err
-	}
-
-	// 修改群聊名单
-	for _, userPO := range UserPOList {
-		err := user_dao.UpdateUserInfoByPO(&userPO)
-		if err != nil {
-			return err
-		}
-	}
-
-	// 删除加群关系
-	for _, id := range userIds {
-		_, err := group_dao.DeleteGroupByUserIDandGroupID(id, utils.ShiftToNum64(info.GroupID))
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -536,21 +562,28 @@ func QuitGroupByParam(info *param.QuitGroupParam) error {
 			return err
 		}
 		// TODO: Tx
-		// 在该群聊中，执行退群操作
-		ret, err := group_dao.DeleteGroupByUserIDandGroupID(utils.ShiftToNum64(info.UserID), utils.ShiftToNum64(info.GroupID))
-		if err != nil || !ret {
-			return err // 删除失败
-		}
+		err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+			// 在该群聊中，执行退群操作
+			ret, err := group_dao.DeleteGroupByUserIDandGroupID(tx, utils.ShiftToNum64(info.UserID), utils.ShiftToNum64(info.GroupID))
+			if err != nil || !ret {
+				return err // 删除失败
+			}
 
-		err = user_dao.UpdateUserInfoByPO(&userInfo)
+			err = user_dao.UpdateUserInfoByPOTx(tx, &userInfo)
+			if err != nil {
+				return err
+			}
+
+			err = group_dao.UpdateGroupInfo(tx, GroupInfoPO)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
 		if err != nil {
 			return err
 		}
 
-		err = group_dao.UpdateGroupInfo(GroupInfoPO)
-		if err != nil {
-			return err
-		}
 	}
 	return nil // 退群成功
 }
@@ -641,22 +674,28 @@ func AgreeGroupApplyByParam(info *param.AgreeGroupApplyParam) error {
 	}
 
 	// TODO:Tx
-	err = group_dao.UpdateGroupInfo(groupInfo)
-	if err != nil {
-		return err
-	}
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = group_dao.UpdateGroupInfo(tx, groupInfo)
+		if err != nil {
+			return err
+		}
 
-	_, err = group_dao.CreateGroupByGroupPO(*groupPO)
-	if err != nil {
-		return err
-	}
+		_, err = group_dao.CreateGroupByGroupPO(tx, *groupPO)
+		if err != nil {
+			return err
+		}
 
-	err = user_dao.UpdateUserInfoByPO(&userInfo)
-	if err != nil {
-		return err
-	}
+		err = user_dao.UpdateUserInfoByPOTx(tx, &userInfo)
+		if err != nil {
+			return err
+		}
 
-	err = apply_dao.DeleteApplicationByApplyID(utils.ShiftToNum64(info.ApplyID))
+		err = apply_dao.DeleteApplicationByApplyID(tx, utils.ShiftToNum64(info.ApplyID))
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -666,8 +705,13 @@ func AgreeGroupApplyByParam(info *param.AgreeGroupApplyParam) error {
 
 // 不同意加入
 func DisAgreeGroupApplyByParam(info *param.DisAgreeGroupApplyParam) error {
-
-	err := apply_dao.DeleteApplicationByApplyID(utils.ShiftToNum64(info.ApplyID))
+	err := mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err := apply_dao.DeleteApplicationByApplyID(tx, utils.ShiftToNum64(info.ApplyID))
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -700,10 +744,17 @@ func SilenceByParam(info *param.SilenceParam) error {
 	silence := string(data)
 	group.SilenceList = &silence
 
-	err = group_dao.UpdateGroupInfo(group)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = group_dao.UpdateGroupInfo(tx, group)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -738,7 +789,13 @@ func UnSilenceByParam(info *param.UnSilenceParam) error {
 		group.SilenceList = nil
 	}
 
-	err = group_dao.UpdateGroupInfo(group)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = group_dao.UpdateGroupInfo(tx, group)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -806,16 +863,21 @@ func TransferGroupByParam(info *param.TransferGroupParam) error {
 	TargetRecord.Type = 2 // 成为群主
 
 	// TODO:Tx
-
-	err = group_dao.UpdateGroupInfo(groupInfoRecord)
-	if err != nil {
-		return err
-	}
-	_, err = group_dao.UpdateGroupByGroupPO(*OwnerRecord)
-	if err != nil {
-		return err
-	}
-	_, err = group_dao.UpdateGroupByGroupPO(*TargetRecord)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = group_dao.UpdateGroupInfo(tx, groupInfoRecord)
+		if err != nil {
+			return err
+		}
+		_, err = group_dao.UpdateGroupByGroupPO(tx, *OwnerRecord)
+		if err != nil {
+			return err
+		}
+		_, err = group_dao.UpdateGroupByGroupPO(tx, *TargetRecord)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -864,11 +926,17 @@ func SetBlackListByParam(info *param.SetBlackListParam) error {
 	}
 	if len(*black) > 0 {
 		userInfo.GroupChatBlack = black
-	}else{
+	} else {
 		userInfo.GroupChatBlack = nil
 	}
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = user_dao.UpdateUserInfoByPOTx(tx, &userInfo)
+		if err != nil {
+			return err
+		}
 
-	err = user_dao.UpdateUserInfoByPO(&userInfo)
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -916,11 +984,16 @@ func SetGrayListByParam(info *param.SetGrayListParam) error {
 	}
 	if len(*black) > 0 {
 		userInfo.GroupChatBlack = black
-	}else{
+	} else {
 		userInfo.GroupChatBlack = nil
 	}
-
-	err = user_dao.UpdateUserInfoByPO(&userInfo)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = user_dao.UpdateUserInfoByPOTx(tx, &userInfo)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -969,11 +1042,16 @@ func SetWhiteListByParam(info *param.SetWhiteListParam) error {
 	}
 	if len(*black) > 0 {
 		userInfo.GroupChatBlack = black
-	}else{
+	} else {
 		userInfo.GroupChatBlack = nil
 	}
-
-	err = user_dao.UpdateUserInfoByPO(&userInfo)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = user_dao.UpdateUserInfoByPOTx(tx, &userInfo)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -1071,14 +1149,21 @@ func SetGroupAdminByParam(info *param.SetGroupAdminParam) error {
 	group.Type = 1
 
 	// TODO:Tx
-	err = group_dao.UpdateGroupInfo(GroupInfoPO)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = group_dao.UpdateGroupInfo(tx, GroupInfoPO)
+		if err != nil {
+			return err
+		}
+		_, err = group_dao.UpdateGroupByGroupPO(tx, *group)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
-	_, err = group_dao.UpdateGroupByGroupPO(*group)
-	if err != nil {
-		return err
-	}
+
 	return nil
 }
 
@@ -1115,14 +1200,21 @@ func SetGroupUserByParam(info *param.SetGroupUserParam) error {
 	group.Type = 0
 
 	// TODO:Tx
-	err = group_dao.UpdateGroupInfo(GroupInfoPO)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = group_dao.UpdateGroupInfo(tx, GroupInfoPO)
+		if err != nil {
+			return err
+		}
+		_, err = group_dao.UpdateGroupByGroupPO(tx, *group)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
-	_, err = group_dao.UpdateGroupByGroupPO(*group)
-	if err != nil {
-		return err
-	}
+
 	return nil
 }
 
@@ -1166,20 +1258,21 @@ func QueryInviteGroupByParam(info *param.QueryInviteGroupParam) (*[]response.Inv
 	if err != nil {
 		return nil, err
 	}
-
-	for _, apply := range *list {
-		applyDO, err := DO.MGetApplyDOFromPO(&apply)
-		if err != nil {
-			return nil, err
+	if list != nil && len(*list) > 0 {
+		for _, apply := range *list {
+			applyDO, err := DO.MGetApplyDOFromPO(&apply)
+			if err != nil {
+				return nil, err
+			}
+			resp := response.InviteGroupInfo{
+				ApplyID:   applyDO.ApplyID,
+				InvitedID: applyDO.Extra.InvitedID,
+				Applicant: applyDO.Applicant,
+				TargetID:  applyDO.TargetID,
+				Reason:    applyDO.Reason,
+			}
+			result = append(result, resp)
 		}
-		resp := response.InviteGroupInfo{
-			ApplyID:   applyDO.ApplyID,
-			InvitedID: applyDO.Extra.InvitedID,
-			Applicant: applyDO.Applicant,
-			TargetID:  applyDO.TargetID,
-			Reason:    applyDO.Reason,
-		}
-		result = append(result, resp)
 	}
 
 	return &result, nil
@@ -1201,8 +1294,14 @@ func AgreeInviteGroupByParam(info *param.AgreeInviteGroupParam) error {
 }
 
 func DisAgreeInviteGroupByParam(info *param.DisAgreeInviteGroupParam) error {
+	err := mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err := apply_dao.DeleteApplicationByApplyID(tx, utils.ShiftToNum64(info.ApplyID))
+		if err != nil {
+			return err
+		}
 
-	err := apply_dao.DeleteApplicationByApplyID(utils.ShiftToNum64(info.ApplyID))
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -1228,8 +1327,14 @@ func SetGroupNameByParam(info *param.SetGroupNameParam) error {
 	if err != nil {
 		return err
 	}
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		_, err = group_dao.UpdateGroupByGroupPO(tx, *GroupPO)
+		if err != nil {
+			return err
+		}
 
-	_, err = group_dao.UpdateGroupByGroupPO(*GroupPO)
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -1252,11 +1357,17 @@ func SetMyNamebyParam(info *param.SetMyNameParam) error {
 	if err != nil {
 		return err
 	}
-
-	_, err = group_dao.UpdateGroupByGroupPO(*GroupPO)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		_, err = group_dao.UpdateGroupByGroupPO(tx, *GroupPO)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -1278,7 +1389,13 @@ func SetGroupReadTimebyParam(info *param.SetGroupReadTimeParam) error {
 		return err
 	}
 
-	_, err = group_dao.UpdateGroupByGroupPO(*GroupPO)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		_, err = group_dao.UpdateGroupByGroupPO(tx, *GroupPO)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -1302,10 +1419,17 @@ func SetAIGPTbyParam(info *param.SetAIGPTParam) error {
 		return err
 	}
 
-	err = group_dao.UpdateGroupInfo(GroupInfoPO)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = group_dao.UpdateGroupInfo(tx, GroupInfoPO)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
