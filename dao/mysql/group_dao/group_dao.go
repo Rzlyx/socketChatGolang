@@ -18,9 +18,9 @@ func MGetGroupInfoByGroupID(GroupID int64) (*GroupInfoPO, error) {
 	return &group, nil
 }
 
-func CreateGroupInfo(info *GroupInfoPO) error {
+func CreateGroupInfo(tx *sql.Tx, info *GroupInfoPO) error {
 	strSql := "INSERT group_info (group_id, owner_id, group_name, description, user_ids, admin_ids, slience_list, create_time, is_deleted, extra) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-	_, err := mysql.DB.Exec(strSql,
+	_, err := tx.Exec(strSql,
 		info.GroupID,
 		info.OwnerID,
 		info.GroupName,
@@ -38,7 +38,7 @@ func CreateGroupInfo(info *GroupInfoPO) error {
 	return nil
 }
 
-func UpdateGroupInfo(info *GroupInfoPO) error {
+func UpdateGroupInfo(tx *sql.Tx, info *GroupInfoPO) error {
 	strSql := "UPDATE group_info SET owner_id = ?, group_name = ?, description = ?, user_ids = ?, admin_ids = ?, slience_list = ?, create_time = ?, is_deleted = ?, extra = ? WHERE group_id = ?"
 	_, err := mysql.DB.Exec(strSql,
 		info.OwnerID,
@@ -114,7 +114,7 @@ func IsGroupUser(UserID, GroupID int64) (bool, error) {
 	return true, nil
 }
 
-func DeleteGroupByUserIDandGroupID(UserId, GroupID int64) (bool, error) {
+func DeleteGroupByUserIDandGroupID(tx *sql.Tx, UserId, GroupID int64) (bool, error) {
 	strSql := "delete from group_num where user_id = ? and group_id = ?"
 	_, err := mysql.DB.Exec(strSql, UserId, GroupID)
 	if err != nil {
@@ -124,7 +124,7 @@ func DeleteGroupByUserIDandGroupID(UserId, GroupID int64) (bool, error) {
 	return true, nil
 }
 
-func CreateGroupByGroupPO(group GroupPO) (bool, error) {
+func CreateGroupByGroupPO(tx *sql.Tx, group GroupPO) (bool, error) {
 	strSql := "INSERT INTO group_num (group_id, group_name, user_id, type, create_time, extra) VALUES (?, ?, ?, ?, ?, ?)"
 	_, err := mysql.DB.Exec(strSql,
 		group.GroupID,
@@ -140,9 +140,9 @@ func CreateGroupByGroupPO(group GroupPO) (bool, error) {
 	return true, nil
 }
 
-func UpdateGroupByGroupPO(group GroupPO) (bool, error) {
+func UpdateGroupByGroupPO(tx *sql.Tx, group GroupPO) (bool, error) {
 	strSql := "UPDATE group_num SET group_id = ?, group_name = ?, user_id = ?, type = ?, create_time = ?, extra = ? WHERE user_id = ? and group_id = ?"
-	_, err := mysql.DB.Exec(strSql,
+	_, err := tx.Exec(strSql,
 		group.GroupID,
 		group.GroupName,
 		group.UserID,

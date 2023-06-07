@@ -140,7 +140,7 @@ func MGetApplicationByGroupIDandUserID(GroupID, UserID int64) (*PO.ApplyPO, erro
 	return &application, nil
 }
 
-func DeleteApplicationByApplyID(applyID int64) (error){
+func DeleteApplicationByApplyID(tx *sql.Tx, applyID int64) (error){
 	sqlStr := "delete from apply where apply_id = ?"
 	_, err := mysql.DB.Exec(sqlStr, applyID)
 	if err != nil {

@@ -144,7 +144,6 @@ type InviteJoinGroupParam struct {
 
 type QueryInviteGroupParam struct {
 	UserID  string `json:"user_id" form:"user_id" binding:"required"`
-	GroupID string `json:"group_id" form:"group_id" binding:"required"`
 }
 
 type AgreeInviteGroupParam struct {
