@@ -19,7 +19,8 @@ var OthserChan map[int64]chan string
 
 var MsgChan chan VO.MessageVO            // 全局消息队列
 var UserChan map[int64]chan VO.MessageVO // 每个用户分配一个chan
-var IDChan chan int64                    // 接收login，分配一个chan
+var UserHeartBeat map[int64]chan VO.MessageVO
+var IDChan chan int64 // 接收login，分配一个chan
 
 func ChanInit() {
 	IDChan = make(chan int64, 100)
@@ -88,6 +89,7 @@ func StartSendGroupNewMsg(UserId, GroupID string, Type int) error {
 func AddUser() {
 	for msg := range IDChan {
 		UserChan[msg] = make(chan VO.MessageVO, 10)
+		UserHeartBeat[msg] = make(chan VO.MessageVO)
 	}
 }
 
@@ -110,6 +112,12 @@ func Connect(c *gin.Context) {
 		return
 	}
 	defer conn.Close()
+
+	err = LogIn(mc.ID)
+	if err != nil {
+		logger.Log.Error(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
 
 	go func(userID int64) {
 		fmt.Println(userID)
@@ -136,6 +144,8 @@ func Connect(c *gin.Context) {
 		// filter
 		if msg.MsgType == 0 {
 			HandlePrivateChatMsg(*msg)
+		} else if msg.MsgType == 999 {
+			UserHeartBeat[utils.ShiftToNum64(msg.ReceiverID)] <- *msg
 		} else { // 群聊
 			HandleGroupChatMsg(msg)
 		}

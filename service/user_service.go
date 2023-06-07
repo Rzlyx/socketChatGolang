@@ -6,6 +6,7 @@ import (
 	"dou_yin/dao/mysql/user_dao"
 	"dou_yin/logger"
 	"dou_yin/model/PO"
+	"dou_yin/model/VO"
 	"dou_yin/model/VO/param"
 	"dou_yin/pkg/jwt"
 	"dou_yin/pkg/snowflake"
@@ -14,6 +15,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 )
 
 func Register(info *param.ParamRegister) (*PO.UserPO, error) {
@@ -272,4 +274,58 @@ func IsSearchFriendOrGroupContextContain(list []DO.SearchFriendOrGroupContext, c
 		}
 	}
 	return false
+}
+
+func LogIn(userID int64) (err error) {
+	userInfo, err := user_dao.QueryUserInfo(userID)
+	if err != nil {
+		return err
+	}
+
+	userInfo.Status = 1
+	err = user_dao.UpdateUserInfoByPO(&userInfo)
+	if err != nil {
+		return err
+	}
+	SendHeartBeat(userID)
+
+	return nil
+}
+
+func SendHeartBeat(userID int64) {
+	for {
+		MsgChan <- VO.MessageVO{
+			MsgType:    999,
+			ReceiverID: utils.ShiftToStringFromInt64(userID),
+		}
+		select {
+		case <-UserHeartBeat[userID]:
+			continue
+		case <-time.After(time.Second):
+			err := LogOut(userID)
+			if err != nil {
+				logger.Log.Error(err.Error())
+			}
+			break
+		}
+		time.Sleep(time.Second)
+	}
+}
+
+func LogOut(userID int64) (err error) {
+	delete(UserHeartBeat, userID)
+	delete(UserChan, userID)
+
+	userInfo, err := user_dao.QueryUserInfo(userID)
+	if err != nil {
+		return err
+	}
+
+	userInfo.Status = 0
+	err = user_dao.UpdateUserInfoByPO(&userInfo)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
