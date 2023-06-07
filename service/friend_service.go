@@ -2,9 +2,11 @@ package service
 
 import (
 	"database/sql"
+	"dou_yin/dao/mysql"
 	"dou_yin/dao/mysql/apply_dao"
 	"dou_yin/dao/mysql/friend_dao"
 	"dou_yin/dao/mysql/user_dao"
+	"dou_yin/dao/redis"
 	"dou_yin/logger"
 	"dou_yin/model/PO"
 	"dou_yin/model/VO"
@@ -129,6 +131,19 @@ func QueryFriendInfo(param param.QueryFriendInfoParam) (friendInfo DO.FriendInfo
 
 func CheckPrivateChatBlack(userID int64, friendID int64) (bool, error) {
 	// 查friend是否把我拉黑
+	val, err := redis.Get(utils.ShiftToStringFromInt64(friendID))
+	if err == nil {
+		var cache PO.PrivateChatBlack
+		err := json.Unmarshal([]byte(val), &cache)
+		if err != nil {
+			return false, err
+		}
+
+		return IsContains(cache.BlackList, userID), nil
+	} else {
+		logger.Log.Error(err.Error())
+	}
+
 	friendInfo, err := user_dao.QueryUserInfo(friendID)
 	if err != nil {
 		return false, err
@@ -273,24 +288,18 @@ func DeleteFriend(p param.DeleteFriendParam) (err error) {
 	}
 
 	// todo: tx
-	err = friend_dao.DeleteFriend(friendship.FriendshipID)
-	if err != nil {
-		return err
-	}
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = friend_dao.DeleteFriend(friendship.FriendshipID)
+		if err != nil {
+			return err
+		}
 
-	//err = RemoveFriendFromWhiteBlackList(utils.ShiftToNum64(p.UserID), utils.ShiftToNum64(p.FriendID))
-	//if err != nil {
-	//	return err
-	//}
+		err = RemoveFriendFromWhiteBlackList(tx, utils.ShiftToNum64(p.FriendID), utils.ShiftToNum64(p.UserID))
+		if err != nil {
+			return err
+		}
 
-	err = RemoveFriendFromWhiteBlackList(utils.ShiftToNum64(p.FriendID), utils.ShiftToNum64(p.UserID))
-	if err != nil {
-		return err
-	}
-
-	err = UnGrayPrivateChat(param.UnGrayPrivateChatParam{
-		UserID:   p.UserID,
-		FriendID: p.FriendID,
+		return nil
 	})
 	if err != nil {
 		return err
@@ -363,10 +372,14 @@ func SetPrivateChatGray(param param.SetPrivateChatGrayParam) (err error) {
 	extraStr := string(extraJson[:])
 	userInfo.Extra = &extraStr
 
-	err = user_dao.UpdateUserInfoByPO(&userInfo)
-	if err != nil {
-		return err
-	}
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = user_dao.UpdateUserInfoByPO(tx, &userInfo)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 
 	return nil
 }
@@ -399,10 +412,14 @@ func UnGrayPrivateChat(param param.UnGrayPrivateChatParam) (err error) {
 	extraStr := string(extraJson[:])
 	userInfo.Extra = &extraStr
 
-	err = user_dao.UpdateUserInfoByPO(&userInfo)
-	if err != nil {
-		return err
-	}
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = user_dao.UpdateUserInfoByPO(tx, &userInfo)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 
 	return nil
 }
@@ -441,49 +458,56 @@ func AgreeFriendApply(param param.AgreeFriendApplyParam) (err error) {
 	if !hadApplied {
 		return errors.New("there is no application")
 	}
-	// todo: tx
-	err = apply_dao.Delete(utils.ShiftToNum64(param.ApplyID))
-	if err != nil {
-		return err
-	}
 
-	FirstInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.FriendID))
-	if err != nil {
-		return err
-	}
-	SecondIndo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.UserID))
-	if err != nil {
-		return err
-	}
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = apply_dao.Delete(tx, utils.ShiftToNum64(param.ApplyID))
+		if err != nil {
+			return err
+		}
 
-	var friendship DO.Friendship
-	friendship.FriendshipID = snowflake.GenID()
-	friendship.FirstID = utils.ShiftToNum64(param.FriendID)
-	friendship.SecondID = utils.ShiftToNum64(param.UserID)
-	friendship.FirstRemarkSecond = SecondIndo.UserName
-	friendship.SecondRemarkFirst = FirstInfo.UserName
+		FirstInfo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.FriendID))
+		if err != nil {
+			return err
+		}
+		SecondIndo, err := user_dao.QueryUserInfo(utils.ShiftToNum64(param.UserID))
+		if err != nil {
+			return err
+		}
 
-	err = friend_dao.Insert(friendship)
-	if err != nil {
-		return err
-	}
+		var friendship DO.Friendship
+		friendship.FriendshipID = snowflake.GenID()
+		friendship.FirstID = utils.ShiftToNum64(param.FriendID)
+		friendship.SecondID = utils.ShiftToNum64(param.UserID)
+		friendship.FirstRemarkSecond = SecondIndo.UserName
+		friendship.SecondRemarkFirst = FirstInfo.UserName
 
-	err = AddPrivateChatWhite(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
-	if err != nil {
-		return err
-	}
+		err = friend_dao.Insert(tx, friendship)
+		if err != nil {
+			return err
+		}
 
-	err = AddFriendCircleWhite(utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
-	if err != nil {
-		return err
-	}
+		err = AddPrivateChatWhite(tx, utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
+		if err != nil {
+			return err
+		}
 
-	err = AddPrivateChatWhite(utils.ShiftToNum64(param.FriendID), utils.ShiftToNum64(param.UserID))
-	if err != nil {
-		return err
-	}
+		err = AddFriendCircleWhite(tx, utils.ShiftToNum64(param.UserID), utils.ShiftToNum64(param.FriendID))
+		if err != nil {
+			return err
+		}
 
-	err = AddFriendCircleWhite(utils.ShiftToNum64(param.FriendID), utils.ShiftToNum64(param.UserID))
+		err = AddPrivateChatWhite(tx, utils.ShiftToNum64(param.FriendID), utils.ShiftToNum64(param.UserID))
+		if err != nil {
+			return err
+		}
+
+		err = AddFriendCircleWhite(tx, utils.ShiftToNum64(param.FriendID), utils.ShiftToNum64(param.UserID))
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -499,15 +523,22 @@ func DisagreeFriendApply(param param.DisagreeFriendApplyParam) (err error) {
 	if !hadApplied {
 		return errors.New("there no apply")
 	}
-	err = apply_dao.Delete(utils.ShiftToNum64(param.ApplyID))
+
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = apply_dao.Delete(tx, utils.ShiftToNum64(param.ApplyID))
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
-func AddFriendCircleWhite(userID int64, friendID int64) (err error) {
+func AddFriendCircleWhite(tx *sql.Tx, userID int64, friendID int64) (err error) {
 	userPO, err := user_dao.QueryUserInfo(userID)
 	if err != nil {
 		return err
@@ -532,7 +563,7 @@ func AddFriendCircleWhite(userID int64, friendID int64) (err error) {
 		whiteStr = ""
 	}
 
-	err = user_dao.UpdateFriendCircleWhite(userID, whiteStr)
+	err = user_dao.UpdateFriendCircleWhite(tx, userID, whiteStr)
 	if err != nil {
 		return err
 	}
@@ -644,7 +675,7 @@ func AddFriendCircleBlack(userID int64, friendID int64) (err error) {
 	return nil
 }
 
-func AddPrivateChatWhite(userID int64, friendID int64) (err error) {
+func AddPrivateChatWhite(tx *sql.Tx, userID int64, friendID int64) (err error) {
 	userPO, err := user_dao.QueryUserInfo(userID)
 	if err != nil {
 		return err
@@ -669,7 +700,7 @@ func AddPrivateChatWhite(userID int64, friendID int64) (err error) {
 		whiteStr = ""
 	}
 
-	err = user_dao.UpdatePrivateChatWhite(userID, whiteStr)
+	err = user_dao.UpdatePrivateChatWhite(tx, userID, whiteStr)
 	if err != nil {
 		return err
 	}
@@ -720,6 +751,11 @@ func AddPrivateChatWhiteFromBlack(userID int64, friendID int64) (err error) {
 		return err
 	}
 	blackStr := string(blackJson[:])
+	err = redis.Add(utils.ShiftToStringFromInt64(userID), blackStr)
+	if err != nil {
+		return err
+	}
+
 	if len(blackList.BlackList) == 0 {
 		blackStr = ""
 	}
@@ -752,6 +788,11 @@ func AddPrivateChatBlack(userID int64, friendID int64) (err error) {
 		return err
 	}
 	blackStr := string(blackJson[:])
+	err = redis.Add(utils.ShiftToStringFromInt64(userID), blackStr)
+	if err != nil {
+		return err
+	}
+
 	if len(blackList.BlackList) == 0 {
 		blackStr = ""
 	}
@@ -788,7 +829,7 @@ func AddPrivateChatBlack(userID int64, friendID int64) (err error) {
 	return nil
 }
 
-func RemoveFriendFromWhiteBlackList(userID int64, friendID int64) (err error) {
+func RemoveFriendFromWhiteBlackList(tx *sql.Tx, userID int64, friendID int64) (err error) {
 	userPO, err := user_dao.QueryUserInfo(userID)
 	if err != nil {
 		return err
@@ -820,7 +861,7 @@ func RemoveFriendFromWhiteBlackList(userID int64, friendID int64) (err error) {
 		whiteStr = ""
 	}
 
-	err = user_dao.UpdatePrivateChatWhite(userID, whiteStr)
+	err = user_dao.UpdatePrivateChatWhite(tx, userID, whiteStr)
 	if err != nil {
 		return err
 	}
@@ -846,14 +887,20 @@ func RemoveFriendFromWhiteBlackList(userID int64, friendID int64) (err error) {
 			return err
 		}
 		blackStr := string(blackJson[:])
+		err = redis.Add(utils.ShiftToStringFromInt64(userID), blackStr)
+		if err != nil {
+			return err
+		}
+
 		if len(blackList.BlackList) == 0 {
 			blackStr = ""
 		}
 
-		err = user_dao.UpdatePrivateChatBlack(userID, blackStr)
+		err = user_dao.UpdatePrivateChatBlack(tx, userID, blackStr)
 		if err != nil {
 			return err
 		}
+
 	}
 
 	friendCircleInWhite := false
@@ -888,7 +935,7 @@ func RemoveFriendFromWhiteBlackList(userID int64, friendID int64) (err error) {
 		friendCircleWhiteStr = ""
 	}
 
-	err = user_dao.UpdateFriendCircleWhite(userID, friendCircleWhiteStr)
+	err = user_dao.UpdateFriendCircleWhite(tx, userID, friendCircleWhiteStr)
 	if err != nil {
 		return err
 	}
@@ -916,10 +963,37 @@ func RemoveFriendFromWhiteBlackList(userID int64, friendID int64) (err error) {
 			blackStr = ""
 		}
 
-		err = user_dao.UpdateFriendCircleBlack(userID, blackStr)
+		err = user_dao.UpdateFriendCircleBlack(tx, userID, blackStr)
 		if err != nil {
 			return err
 		}
+	}
+
+	var userExtra PO.UserExtra
+	if userPO.Extra != nil {
+		err := json.Unmarshal([]byte(*userPO.Extra), &userExtra)
+		if err != nil {
+			return err
+		}
+	}
+	if userExtra.PrivateChatGray != nil {
+		for index, id := range *userExtra.PrivateChatGray {
+			if id == friendID {
+				*userExtra.PrivateChatGray = append((*userExtra.PrivateChatGray)[:index], (*userExtra.PrivateChatGray)[index+1:]...)
+			}
+		}
+	}
+
+	extraJson, err := json.Marshal(userExtra)
+	if err != nil {
+		return err
+	}
+	extraStr := string(extraJson[:])
+	userPO.Extra = &extraStr
+
+	err = user_dao.UpdateUserInfoByPO(tx, &userPO)
+	if err != nil {
+		return err
 	}
 
 	return nil

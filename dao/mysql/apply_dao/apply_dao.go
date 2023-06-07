@@ -64,9 +64,9 @@ func UpdateStatus(applyID int64, status int) (err error) {
 	return nil
 }
 
-func Delete(applyID int64) (err error) {
+func Delete(tx *sql.Tx, applyID int64) (err error) {
 	sqlStr := "delete from apply where apply_id = ?"
-	_, err = mysql.DB.Exec(sqlStr, applyID)
+	_, err = tx.Exec(sqlStr, applyID)
 	if err != nil {
 		logger.Log.Error(err.Error())
 		return err
@@ -75,9 +75,9 @@ func Delete(applyID int64) (err error) {
 	return nil
 }
 
-func CreateApplication(apply *PO.ApplyPO) (error) {
+func CreateApplication(apply *PO.ApplyPO) error {
 	sqlStr := "INSERT INTO apply (apply_id, applicant, target_id, type, status, reason, create_time, extra) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-	_, err := mysql.DB.Exec(sqlStr, 
+	_, err := mysql.DB.Exec(sqlStr,
 		apply.ApplyID,
 		apply.Applicant,
 		apply.TargetID,
@@ -140,9 +140,9 @@ func MGetApplicationByGroupIDandUserID(GroupID, UserID int64) (*PO.ApplyPO, erro
 	return &application, nil
 }
 
-func DeleteApplicationByApplyID(tx *sql.Tx, applyID int64) (error){
+func DeleteApplicationByApplyID(tx *sql.Tx, applyID int64) error {
 	sqlStr := "delete from apply where apply_id = ?"
-	_, err := mysql.DB.Exec(sqlStr, applyID)
+	_, err := tx.Exec(sqlStr, applyID)
 	if err != nil {
 		fmt.Println("[DeleteApplicationByApplyID], delete err id ", err.Error())
 		return err

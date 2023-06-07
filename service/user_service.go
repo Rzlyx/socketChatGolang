@@ -2,6 +2,7 @@ package service
 
 import (
 	"database/sql"
+	"dou_yin/dao/mysql"
 	"dou_yin/dao/mysql/group_dao"
 	"dou_yin/dao/mysql/user_dao"
 	"dou_yin/logger"
@@ -105,7 +106,7 @@ func QueryContactorList(param param.QueryContactorListParam) (contactors DO.Cont
 			contactors.ContactorList = append(contactors.ContactorList, contactDO)
 		}
 	}
-
+	fmt.Println(extra, contactors)
 	return contactors, err
 }
 
@@ -147,7 +148,14 @@ func SetContactorList(param param.SetContactorListParam) (err error) {
 	extraStr := string(extraJson[:])
 	userInfo.Extra = &extraStr
 
-	err = user_dao.UpdateUserInfoByPO(&userInfo)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = user_dao.UpdateUserInfoByPO(tx, &userInfo)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -180,7 +188,14 @@ func UpdateUserInfo(param param.UpdateUserInfoParam) (err error) {
 	userInfo.Birthday = param.Birthday
 	userInfo.FriendCircleVisiable = param.FriendCircleVisiable
 
-	err = user_dao.UpdateUserInfoByPO(&userInfo)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = user_dao.UpdateUserInfoByPO(tx, &userInfo)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if err != nil {
 		return err
 	}
@@ -306,10 +321,17 @@ func LogIn(userID int64, conn *websocket.Conn) (err error) {
 
 	userInfo.Status = 1
 	fmt.Println(userInfo)
-	err = user_dao.UpdateUserInfoByPO(&userInfo)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = user_dao.UpdateUserInfoByPO(tx, &userInfo)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
+
 	go SendHeartBeat(userID, conn)
 
 	return nil
@@ -323,7 +345,7 @@ func SendHeartBeat(userID int64, conn *websocket.Conn) {
 			MsgType:    999,
 			ReceiverID: utils.ShiftToStringFromInt64(userID),
 		}
-		// fmt.Printf("func(SendHeartBeat): [param: %v]\n", userID)
+		//fmt.Printf("func(SendHeartBeat): [param: %v]\n", userID)
 		select {
 		case <-UserHeartBeat[userID]:
 			interval = 0
@@ -353,7 +375,13 @@ func LogOut(userID int64, conn *websocket.Conn) (err error) {
 	}
 
 	userInfo.Status = 0
-	err = user_dao.UpdateUserInfoByPO(&userInfo)
+	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
+		err = user_dao.UpdateUserInfoByPO(tx, &userInfo)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}
