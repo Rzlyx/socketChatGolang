@@ -27,6 +27,7 @@ func ChanInit() {
 	MsgChan = make(chan VO.MessageVO, 10000)
 	UserChan = make(map[int64]chan VO.MessageVO)
 	UserChan[1] = make(chan VO.MessageVO, 10)
+	UserHeartBeat = make(map[int64]chan VO.MessageVO)
 }
 
 func MsgTransMit() {

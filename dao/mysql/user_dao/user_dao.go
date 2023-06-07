@@ -1,6 +1,7 @@
 package user_dao
 
 import (
+	"database/sql"
 	"dou_yin/dao/mysql"
 	"dou_yin/logger"
 	"dou_yin/model/PO"
@@ -190,6 +191,36 @@ func CreateUserInfoByPO(user *PO.UserPO) error {
 func UpdateUserInfoByPO(user *PO.UserPO) error {
 	strSql := "UPDATE user SET user_name = ?, password = ?, sex = ?, phone_number = ?, e_mail = ?, signature = ?, birthday = ?, status = ?, private_chat_white = ?, private_chat_black = ?, friend_circle_white = ?, friend_circle_black = ?, friend_circle_visiable = ?, group_chat_white = ?, group_chat_black = ?, group_chat_gray = ?, create_time = ?, is_deleted = ?, extra = ? WHERE user_id = ?"
 	_, err := mysql.DB.Exec(strSql,
+		user.UserName,
+		user.Password,
+		user.Sex,
+		user.PhoneNumber,
+		user.Email,
+		user.Signature,
+		user.Birthday,
+		user.Status,
+		user.PrivateChatWhite,
+		user.PrivateChatBlack,
+		user.FriendCircleWhite,
+		user.FriendCircleBlack,
+		user.FriendCircleVisiable,
+		user.GroupChatWhite,
+		user.GroupChatBlack,
+		user.GroupChatGray,
+		user.CreateTime,
+		user.IsDeleted,
+		user.Extra,
+		user.UserID)
+	if err != nil {
+		fmt.Println("[UpdateUserInfoByPO], update err is ", err.Error())
+		return err
+	}
+	return nil
+}
+
+func UpdateUserInfoByPOTx(tx *sql.Tx, user *PO.UserPO) error {
+	strSql := "UPDATE user SET user_name = ?, password = ?, sex = ?, phone_number = ?, e_mail = ?, signature = ?, birthday = ?, status = ?, private_chat_white = ?, private_chat_black = ?, friend_circle_white = ?, friend_circle_black = ?, friend_circle_visiable = ?, group_chat_white = ?, group_chat_black = ?, group_chat_gray = ?, create_time = ?, is_deleted = ?, extra = ? WHERE user_id = ?"
+	_, err := tx.Exec(strSql,
 		user.UserName,
 		user.Password,
 		user.Sex,
