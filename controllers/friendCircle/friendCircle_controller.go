@@ -150,6 +150,7 @@ func CommentCircle(c *gin.Context) {
 	response.ResponseSuccess(c, struct{}{})
 }
 
+// 删除朋友圈
 func DeleteFriendCircle(c *gin.Context) {
 	p := new(param.DeleteFriendCircleParam)
 	err := c.ShouldBind(p)
