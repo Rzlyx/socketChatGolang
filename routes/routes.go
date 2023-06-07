@@ -105,6 +105,9 @@ func SetupRouter() *gin.Engine {
 	r.POST("/UploadCirclePhoto", friendCircle.UploadCirclePhoto) // 上传图片
 	r.POST("/queryAllFriendCircle", friendCircle.QueryAllFriendCircle)
 	r.POST("/queryFriendCircle", friendCircle.QueryFriendCircle)
+	r.POST("/IsLikeCircle", friendCircle.IsLikeCircle)             // 点赞朋友圈
+	r.POST("/CommentCircle", friendCircle.CommentCircle)           // 评论朋友圈
+	r.POST("/DeleteFriendCircle", friendCircle.DeleteFriendCircle) // 删除朋友圈
 
 	return r
 }
