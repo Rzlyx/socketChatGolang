@@ -331,3 +331,92 @@ func QueryFriendCircle(param param.QueryFriendCircleParam) ([]response.FriendCir
 
 	return *res, nil
 }
+
+func IsLikeCirclebyParam(info *param.IsLikeCircleParam) error {
+	circlePO, err := friendCircle_dao.MGetFriendCircle(utils.ShiftToNum64(info.NewsID))
+	if err != nil {
+		return err
+
+	}
+	circleDO, err := DO.MGetFriendCircleDOFromPO(circlePO)
+	if err != nil {
+		return err
+	}
+	var likes []int64
+	likes = append(likes, utils.ShiftToNum64(info.UserID))
+	circleDO.Likes = &likes
+
+	CirclePO, err := DO.MGetFriendCirclePOFromDO(circleDO)
+	if err != nil {
+		return err
+	}
+
+	err = friendCircle_dao.UpdateFriendCircle(CirclePO)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func CommentCirclebyParam(info *param.CommentCircleParam) error {
+	circlePO, err := friendCircle_dao.MGetFriendCircle(utils.ShiftToNum64(info.NewsID))
+	if err != nil {
+		return err
+
+	}
+	circleDO, err := DO.MGetFriendCircleDOFromPO(circlePO)
+	if err != nil {
+		return err
+	}
+	
+	var List []DO.Comment
+	if len(*circleDO.Extra.List) > 0{
+		List = append(List, *circleDO.Extra.List...)
+	}
+	List = append(List, DO.Comment{
+		SenderID: utils.ShiftToNum64(info.UserID),
+		Message: info.Message,
+		CreateTime: utils.GetNowTime(),
+	})
+
+	circleDO.Extra.List = &List
+
+	CirclePO, err := DO.MGetFriendCirclePOFromDO(circleDO)
+	if err != nil {
+		return err
+	}
+
+	err = friendCircle_dao.UpdateFriendCircle(CirclePO)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteFriendCirclebyParam(info *param.DeleteFriendCircleParam) error {
+	circlePO, err := friendCircle_dao.MGetFriendCircle(utils.ShiftToNum64(info.NewsID))
+	if err != nil {
+		return err
+
+	}
+	circleDO, err := DO.MGetFriendCircleDOFromPO(circlePO)
+	if err != nil {
+		return err
+	}
+	
+	circleDO.IsDeleted = true
+
+	CirclePO, err := DO.MGetFriendCirclePOFromDO(circleDO)
+	if err != nil {
+		return err
+	}
+
+	err = friendCircle_dao.UpdateFriendCircle(CirclePO)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
