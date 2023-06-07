@@ -189,6 +189,27 @@ func QueryAllFriendCircle(param param.QueryAllFriendCircleParam) ([]response.Fri
 					*likes = append(*likes, friendInfo.UserName)
 				}
 
+				PhotoPaths := new([]string)
+				Comments := new([]response.Comment)
+				if context[i].Extra != nil {
+					if context[i].Extra.Paths != nil {
+						for _, path := range *(context[i].Extra.Paths) {
+							*PhotoPaths = append(*PhotoPaths, utils.ShiftToStringFromInt64(path))
+						}
+					}
+
+					if context[i].Extra.List != nil {
+						for _, comment := range *(context[i].Extra.List) {
+							*Comments = append(*Comments, response.Comment{
+								SenderID:   comment.SenderID,
+								Message:    comment.Message,
+								Caller:     comment.Caller,
+								CreateTime: comment.CreateTime,
+							})
+						}
+					}
+				}
+
 				*res = append(*res, response.FriendCircleContext{
 					NewsID:     context[i].NewsID,
 					SenderID:   context[i].SenderID,
@@ -197,6 +218,8 @@ func QueryAllFriendCircle(param param.QueryAllFriendCircleParam) ([]response.Fri
 					Type:       context[i].Type,
 					CreateTime: context[i].CreateTime,
 					Likes:      likes,
+					PhotoPaths: PhotoPaths,
+					Comments:   Comments,
 				})
 			}
 		}
@@ -316,6 +339,27 @@ func QueryFriendCircle(param param.QueryFriendCircleParam) ([]response.FriendCir
 					*likes = append(*likes, friendInfo.UserName)
 				}
 
+				PhotoPaths := new([]string)
+				Comments := new([]response.Comment)
+				if context[i].Extra != nil {
+					if context[i].Extra.Paths != nil {
+						for _, path := range *(context[i].Extra.Paths) {
+							*PhotoPaths = append(*PhotoPaths, utils.ShiftToStringFromInt64(path))
+						}
+					}
+
+					if context[i].Extra.List != nil {
+						for _, comment := range *(context[i].Extra.List) {
+							*Comments = append(*Comments, response.Comment{
+								SenderID:   comment.SenderID,
+								Message:    comment.Message,
+								Caller:     comment.Caller,
+								CreateTime: comment.CreateTime,
+							})
+						}
+					}
+				}
+
 				*res = append(*res, response.FriendCircleContext{
 					NewsID:     context[i].NewsID,
 					SenderID:   context[i].SenderID,
@@ -324,6 +368,8 @@ func QueryFriendCircle(param param.QueryFriendCircleParam) ([]response.FriendCir
 					Type:       context[i].Type,
 					CreateTime: context[i].CreateTime,
 					Likes:      likes,
+					PhotoPaths: PhotoPaths,
+					Comments:   Comments,
 				})
 			}
 		}
@@ -369,14 +415,14 @@ func CommentCirclebyParam(info *param.CommentCircleParam) error {
 	if err != nil {
 		return err
 	}
-	
+
 	var List []DO.Comment
-	if len(*circleDO.Extra.List) > 0{
+	if len(*circleDO.Extra.List) > 0 {
 		List = append(List, *circleDO.Extra.List...)
 	}
 	List = append(List, DO.Comment{
-		SenderID: utils.ShiftToNum64(info.UserID),
-		Message: info.Message,
+		SenderID:   utils.ShiftToNum64(info.UserID),
+		Message:    info.Message,
 		CreateTime: utils.GetNowTime(),
 	})
 
@@ -405,7 +451,7 @@ func DeleteFriendCirclebyParam(info *param.DeleteFriendCircleParam) error {
 	if err != nil {
 		return err
 	}
-	
+
 	circleDO.IsDeleted = true
 
 	CirclePO, err := DO.MGetFriendCirclePOFromDO(circleDO)
