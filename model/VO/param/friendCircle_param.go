@@ -23,6 +23,22 @@ type SendCircleParam struct {
 }
 
 type UploadCirclePhotoParam struct {
-	NewsID  string       `json:"news_id" form:"news_id" binding:"required"`
+	NewsID string `json:"news_id" form:"news_id" binding:"required"`
 	// Message VO.MessageVO `json:"message" binding:"required"`
+}
+
+type IsLikeCircleParam struct {
+	NewsID string `json:"news_id" form:"news_id" binding:"required"`
+	UserID string `json:"user_id" form:"user_id" binding:"required"`
+}
+
+type CommentCircleParam struct {
+	NewsID string `json:"news_id" form:"news_id" binding:"required"`
+	UserID string `json:"user_id" form:"user_id" binding:"required"`
+	Message string `json:"message" form:"message" binding:"message"`
+}
+
+type DeleteFriendCircleParam struct {
+	NewsID  string `json:"news_id" form:"news_id" binding:"required"`
+	UserID  string `json:"user_id" form:"user_id" binding:"required"`
 }

@@ -112,10 +112,59 @@ func UploadCirclePhoto(c *gin.Context) {
 
 // 点赞朋友圈
 func IsLikeCircle(c *gin.Context) {
-
+	p := new(param.IsLikeCircleParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[IsLikeCircle] ShouldBind err is ", err.Error())
+		return
+	}
+	err = service.IsLikeCirclebyParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[IsLikeCircle]  err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, struct{}{})
 }
 
 // 评论朋友圈
 func CommentCircle(c *gin.Context) {
+	p := new(param.CommentCircleParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[CommentCircle] ShouldBind err is ", err.Error())
+		return
+	}
+	err = service.CommentCirclebyParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[CommentCircle]  err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, struct{}{})
+}
 
+func DeleteFriendCircle(c *gin.Context) {
+	p := new(param.DeleteFriendCircleParam)
+	err := c.ShouldBind(p)
+	if err != nil {
+		// 无效参数
+		response.ResponseError(c, response.CodeInvalidParams)
+		fmt.Println("[DeleteFriendCircle] ShouldBind err is ", err.Error())
+		return
+	}
+	err = service.DeleteFriendCirclebyParam(p)
+	if err != nil {
+		// 内部错误
+		response.ResponseError(c, response.CodeInternError)
+		fmt.Println("[DeleteFriendCircle]  err is ", err.Error())
+		return
+	}
+	response.ResponseSuccess(c, struct{}{})
 }
