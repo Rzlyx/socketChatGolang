@@ -16,6 +16,7 @@ import (
 	"dou_yin/service/DO"
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 func QueryFriendList(param param.QueryFriendListParam) (friendList DO.FriendList, err error) {
@@ -287,7 +288,6 @@ func DeleteFriend(p param.DeleteFriendParam) (err error) {
 		return err
 	}
 
-	// todo: tx
 	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
 		err = friend_dao.DeleteFriend(friendship.FriendshipID)
 		if err != nil {
@@ -372,6 +372,7 @@ func SetPrivateChatGray(param param.SetPrivateChatGrayParam) (err error) {
 	extraStr := string(extraJson[:])
 	userInfo.Extra = &extraStr
 
+	fmt.Println("设置私聊灰名单：", param.FriendID, userExtra.PrivateChatGray)
 	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
 		err = user_dao.UpdateUserInfoByPO(tx, &userInfo)
 		if err != nil {
@@ -397,16 +398,17 @@ func UnGrayPrivateChat(param param.UnGrayPrivateChatParam) (err error) {
 			return err
 		}
 	}
-	newList := new([]int64)
+
+	newlist := new([]int64)
 	if userExtra.PrivateChatGray != nil {
 		for _, id := range *userExtra.PrivateChatGray {
 			if id != utils.ShiftToNum64(param.FriendID) {
-				*newList = append(*newList, id)
+				*newlist = append(*newlist, id)
 			}
 		}
 	}
 
-	userExtra.PrivateChatGray = newList
+	userExtra.PrivateChatGray = newlist
 	extraJson, err := json.Marshal(userExtra)
 	if err != nil {
 		return err
@@ -414,6 +416,7 @@ func UnGrayPrivateChat(param param.UnGrayPrivateChatParam) (err error) {
 	extraStr := string(extraJson[:])
 	userInfo.Extra = &extraStr
 
+	fmt.Println("解除私聊灰名单：", param.FriendID, userExtra.PrivateChatGray)
 	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
 		err = user_dao.UpdateUserInfoByPO(tx, &userInfo)
 		if err != nil {

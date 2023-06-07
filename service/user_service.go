@@ -72,9 +72,6 @@ func Login(p *param.ParamLogin) (user *PO.UserPO, token string, err error) {
 
 		return nil
 	})
-	if err != nil {
-		return nil, "", err
-	}
 
 	return nil, "", errors.New("信息错误")
 }
@@ -373,13 +370,16 @@ func SendHeartBeat(userID int64, conn *websocket.Conn) {
 
 func LogOut(userID int64, conn *websocket.Conn) (err error) {
 	delete(UserHeartBeat, userID)
+	fmt.Println("1*****")
 	delete(UserChan, userID)
 
+	fmt.Println("2*****")
 	userInfo, err := user_dao.QueryUserInfo(userID)
 	if err != nil {
 		return err
 	}
 
+	fmt.Println("******************log out: ", userID)
 	userInfo.Status = 0
 	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
 		err = user_dao.UpdateUserInfoByPO(tx, &userInfo)
