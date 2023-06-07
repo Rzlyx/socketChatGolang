@@ -1,6 +1,7 @@
 package friend_dao
 
 import (
+	"database/sql"
 	"dou_yin/dao/mysql"
 	"dou_yin/logger"
 	"dou_yin/model/PO"
@@ -62,9 +63,9 @@ func DeleteFriend(friendshipID int64) (err error) {
 	return nil
 }
 
-func Insert(friendship DO.Friendship) (err error) {
+func Insert(tx *sql.Tx, friendship DO.Friendship) (err error) {
 	sqlStr := "insert friend(friendship_id, first_id, second_id, f_remark_s, s_remark_f, is_f_remark_s, is_s_remark_f) values(?, ?, ?, ?, ?, ?, ?)"
-	_, err = mysql.DB.Exec(sqlStr, friendship.FriendshipID, friendship.FirstID, friendship.SecondID, friendship.FirstRemarkSecond, friendship.SecondRemarkFirst, false, false)
+	_, err = tx.Exec(sqlStr, friendship.FriendshipID, friendship.FirstID, friendship.SecondID, friendship.FirstRemarkSecond, friendship.SecondRemarkFirst, false, false)
 	if err != nil {
 		logger.Log.Error(err.Error())
 		return err
