@@ -254,7 +254,7 @@ func AddFriend(addFriendParam param.AddFriendParam) (application DO.AddFriendApp
 	}
 
 	msg := VO.MessageVO{
-		MsgType:    11,
+		MsgType:    12,
 		ReceiverID: addFriendParam.FriendID,
 	}
 	NotifyFriend(msg)

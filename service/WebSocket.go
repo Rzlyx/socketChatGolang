@@ -32,7 +32,8 @@ func ChanInit() {
 
 func MsgTransMit() {
 	for msg := range MsgChan {
-		if msg.MsgType == 0 || msg.MsgType == 1 { // 私聊
+		//fmt.Println("****", msg)
+		if msg.MsgType == 0 || msg.MsgType == 1 || msg.MsgType == 999 { // 私聊
 			if _, ok := UserChan[utils.ShiftToNum64(msg.ReceiverID)]; ok {
 				fmt.Println("receive_id:", msg.ReceiverID)
 				UserChan[utils.ShiftToNum64(msg.ReceiverID)] <- msg
@@ -103,6 +104,7 @@ var upgrader = websocket.Upgrader{
 func Connect(c *gin.Context) {
 	//获取token,如果token无效，就返回
 	token := c.Param("token")
+	fmt.Println("*************")
 	mc, err := jwt.ParseToken(token)
 	IDChan <- mc.ID
 	//连接升级
@@ -114,14 +116,13 @@ func Connect(c *gin.Context) {
 	}
 	defer conn.Close()
 
-	err = LogIn(mc.ID)
+	err = LogIn(mc.ID, conn)
 	if err != nil {
 		logger.Log.Error(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 	}
 
 	go func(userID int64) {
-		fmt.Println(userID)
 		for {
 			message := <-UserChan[userID]
 			msgJson, _ := json.Marshal(message)
@@ -143,10 +144,17 @@ func Connect(c *gin.Context) {
 			fmt.Println(err)
 		}
 		// filter
+		fmt.Println(msg)
 		if msg.MsgType == 0 {
 			HandlePrivateChatMsg(*msg)
 		} else if msg.MsgType == 999 {
 			UserHeartBeat[utils.ShiftToNum64(msg.ReceiverID)] <- *msg
+		} else if msg.MsgType == 998 {
+			err = LogOut(utils.ShiftToNum64(msg.SenderID), conn)
+			if err != nil {
+				logger.Log.Error(err.Error())
+				return
+			}
 		} else { // 群聊
 			HandleGroupChatMsg(msg)
 		}

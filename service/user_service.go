@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"time"
 )
 
@@ -276,43 +277,53 @@ func IsSearchFriendOrGroupContextContain(list []DO.SearchFriendOrGroupContext, c
 	return false
 }
 
-func LogIn(userID int64) (err error) {
+func LogIn(userID int64, conn *websocket.Conn) (err error) {
+	fmt.Printf("func(LogIn): [param: %v]\n", userID)
 	userInfo, err := user_dao.QueryUserInfo(userID)
 	if err != nil {
 		return err
 	}
 
 	userInfo.Status = 1
+	fmt.Println(userInfo)
 	err = user_dao.UpdateUserInfoByPO(&userInfo)
 	if err != nil {
 		return err
 	}
-	SendHeartBeat(userID)
+	go SendHeartBeat(userID, conn)
 
 	return nil
 }
 
-func SendHeartBeat(userID int64) {
+func SendHeartBeat(userID int64, conn *websocket.Conn) {
+	var interval int64
+	interval = 0
 	for {
-		MsgChan <- VO.MessageVO{
+		UserChan[userID] <- VO.MessageVO{
 			MsgType:    999,
 			ReceiverID: utils.ShiftToStringFromInt64(userID),
 		}
+		fmt.Printf("func(SendHeartBeat): [param: %v]\n", userID)
 		select {
 		case <-UserHeartBeat[userID]:
-			continue
+			interval = 0
 		case <-time.After(time.Second):
-			err := LogOut(userID)
-			if err != nil {
-				logger.Log.Error(err.Error())
+			logger.Log.Error("维持心跳失败 userID: " + utils.ShiftToStringFromInt64(userID) + " " + utils.ShiftToStringFromInt64(interval))
+			interval++
+			if interval == 5 {
+				logger.Log.Error("维持心跳失败 userID: " + utils.ShiftToStringFromInt64(userID))
+				err := LogOut(userID, conn)
+				if err != nil {
+					logger.Log.Error(err.Error())
+				}
+				return
 			}
-			break
 		}
-		time.Sleep(time.Second)
+		time.Sleep(time.Second * 2)
 	}
 }
 
-func LogOut(userID int64) (err error) {
+func LogOut(userID int64, conn *websocket.Conn) (err error) {
 	delete(UserHeartBeat, userID)
 	delete(UserChan, userID)
 
@@ -327,5 +338,6 @@ func LogOut(userID int64) (err error) {
 		return err
 	}
 
+	conn.Close()
 	return nil
 }
