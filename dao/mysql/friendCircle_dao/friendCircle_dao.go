@@ -7,7 +7,7 @@ import (
 )
 
 func CreateFriendCircle(circle *PO.FriendCirclePO) error {
-	strSql := "insert friend_circle (news_id,sender_id,news,type,black_list,white_list,create_time,likes,is_deleted,extra) values (?,?,?,?,?,?,?,?,?,?)"
+	strSql := "insert friend_circle (news_id,sender,news,type,blacklist,whitelist,create_time,likes,is_deleted,extra) values (?,?,?,?,?,?,?,?,?,?)"
 	result, err := mysql.DB.Exec(strSql, 
 		circle.NewsID,
 		circle.SenderID,
@@ -33,7 +33,7 @@ func CreateFriendCircle(circle *PO.FriendCirclePO) error {
 }
 
 func UpdateFriendCircle(circle *PO.FriendCirclePO) error {
-	strSql := "UPDATE friend_circle SET sender_id = ?, news = ?, type = ?, black_list = ?, white_list = ?, create_time = ?, likes = ?, is_deleted = ?, extra = ? WHERE news_id = ?"
+	strSql := "UPDATE friend_circle SET sender = ?, news = ?, type = ?, blacklist = ?, whitelist = ?, create_time = ?, likes = ?, is_deleted = ?, extra = ? WHERE news_id = ?"
 	_, err := mysql.DB.Exec(strSql, 
 		circle.SenderID,
 		circle.News,
