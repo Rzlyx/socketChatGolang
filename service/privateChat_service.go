@@ -218,7 +218,7 @@ func QueryAllUnreadPrivateChatMsg(UserID int64) (err error) {
 			readTime = extra.SecondReadTime
 		}
 
-		fmt.Println("开始查未读消息：", friendship, readTime)
+		fmt.Println("开始查未读消息： ", friendship.FirstID, extra.FirstReadTime, friendship.SecondID, extra.SecondReadTime, UserID, readTime)
 		msgs, err := privateChat_dao.QueryUnreadMsgByFriendshipID(friendship.FriendshipID, readTime)
 		fmt.Println("查到未读私聊消息：", msgs)
 		if err != nil {
@@ -231,11 +231,12 @@ func QueryAllUnreadPrivateChatMsg(UserID int64) (err error) {
 				Message:     msg.Message,
 				CreateTime:  msg.CreateTime,
 				SenderID:    utils.ShiftToStringFromInt64(msg.SenderID),
-				ReceiverID:  utils.ShiftToStringFromInt64(msg.ReceiverID),
+				ReceiverID:  utils.ShiftToStringFromInt64(UserID),
 				DataType:    msg.Type,
 				ErrString:   "",
 				IsAnonymous: false,
 			}
+			fmt.Println("/*/*/*create_time ", msg)
 			msgVOs = append(msgVOs, msgVO)
 		}
 	}

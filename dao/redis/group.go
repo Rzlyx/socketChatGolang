@@ -51,3 +51,43 @@ func TurnNodeFromNode(value string) (*UserGroup, error) {
 	}
 	return &node, nil
 }
+
+func AddGroupLock(GroupID string) error {
+	res := rdb.Do("rpush", GroupID, "unlock")
+	return res.Err()
+}
+
+func GetGroupLock(GroupID string) bool {
+	res := rdb.LRange(GroupID, 0, -1)
+	if res.Err() != nil {
+		fmt.Println("[GetGroupLock], err is ", res.Err().Error())
+	}
+	if len(res.Val()) > 0 && res.Val()[0] == "lock" {
+		return true
+	}
+	return false
+}
+
+func GroupLock(GroupID string) bool {
+	if !GetGroupLock(GroupID) {
+		res := rdb.Do("SET", GroupID, "lock")
+		if res.Err() != nil {
+			fmt.Println("[GroupLock], err is ", res.Err().Error())
+		}
+		return true
+	} else {
+		return false
+	}
+}
+
+func GroupUnLock(GroupID string) bool {
+	if GetGroupLock(GroupID) {
+		res := rdb.Do("SET", GroupID, "unlock")
+		if res.Err() != nil {
+			fmt.Println("[GroupLock], err is ", res.Err().Error())
+		}
+		return true
+	} else {
+		return false
+	}
+}

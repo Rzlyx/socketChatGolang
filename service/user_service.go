@@ -52,9 +52,9 @@ func Login(p *param.ParamLogin) (user *PO.UserPO, token string, err error) {
 		return nil, "", errors.New("用户不存在")
 	}
 
-	if user.Status == 1 {
-		return user, "", errors.New("用户已经登录")
-	}
+	// if user.Status == 1 {
+	// 	return user, "", errors.New("用户已经登录")
+	// }
 
 	if p.UserName == user.UserName && p.Password == user.Password {
 		token, err = jwt.GenToken(user.UserID, user.UserName)
@@ -104,6 +104,7 @@ func QueryContactorList(param param.QueryContactorListParam) (contactors DO.Cont
 				Name:    contact.Name,
 				Message: contact.Message,
 				Time:    contact.Time,
+				Status:  contact.Status,
 			}
 
 			contactors.ContactorList = append(contactors.ContactorList, contactDO)
@@ -144,11 +145,13 @@ func SetContactorList(param param.SetContactorListParam) (err error) {
 	} else {
 		extra.ContactorList = nil
 	}
+	fmt.Println("[加入首页], extra is", extra)
 	extraJson, err := json.Marshal(extra)
 	if err != nil {
 		return err
 	}
 	extraStr := string(extraJson[:])
+	fmt.Println("[加入首页], extraStr is", extraStr)
 	userInfo.Extra = &extraStr
 
 	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
