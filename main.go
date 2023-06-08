@@ -23,7 +23,7 @@ import (
 )
 
 func main() {
-	service.GptClient = openai.NewClient("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")
+	service.GptClient = openai.NewClient("sk-")
 
 	service.ChanInit()
 	//初始化消息通道
