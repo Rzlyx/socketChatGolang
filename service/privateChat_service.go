@@ -9,6 +9,7 @@ import (
 	"dou_yin/pkg/utils"
 	"dou_yin/service/DO"
 	"encoding/json"
+	"fmt"
 )
 
 func QueryPrivateChatMsg(param param.QueryPrivateChatMsgParam) (messageList DO.MessageList, err error) {
@@ -217,7 +218,9 @@ func QueryAllUnreadPrivateChatMsg(UserID int64) (err error) {
 			readTime = extra.SecondReadTime
 		}
 
+		fmt.Println("开始查未读消息：", friendship, readTime)
 		msgs, err := privateChat_dao.QueryUnreadMsgByFriendshipID(friendship.FriendshipID, readTime)
+		fmt.Println("查到未读私聊消息：", msgs)
 		if err != nil {
 			return err
 		}
@@ -238,6 +241,7 @@ func QueryAllUnreadPrivateChatMsg(UserID int64) (err error) {
 	}
 
 	for _, msgVO := range msgVOs {
+		fmt.Println("发送未读私聊消息：", msgVO)
 		MsgChan <- msgVO
 	}
 
