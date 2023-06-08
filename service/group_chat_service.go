@@ -437,6 +437,7 @@ func HandleGroupChatMsg(msg *VO.MessageVO) {
 		msg.ErrString = "系统内部错误，请稍后再试"
 	}
 	if IsSlience {
+		fmt.Println("[HandleGroupChatMsg], senderId 被禁言", msg.SenderID)
 		msg.ErrString = "已被禁言"
 	} else {
 		err = CreatGroupMsg(*msg)

@@ -234,6 +234,9 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 		groups = append(groups, *groupPO)
 	}
 
+	// 添加锁
+	redis.AddGroupLock(utils.ShiftToStringFromInt64(groupInfo.GroupID))
+
 	// TODO: Tx
 	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
 		// 创建群
@@ -266,6 +269,10 @@ func CreateGroupInfoByParam(info *param.CreateGroupInfoParam) error {
 
 // 修改群信息
 func UpdateGroupInfoByParam(info *param.UpdateGroupInfoParam) error {
+	// 分布式锁
+	redis.GroupLock(info.GroupID)
+	defer redis.GroupUnLock(info.GroupID)
+
 	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return err
@@ -331,6 +338,10 @@ func UpdateGroupInfoByParam(info *param.UpdateGroupInfoParam) error {
 
 // 解散群聊
 func DissolveGroupInfoByParam(info *param.DissolveGroupInfoParam) error {
+	// 分布式锁
+	redis.GroupLock(info.GroupID)
+	defer redis.GroupUnLock(info.GroupID)
+	
 	// TODO 加锁
 	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
 	if err != nil {
@@ -430,6 +441,10 @@ func DissolveGroupInfoByParam(info *param.DissolveGroupInfoParam) error {
 }
 
 func ApplyJoinGroupByParam(info *param.ApplyJoinGroupParam) error {
+	// 分布式锁
+	redis.GroupLock(info.GroupID)
+	defer redis.GroupUnLock(info.GroupID)
+	
 	application, err := apply_dao.MGetApplicationByGroupIDandUserID(utils.ShiftToNum64(info.GroupID), utils.ShiftToNum64(info.UserID))
 	if err != nil {
 		return err
@@ -483,6 +498,10 @@ func ApplyJoinGroupByParam(info *param.ApplyJoinGroupParam) error {
 
 // 退出群聊
 func QuitGroupByParam(info *param.QuitGroupParam) error {
+	// 分布式锁
+	redis.GroupLock(info.GroupID)
+	defer redis.GroupUnLock(info.GroupID)
+	
 	ret, err := group_dao.IsGroupUser(utils.ShiftToNum64(info.UserID), utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return err // 查询失败
@@ -615,6 +634,10 @@ func QueryGroupApplyListByParam(info *param.QueryGroupApplyListParam) (*[]respon
 
 // 同意加入
 func AgreeGroupApplyByParam(info *param.AgreeGroupApplyParam) error {
+	// 分布式锁
+	redis.GroupLock(info.GroupID)
+	defer redis.GroupUnLock(info.GroupID)
+
 	groupInfoPO, err := group_dao.MGetGroupInfoByGroupID(utils.ShiftToNum64(info.GroupID))
 	if err != nil {
 		return err
@@ -936,7 +959,7 @@ func SetBlackListByParam(info *param.SetBlackListParam) error {
 		userInfo.GroupChatBlack = nil
 	}
 	// 删缓存
-	redis.DeleteUserGroup(info.UserID+info.GroupID)
+	redis.DeleteUserGroup(info.UserID + info.GroupID)
 
 	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
 		err = user_dao.UpdateUserInfoByPOTx(tx, &userInfo)
@@ -951,8 +974,7 @@ func SetBlackListByParam(info *param.SetBlackListParam) error {
 	}
 
 	// 删缓存
-	redis.DeleteUserGroup(info.UserID+info.GroupID)
-	
+	redis.DeleteUserGroup(info.UserID + info.GroupID)
 
 	return nil
 }
@@ -1002,8 +1024,7 @@ func SetGrayListByParam(info *param.SetGrayListParam) error {
 	}
 
 	// 删缓存
-	redis.DeleteUserGroup(info.UserID+info.GroupID)
-
+	redis.DeleteUserGroup(info.UserID + info.GroupID)
 
 	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
 		err = user_dao.UpdateUserInfoByPOTx(tx, &userInfo)
@@ -1017,7 +1038,7 @@ func SetGrayListByParam(info *param.SetGrayListParam) error {
 	}
 
 	// 删缓存
-	redis.DeleteUserGroup(info.UserID+info.GroupID)
+	redis.DeleteUserGroup(info.UserID + info.GroupID)
 
 	return nil
 }
@@ -1068,7 +1089,7 @@ func SetWhiteListByParam(info *param.SetWhiteListParam) error {
 	}
 
 	// 删缓存
-	redis.DeleteUserGroup(info.UserID+info.GroupID)
+	redis.DeleteUserGroup(info.UserID + info.GroupID)
 
 	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
 		err = user_dao.UpdateUserInfoByPOTx(tx, &userInfo)
@@ -1082,7 +1103,7 @@ func SetWhiteListByParam(info *param.SetWhiteListParam) error {
 	}
 
 	// 删缓存
-	redis.DeleteUserGroup(info.UserID+info.GroupID)
+	redis.DeleteUserGroup(info.UserID + info.GroupID)
 
 	return nil
 }

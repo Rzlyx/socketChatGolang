@@ -3,6 +3,7 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 type UserGroup struct {
@@ -69,14 +70,16 @@ func GetGroupLock(GroupID string) bool {
 }
 
 func GroupLock(GroupID string) bool {
-	if !GetGroupLock(GroupID) {
-		res := rdb.Do("SET", GroupID, "lock")
-		if res.Err() != nil {
-			fmt.Println("[GroupLock], err is ", res.Err().Error())
+	for {
+		if !GetGroupLock(GroupID) {
+			res := rdb.Do("SET", GroupID, "lock")
+			if res.Err() != nil {
+				fmt.Println("[GroupLock], err is ", res.Err().Error())
+			}
+			return true
+		} else {
+			time.Sleep(time.Millisecond * 400)
 		}
-		return true
-	} else {
-		return false
 	}
 }
 
