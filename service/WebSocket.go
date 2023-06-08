@@ -61,7 +61,7 @@ func MsgTransMit() {
 						}
 						msg.MsgType = int(Type)
 						if Type == GROUP_WHITE_LIST || Type == GROUP_GRAY_LIST {
-							fmt.Println("向群成员发送群聊消息: GroupID", msg.ReceiverID, " receive_id:", id)
+							fmt.Println("向群成员发送群聊消息（刚发消息）: GroupID", msg.ReceiverID, " receive_id:", id, msg)
 							UserChan[id] <- msg
 						}
 					}
@@ -79,9 +79,11 @@ func StartSendGroupNewMsg(UserId, GroupID string, Type int) error {
 	id := utils.ShiftToNum64(UserId)
 	if _, ok := UserChan[id]; ok {
 		for _, msg := range msgs {
-			msg.MsgType = Type
-			fmt.Println("receive_group:", GroupID, " receive_id:", id)
-			UserChan[id] <- msg
+			if msg.SenderID != UserId {
+				msg.MsgType = Type
+				fmt.Println("向群成员发送群聊消息(历史未读): GroupID", msg.ReceiverID, " receive_id:", id, msg)
+				UserChan[id] <- msg
+			}
 		}
 	}
 
@@ -145,11 +147,11 @@ func Connect(c *gin.Context) {
 		}
 		// filter
 		if msg.MsgType == 0 {
-			fmt.Println("收到私聊消息 ", msg.SenderID,"-->", msg.ReceiverID," msg:", msg)
-		}else{
-			fmt.Println("收到群聊消息 ", msg.SenderID,"-->", msg.ReceiverID," msg:", msg)
+			fmt.Println("收到私聊消息 ", msg.SenderID, "-->", msg.ReceiverID, " msg:", msg)
+		} else if msg.MsgType != 999 {
+			fmt.Println("收到群聊消息 ", msg.SenderID, "-->", msg.ReceiverID, " msg:", msg)
 		}
-		
+
 		if msg.MsgType == 0 {
 			HandlePrivateChatMsg(*msg)
 		} else if msg.MsgType == 999 {

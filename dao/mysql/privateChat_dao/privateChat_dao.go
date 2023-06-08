@@ -4,6 +4,7 @@ import (
 	"dou_yin/dao/mysql"
 	"dou_yin/logger"
 	"dou_yin/model/PO"
+	"fmt"
 )
 
 func Insert(privateMsgPO PO.PrivateMsgPO) (err error) {
@@ -54,6 +55,7 @@ func QueryReadMsgByReadTime(friendshipID int64, lastTime string, num int) (priva
 func QueryUnreadMsgByFriendshipID(friendshipID int64, readTime string) (privateMsgPOs []PO.PrivateMsgPO, err error) {
 	sqlStr := "select * from private_message where friendship_id = ? and create_time > ?"
 	err = mysql.DB.Select(&privateMsgPOs, sqlStr, friendshipID, readTime)
+	fmt.Println("查询私聊消息(历史未读):", readTime, privateMsgPOs)
 	if err != nil {
 		logger.Log.Error(err.Error())
 		return nil, err

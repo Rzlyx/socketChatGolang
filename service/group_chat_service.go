@@ -6,6 +6,7 @@ import (
 	"dou_yin/dao/mysql/user_dao"
 	"dou_yin/dao/redis"
 	"dou_yin/model/VO"
+	"dou_yin/model/VO/param"
 	"dou_yin/pkg/utils"
 	"dou_yin/service/DO"
 	"fmt"
@@ -442,6 +443,10 @@ func HandleGroupChatMsg(msg *VO.MessageVO) {
 		if err != nil {
 			msg.ErrString = "系统内部错误，请稍后再试"
 		}
+		SetGroupReadTimebyParam(&param.SetGroupReadTimeParam{
+			UserID: msg.SenderID,
+			GroupID: msg.ReceiverID,
+		})
 		fmt.Println("转发群聊消息 ", msg.SenderID,"-->", msg.ReceiverID," msg:", msg)
 		MsgChan <- *msg
 		if strings.HasPrefix(msg.Message, "@GPT") {
