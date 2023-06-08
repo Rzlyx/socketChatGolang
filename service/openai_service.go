@@ -14,6 +14,14 @@ import (
 var GptClient *openai.Client
 
 func GetGPTMessage(msg *VO.MessageVO) (*VO.MessageVO, error) {
+	result := VO.MessageVO{
+		MsgID:       utils.ShiftToStringFromInt64(snowflake.GenID()),
+		MsgType:     msg.MsgType,
+		CreateTime:  utils.GetNowTime(),
+		SenderID:    utils.ShiftToStringFromInt64(999999),
+		DataType:    0,
+		IsAnonymous: false,
+	}
 	resp, err := GptClient.CreateChatCompletion(
 		context.Background(),
 		openai.ChatCompletionRequest{
@@ -28,17 +36,12 @@ func GetGPTMessage(msg *VO.MessageVO) (*VO.MessageVO, error) {
 	)
 	if err != nil {
 		fmt.Println("[GetGPTMessage], CreateChatCompletion err is ", err.Error())
-		return nil, err
+		// return nil, err
+		result.Message = "GPT timeout, 请稍后再试"
+	} else {
+		result.Message = resp.Choices[0].Message.Content
 	}
-	result := VO.MessageVO{
-		MsgID:       utils.ShiftToStringFromInt64(snowflake.GenID()),
-		MsgType:     msg.MsgType,
-		Message:     resp.Choices[0].Message.Content,
-		CreateTime:  utils.GetNowTime(),
-		SenderID:    utils.ShiftToStringFromInt64(999999),
-		DataType:    0,
-		IsAnonymous: false,
-	}
+
 	// result.SenderName =
 
 	if result.MsgType == 0 { // 私聊

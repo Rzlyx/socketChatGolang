@@ -145,13 +145,13 @@ func SetContactorList(param param.SetContactorListParam) (err error) {
 	} else {
 		extra.ContactorList = nil
 	}
-	fmt.Println("[加入首页], extra is", extra)
+	// fmt.Println("[加入首页], extra is", extra)
 	extraJson, err := json.Marshal(extra)
 	if err != nil {
 		return err
 	}
 	extraStr := string(extraJson[:])
-	fmt.Println("[加入首页], extraStr is", extraStr)
+	// fmt.Println("[加入首页], extraStr is", extraStr)
 	userInfo.Extra = &extraStr
 
 	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
@@ -373,16 +373,16 @@ func SendHeartBeat(userID int64, conn *websocket.Conn) {
 
 func LogOut(userID int64, conn *websocket.Conn) (err error) {
 	delete(UserHeartBeat, userID)
-	fmt.Println("1*****")
+	// fmt.Println("1*****")
 	delete(UserChan, userID)
 
-	fmt.Println("2*****")
+	// fmt.Println("2*****")
 	userInfo, err := user_dao.QueryUserInfo(userID)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("******************log out: ", userID)
+	// fmt.Println("******************log out: ", userID)
 	userInfo.Status = 0
 	err = mysql.Tx(mysql.DB, func(tx *sql.Tx) error {
 		err = user_dao.UpdateUserInfoByPO(tx, &userInfo)

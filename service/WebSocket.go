@@ -106,7 +106,7 @@ var upgrader = websocket.Upgrader{
 func Connect(c *gin.Context) {
 	//获取token,如果token无效，就返回
 	token := c.Param("token")
-	fmt.Println("*************")
+	// fmt.Println("*************")
 	mc, err := jwt.ParseToken(token)
 	IDChan <- mc.ID
 	//连接升级
@@ -148,7 +148,7 @@ func Connect(c *gin.Context) {
 		// filter
 		if msg.MsgType == 0 {
 			fmt.Println("收到私聊消息 ", msg.SenderID, "-->", msg.ReceiverID, " msg:", msg)
-		} else if msg.MsgType != 999 {
+		} else if msg.MsgType == 6 {
 			fmt.Println("收到群聊消息 ", msg.SenderID, "-->", msg.ReceiverID, " msg:", msg)
 		}
 

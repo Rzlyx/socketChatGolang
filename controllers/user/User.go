@@ -79,7 +79,7 @@ func QueryContactorList(c *gin.Context) {
 		return
 	}
 
-	fmt.Println("返回首页内容：", contactors)
+	// fmt.Println("返回首页内容：", contactors)
 	queryContactorListResp := new(response.QueryContactorList)
 	queryContactorListResp.ContactorList = contactors
 	response.ResponseSuccess(c, queryContactorListResp)
@@ -126,7 +126,7 @@ func SetContactorList(c *gin.Context) {
 		response.ResponseError(c, response.CodeInvalidParams)
 		return
 	}
-	fmt.Println("设置首页参数为", param)
+	// fmt.Println("设置首页参数为", param)
 	err = service.SetContactorList(*param)
 	if err != nil {
 		logger.Log.Error(err.Error())
