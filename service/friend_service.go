@@ -1084,6 +1084,12 @@ func HandlePrivateChatMsg(msg VO.MessageVO) {
 			msg.ErrString = "系统内部错误，请稍后重试"
 		}
 
+		err = SetReadTime(param.SetReadTime{UserID: msg.SenderID,
+			FriendID: msg.ReceiverID})
+		if err != nil {
+			logger.Log.Error(err.Error())
+		}
+
 		isInGrayList, err := CheckPrivateChatGray(utils.ShiftToNum64(msg.SenderID), utils.ShiftToNum64(msg.ReceiverID))
 		if err != nil {
 			msg.ReceiverID, msg.SenderID = msg.SenderID, msg.ReceiverID

@@ -189,7 +189,7 @@ func CreateUserInfoByPO(user *PO.UserPO) error {
 }
 
 func UpdateUserInfoByPO(tx *sql.Tx, user *PO.UserPO) error {
-	fmt.Printf("func(UpdateUserInfoByPO): [param: %v]\n", user)
+	fmt.Printf("func(UpdateUserInfoByPO): [param: %v]\n", *user.Extra)
 	strSql := "UPDATE user SET user_name = ?, password = ?, sex = ?, phone_number = ?, e_mail = ?, signature = ?, birthday = ?, status = ?, private_chat_white = ?, private_chat_black = ?, friend_circle_white = ?, friend_circle_black = ?, friend_circle_visiable = ?, group_chat_white = ?, group_chat_black = ?, group_chat_gray = ?, create_time = ?, is_deleted = ?, extra = ? WHERE user_id = ?"
 	//fmt.Println("func(UpdateUserInfoByPO): ", strSql)
 	_, err := tx.Exec(strSql,

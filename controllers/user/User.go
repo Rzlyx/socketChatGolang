@@ -67,15 +67,19 @@ func QueryContactorList(c *gin.Context) {
 	param := new(param.QueryContactorListParam)
 	err := c.ShouldBind(param)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		response.ResponseError(c, response.CodeInvalidParams)
 		return
 	}
 
 	contactors, err := service.QueryContactorList(*param)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		response.ResponseError(c, response.CodeInternError)
 		return
 	}
+
+	fmt.Println("返回首页内容：", contactors)
 	queryContactorListResp := new(response.QueryContactorList)
 	queryContactorListResp.ContactorList = contactors
 	response.ResponseSuccess(c, queryContactorListResp)
@@ -118,12 +122,14 @@ func SetContactorList(c *gin.Context) {
 	param := new(param.SetContactorListParam)
 	err := c.ShouldBind(param)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		response.ResponseError(c, response.CodeInvalidParams)
 		return
 	}
-	fmt.Println(*param)
+	fmt.Println("设置首页参数为", param)
 	err = service.SetContactorList(*param)
 	if err != nil {
+		logger.Log.Error(err.Error())
 		response.ResponseError(c, response.CodeInternError)
 		return
 	}
@@ -189,6 +195,7 @@ func SearchFriendOrGroup(c *gin.Context) {
 func StartSendWebSocket(c *gin.Context) {
 	p := new(param.StartSendWebSocketParam)
 	err := c.ShouldBind(p)
+	fmt.Println("aaaaaaaaaaaaaaaaaa", p.UserID)
 	if err != nil {
 		// 无效参数
 		response.ResponseError(c, response.CodeInvalidParams)
